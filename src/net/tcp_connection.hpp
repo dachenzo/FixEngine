@@ -24,7 +24,10 @@ namespace TCP {
             return std::string_view{buff_, n};
         }
 
-        ssize_t write( size_t len) {}
+        ssize_t write(char* buff, std::size_t n) {
+            ssize_t n = send(sockfd_, buff, n, 0);
+            
+        }
 
         private:
         int sockfd_;

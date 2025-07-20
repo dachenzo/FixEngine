@@ -8,7 +8,6 @@
 #include <vector>
 #include "fix_message.hpp"
 
-constexpr const size_t MAX_MESSAGE_SIZE = 4096*2;
 const size_t MAX_TAG_SIZE = 6;
 
 namespace Fix {
@@ -18,7 +17,6 @@ namespace Fix {
     };
     
     enum class ParseErrors {
-        None,
         NoTag,
         MaxTagSize,
         MalformedTag,
@@ -28,33 +26,63 @@ namespace Fix {
     };
 
 
-    using ParseResult = std::pair<std::optional<Fix::Field>, std::vector<ParseErrors>>;
+   
 
     struct Parser {
 
-        void add_new_messge_fragment(std::string_view sv) {
+    
+        std::optional<Fix::Message> parse(std::string_view& sv) {
+            add_new_messge_fragment_(sv);
+            parse_field_();
+            if (message_builder.ready()) {return message_builder.get();}
+            else {return std::nullopt;}
+        }   
+
+        
+
+
+        private:
+        std::vector<char> buff_;
+        char tag_buff_[MAX_TAG_SIZE];
+        size_t complete_field_count_{0};
+        size_t read_idx_{0};
+        Fix::MessageBuilder message_builder;
+        std::vector<Fix::ParseErrors> errs_;
+
+
+        std::string_view next_field_() {
+            auto it = read_idx_;
+            while(buff_[it] != '\x01') {
+                it++;
+            }
+            read_idx_ = ++it;
+            return std::string_view{buff_.data()+read_idx_, it-read_idx_};
+        }
+
+        void add_new_messge_fragment_(std::string_view& sv) {
             for (auto c: sv) {
-                if (write_idx_== MAX_MESSAGE_SIZE) {}//DO SOMETHING
-                buff_[write_idx_] = c;
-                write_idx_++;
-                if (c == 1) {complete_message_count_++;}
+                buff_.push_back(c);
+                if (c == '\x01') {complete_field_count_++;}
             }
         }
 
         
+        bool has_complete_field_() {
+            return complete_field_count_ > 0;
+        }
 
-        Fix::ParseResult parse_field() {
-            std::vector<Fix::ParseErrors> errs;
+        void parse_field_() {
+            
         
-            if (!has_complete_message) {std::cout << "Wrong use, no theres no message yet";}
-            ParseErrors err = ParseErrors::None;
+            if (!has_complete_field_()) {return ;}
+           
 
             // read tag
             int idx = 0;
             std::string_view sv = next_field_();
             auto it = sv.begin();
             for (;it !=  sv.end() && *it != '='; it++) {
-                if (idx == MAX_TAG_SIZE) {errs.push_back(ParseErrors::MaxTagSize); break;}
+                if (idx == MAX_TAG_SIZE) {errs_.push_back(ParseErrors::MaxTagSize); break;}
                 tag_buff_[idx] = *it;
                 idx++;
                 
@@ -65,46 +93,21 @@ namespace Fix {
             std::string_view value_sv{it+1, sv.end()};
             
 
-            if (ec != std::errc()) {errs.push_back(ParseErrors::MalformedTag);}
-            if (it ==  sv.end()) {errs.push_back(ParseErrors::MissingValue);}
+            if (ec != std::errc()) {errs_.push_back(ParseErrors::MalformedTag);}
+            if (it ==  sv.end()) {errs_.push_back(ParseErrors::MissingValue);}
             else {
-                if (*it != '=') {errs.push_back(ParseErrors::MissingEqualSign);}
+                if (*it != '=') {errs_.push_back(ParseErrors::MissingEqualSign);}
                 // skip '='
                 it++;
-                if (it ==  sv.end()) {errs.push_back(ParseErrors::MissingValue);}
+                if (it ==  sv.end()) {errs_.push_back(ParseErrors::MissingValue);}
             }
             
-            Fix::Field field{tag, std::string{value_sv}};
-            if (errs.empty()) {
-                return ParseResult{field, errs};
-            } else {
-                return ParseResult{std::nullopt, errs};
+            Fix::Field field{tag, std::string{value_sv}, sv};
+
+            if (errs_.empty()) {
+                message_builder.add(field); 
             }
-
         }
-
-        bool has_complete_message() {
-            return complete_message_count_ > 0;
-        }
-
-
-
-        private:
-        char buff_[MAX_MESSAGE_SIZE];
-        char tag_buff_[MAX_TAG_SIZE];
-        size_t complete_message_count_{0};
-        size_t write_idx_{0};
-        size_t read_idx_{0};
-
-
-        std::string_view next_field_() {
-            auto it = read_idx_;
-            while(buff_[it] != 1) {
-                it++;
-            }
-            return std::string_view{buff_+read_idx_, it-read_idx_};
-        }
-    };
-
+    };  
 
 };
