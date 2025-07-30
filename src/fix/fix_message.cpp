@@ -3,14 +3,48 @@
 #include <string_view>
 #include <vector>
 #include <optional>
+#include <unordered_map>
 #include "fix_message.hpp"
 
 namespace Fix {
 
-  
+    auto FIX_VERSION = "";
 
+    
+    std::optional<std::string_view> Message::get(int key) {
+        auto it = lookup.find(key);
+        if (it == lookup.end()) {
+            return  std::nullopt;
+        } else {
+            return std::string_view{it->second};
+        }
+    }
+
+    Message::Message() {
+        message_.reserve(32);
+        lookup.reserve(32);
+    }
+
+    void Message::add(Fix::Field& field) {
+        message_.push_back(field);
+        //FIXME: possible error if its a duplicate field
+        auto it = lookup.insert({field.tag, field.value});
+    }   
+
+        
+
+    namespace MessageErrors {
+        enum class Critical {
+            FAILED_CHECKSUM,
+            WRONG_FIX_VERSION,
+            WRONG_BODYLENGTH
+        };
+        enum class Mild {
+            DUPLICATE_TAG
+        };
+    };
+ 
     void MessageBuilder::add(Fix::Field& field) {
-        if (ready_) {} //throw an error
         if (field.tag == 9) {
             body_length_ = std::stoi(field.value);
             body_length_count_ = 0;
@@ -26,7 +60,7 @@ namespace Fix {
 
         for (unsigned char c: field.raw_bytes) {checksum_count_ += c;}
         body_length_count_ += field.raw_bytes.size();
-        message_.push_back(field);
+        message_.add(field);
     }
 
     bool MessageBuilder::ready() {return ready_;}
@@ -41,7 +75,6 @@ namespace Fix {
 
     void MessageBuilder::reset_state_() {
         message_ = Fix::Message();
-        message_.reserve(32);
         checksum_count_ = 0;
         body_length_count_ = 0;
         body_length_ = 0;

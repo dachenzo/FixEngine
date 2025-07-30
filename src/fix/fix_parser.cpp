@@ -13,14 +13,14 @@
 
 namespace Fix {
 
-        std::string to_string(Fix::ParseErrors err) {
+        std::string to_string(Fix::ParseErrors::Critical err) {
             switch (err)
             {
-            case Fix::ParseErrors::MaxTagSize: return "MaxTagSize";
-            case Fix::ParseErrors::NoTag: return "NoTag";
-            case Fix::ParseErrors::MalformedTag: return "MalformedTag";
-            case Fix::ParseErrors::MissingEqualSign: return "MissingEqualSign";
-            case Fix::ParseErrors::MissingValue: return "MissingValue";
+            case Fix::ParseErrors::Critical::MaxTagSize: return "MaxTagSize";
+            case Fix::ParseErrors::Critical::NoTag: return "NoTag";
+            case Fix::ParseErrors::Critical::MalformedTag: return "MalformedTag";
+            case Fix::ParseErrors::Critical::MissingEqualSign: return "MissingEqualSign";
+            case Fix::ParseErrors::Critical::MissingValue: return "MissingValue";
             default: return "Unknown Error";
                 
             }
@@ -73,10 +73,11 @@ namespace Fix {
             int idx = 0;
             std::string_view sv = next_field_();
             
+            
            
             auto it = sv.begin();
             for (;it !=  sv.end() && *it != '='; it++) {
-                if (idx == MAX_TAG_SIZE) {errs_.push_back(ParseErrors::MaxTagSize); break;}
+                if (idx == MAX_TAG_SIZE) {errs_.push_back(ParseErrors::Critical::MaxTagSize); break;}
                 tag_buff_[idx] = *it;
                 idx++;
                 
@@ -85,23 +86,24 @@ namespace Fix {
             int tag;
             auto [ptr, ec] = std::from_chars(tag_buff_, tag_buff_+idx, tag);
 
-            //skip '='
+            //skip '='1
             if (*it == '=') {it++;}
-            else{errs_.push_back(ParseErrors::MissingEqualSign);}
+            else{errs_.push_back(ParseErrors::Critical::MissingEqualSign);}
 
 
             std::string_view value_sv = sv.substr(it - sv.begin());
             
 
-            if (ec != std::errc()) {errs_.push_back(ParseErrors::MalformedTag);}
-            if (it ==  sv.end()) {errs_.push_back(ParseErrors::MissingValue);}
+            if (ec != std::errc()) {errs_.push_back(ParseErrors::Critical::MalformedTag);}
+            if (it ==  sv.end()) {errs_.push_back(ParseErrors::Critical::MissingValue);}
            
             
-            
-            Fix::Field field{tag, std::string{value_sv}, sv};
             for (auto p: errs_) {std::cout << Fix::to_string(p) << '\n';}
+            
+            
 
             if (errs_.empty()) {
+                Fix::Field field{tag, std::string{value_sv}, sv};
                 message_builder.add(field);  
             }
         }

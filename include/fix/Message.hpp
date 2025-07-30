@@ -3,6 +3,7 @@
 #include <string_view>
 #include <vector>
 #include <optional>
+#include <unordered_map>
 
 namespace Fix {
 

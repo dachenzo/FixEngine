@@ -19,7 +19,7 @@ namespace TCP {
     struct Connection{
         Connection(int sockfd): sockfd_{sockfd} {}
 
-        std::string_view read(size_t len) {
+        std::string_view read() {
             ssize_t n = recv(sockfd_, buff_, sizeof(buff_)-1, 0);
             return std::string_view{buff_, n};
         }
