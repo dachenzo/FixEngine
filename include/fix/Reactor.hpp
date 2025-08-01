@@ -19,7 +19,7 @@ namespace Fix {
 
 
         private:
-        boost::asio::io_context ioCtx_;
+        boost::asio::io_context io_context_;
         boost::asio::executor_work_guard<
             boost::asio::io_context::executor_type
         > work_guard_;

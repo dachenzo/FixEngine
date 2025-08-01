@@ -5,9 +5,14 @@ add_library(fix_engine
     SessionManager.cpp
     Parser.cpp
     Serializer.cpp
-    MessageStoreSQLite.cpp
+    MessageStore.cpp
     Config.cpp
+    SessionPool.cpp
+    Reactor.cpp
+    Message.cpp
 )
+
+
 target_include_directories(fix_engine PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>

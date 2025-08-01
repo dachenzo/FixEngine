@@ -9,12 +9,6 @@
 
 namespace Fix {
 
-    struct ITimerFactory {
-        virtual ~ITimerFactory() = default;
-
-        virtual std::unique_ptr<ITimer> create_timer() = 0;
-    };
-
     struct ITimer {
         using Handler = std::function<void(const std::error_code)>;
             
@@ -23,11 +17,31 @@ namespace Fix {
 
        
 
-        virtual void start(std::chrono::milliseconds duration, Handler handler) = 0;
+        virtual void start(std::chrono::milliseconds duration, Handler& handler) = 0;
 
-        virtual void cancel() = 0;
+        virtual void cancel() noexcept = 0;
     };
 
+    struct ITimerFactory {
+        virtual ~ITimerFactory() = default;
+
+        virtual std::unique_ptr<ITimer> create_timer() = 0;
+    };
+
+    
+    struct AsioTimer: ITimer {
+     
+        AsioTimer(boost::asio::io_context& io);
+
+        void start(std::chrono::milliseconds duration, Handler& handler);
+
+        void cancel() noexcept;
+
+        private:
+        boost::asio::steady_timer timer_;
+
+        
+    };
 
     struct AsioTimerFactory: ITimerFactory {
         AsioTimerFactory(boost::asio::io_context& io);
@@ -39,19 +53,7 @@ namespace Fix {
     };
 
 
-    struct AsioTimer: ITimer {
-     
-        AsioTimer::AsioTimer(boost::asio::io_context& io);
 
-        virtual void start(std::chrono::milliseconds duration, Handler handler) = 0;
-
-        void cancel();
-
-        private:
-        boost::asio::steady_timer timer_;
-
-        
-    };
 
 }
 

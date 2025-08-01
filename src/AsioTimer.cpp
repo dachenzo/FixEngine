@@ -1,7 +1,7 @@
 #include <boost/asio.hpp>
 #include <chrono>
 #include <memory>
-#include "include/fix/ITimer.hpp"
+#include <fix/ITimer.hpp>
 
 
 
@@ -14,7 +14,7 @@ namespace Fix {
 
     AsioTimer::AsioTimer(boost::asio::io_context& io): timer_{io} {}
 
-    void AsioTimer::start(std::chrono::milliseconds duration, Fix::ITimer::Handler handler) {
+    void AsioTimer::start(std::chrono::milliseconds duration, Handler& handler) {
         timer_.expires_after(duration);
         timer_.async_wait(
             [this, handler] (const boost::system::error_code& ec) {

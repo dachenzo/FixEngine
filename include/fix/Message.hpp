@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <span>
 #include <optional>
 #include <unordered_map>
 
@@ -11,14 +12,18 @@ namespace Fix {
     struct Field{
         int tag;
         std::string value;
-        std::string_view raw_bytes;
+        std::string_view raw_bytes; // WARNING MIGHT BE INVALID IF MISUSED
     };
 
 
     struct Message {
+        Message();
+
         std::optional<std::string_view> get(int key);
 
         void add(Fix::Field& field);
+
+        std::span<const Fix::Field> get_fields() const noexcept;
 
         private:
         std::vector<Fix::Field> message_;
