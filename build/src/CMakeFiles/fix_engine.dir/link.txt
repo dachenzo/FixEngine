@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfix_engine.a CMakeFiles/fix_engine.dir/ConnectionAsio.cpp.o CMakeFiles/fix_engine.dir/AsioTimer.cpp.o CMakeFiles/fix_engine.dir/Session.cpp.o CMakeFiles/fix_engine.dir/SessionManager.cpp.o CMakeFiles/fix_engine.dir/Parser.cpp.o CMakeFiles/fix_engine.dir/Serializer.cpp.o CMakeFiles/fix_engine.dir/MessageStore.cpp.o CMakeFiles/fix_engine.dir/Config.cpp.o CMakeFiles/fix_engine.dir/SessionPool.cpp.o CMakeFiles/fix_engine.dir/Reactor.cpp.o CMakeFiles/fix_engine.dir/Message.cpp.o
+/usr/bin/ranlib libfix_engine.a
