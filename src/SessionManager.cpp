@@ -1,4 +1,5 @@
 #include <memory>
+#include <boost/asio.hpp>
 #include <fix/SessionManager.hpp>
 
 
@@ -17,14 +18,33 @@ namespace Fix {
         } 
 
 
-    void SessionManager::create_session(Fix::SessionCreationConfig& config) {
-        auto conn_ = connFactory_.make_connection(config.conn_config);
-        session_pool_.emplace_session(
+    void SessionManager::create_session(const Fix::SessionCreationConfig& config) {
+        auto sess = session_pool_.emplace_session(
             config.role,
-            std::move(conn_),
             app_,
             timerFactory_
         );
+
+        if (config.role == Fix::Role::ACCEPTOR) {
+            connFactory_.async_connect(config.conn_config,
+            [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
+            std::shared_ptr<IConnection> conn) {
+                if (ec) {
+                    // log + schedule retry/backoff here
+                    return;
+                }
+
+                if (auto s = w.lock()) {
+                    s->set_connection(std::move(conn));
+                    s->start();
+                }
+            }
+            );
+        } else {
+            
+        }
+
+        
     }
 
     void SessionManager::create_all(std::vector<Fix::SessionCreationConfig>& confgs) {

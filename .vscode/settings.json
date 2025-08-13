@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "internet": "cpp",
+        "socket": "cpp"
+    }
+}

@@ -7,14 +7,11 @@
 
 namespace Fix {
 
-
     Session::Session(
                 Fix::SessionID id,
                 Fix::Role role,
-                std::unique_ptr<IConnection> conn,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers):  
-                conn_{std::move(conn)}, 
                 parser_{},
                 app_{app},
                 timers_{timers},
@@ -40,7 +37,7 @@ namespace Fix {
 
     void Session::do_read() {
         auto self = shared_from_this();
-        auto boost_buff = boost::asio::buffer(buff_, buff_.size());
+        auto boost_buff = boost::asio::buffer(buff_, buff_.capacity());
         auto handler = [this, self](boost::system::error_code ec, std::size_t n) {
                 if (ec) {
                     // tear down on error
@@ -61,6 +58,10 @@ namespace Fix {
         conn_->async_read_some(boost_buff, handler);
 
         
+    }
+
+    void Session::set_connection(std::shared_ptr<Fix::IConnection> conn) {
+            conn_ = conn;
     }
 
 

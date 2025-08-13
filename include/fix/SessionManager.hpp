@@ -18,7 +18,7 @@ namespace Fix {
         Fix::IConnectionFactory& connFactory, Fix::ITimerFactory& timerFactory);
 
 
-        void create_session(Fix::SessionCreationConfig& cnfg);
+        void create_session(const Fix::SessionCreationConfig& cnfg);
 
         bool remove_session(const Fix::SessionID& id);
 

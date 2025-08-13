@@ -17,9 +17,8 @@ namespace Fix {
     }
 
 
-    void SessionPool::emplace_session(           
+    std::shared_ptr<Session> SessionPool::emplace_session(           
                 Fix::Role role,
-                std::unique_ptr<IConnection> conn,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers
     ) {
@@ -29,11 +28,11 @@ namespace Fix {
                 std::make_shared<Session>(
                     session_id,
                     role,
-                    std::move(conn),
                     app,
                     timers
                 )
             );
+            return sessions_.back();
         } else {
             std::size_t nxt = free_indices_.back();
             free_indices_.pop_back();
@@ -41,10 +40,10 @@ namespace Fix {
             sessions_[nxt] = std::make_shared<Fix::Session>(
                 session_id,
                 role,
-                std::move(conn),
                 app,
                 timers
             );
+            return sessions_[nxt];
             
         }
     }

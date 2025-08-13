@@ -27,19 +27,18 @@ namespace Fix {
      
 
     struct IConnectionFactory {
-        
+        using ConnectHandler = std::function<void(const boost::system::error_code&, std::shared_ptr<IConnection>)>;
+
         virtual ~IConnectionFactory() = default;
 
-        virtual std::unique_ptr<IConnection> make_initiator(Fix::ConnectionConfig& config) = 0;
+        // Initiator side (client dials out)
+        virtual void async_connect(const Fix::ConnectionConfig& cfg,
+                                    ConnectHandler handler) = 0;
 
-        virtual std::unique_ptr<IConnection> make_acceptor(Fix::ConnectionConfig& config) = 0;
-
-        virtual std::unique_ptr<IConnection> make_connection
-        (Fix::ConnectionConfig& config) = 0;
-
-
-    };
-
+        // (Optional) Acceptor side (server listens) — not needed for this step
+        virtual void async_listen(const Fix::ConnectionConfig& cfg,
+                                    ConnectHandler handler) = 0;
+};
     
 
 
@@ -61,20 +60,17 @@ namespace Fix {
     };
 
 
-    struct AsioConnectionFactory: IConnectionFactory {
 
-        AsioConnectionFactory(boost::asio::io_context& io);
-        
-        std::unique_ptr<IConnection> make_initiator(Fix::ConnectionConfig& config);
+    struct AsioConnectionFactory final : IConnectionFactory {
+        explicit AsioConnectionFactory(boost::asio::io_context& io);
 
-        std::unique_ptr<IConnection> make_acceptor
-        (Fix::ConnectionConfig& config);
+        void async_connect(const Fix::ConnectionConfig& cfg,
+                            ConnectHandler handler) override;
 
-        std::unique_ptr<IConnection> make_connection
-        (Fix::ConnectionConfig& config);
+        void async_listen(const Fix::ConnectionConfig& cfg,
+                            ConnectHandler handler) override; 
 
         private:
         boost::asio::io_context& io_;
-
     };
 }

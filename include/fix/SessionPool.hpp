@@ -23,9 +23,8 @@ namespace Fix {
 
         std::size_t size() noexcept;
 
-        void emplace_session(
+        std::shared_ptr<Session> emplace_session(
                 Fix::Role role,
-                std::unique_ptr<IConnection> conn,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers);
 

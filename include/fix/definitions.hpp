@@ -25,6 +25,7 @@ namespace Fix {
         std::string ip;
         uint16_t port;
         Fix::Role role;
+        int backlog;
     }; 
 
     struct SessionCreationConfig {

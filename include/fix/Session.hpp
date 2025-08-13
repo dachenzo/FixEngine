@@ -19,7 +19,6 @@ namespace Fix {
         // ctor/dtor
         Session(Fix::SessionID id,
                 Fix::Role role,
-                std::unique_ptr<IConnection> conn,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers);
 
@@ -34,6 +33,8 @@ namespace Fix {
         // void onWritable();
 
         Fix::SessionID& get_session_id() noexcept;
+
+        void set_connection(std::shared_ptr<Fix::IConnection> conn);
 
         // // timer callbacks (heartbeat, test‐req, logout)
         // void onTimer(Fix::TimerType which);
