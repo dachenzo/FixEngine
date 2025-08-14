@@ -44,7 +44,8 @@ namespace Fix {
                         if (ec) { op->callback(ec, {}); return; }
 
                         // Success: wrap the connected socket in our IConnection
-                        auto conn = std::make_shared<AsioConnection>(std::move(op->socket));
+                         auto shared_sock = std::make_shared<boost::asio::ip::tcp::socket>(std::move(op->socket));
+                        auto conn = std::make_shared<AsioConnection>(std::move(shared_sock));
                         op->callback({}, std::move(conn));
                     }
                 );
@@ -98,7 +99,8 @@ namespace Fix {
                 [self](const boost::system::error_code& ec, tcp::socket sock) {
                 
                     if (!ec) {
-                        auto conn = std::make_shared<AsioConnection>(std::move(sock));
+                        auto shared_sock = std::make_shared<boost::asio::ip::tcp::socket>(std::move(sock));
+                        auto conn = std::make_shared<AsioConnection>(std::move(shared_sock));
                         self->callback({}, std::move(conn));
                     } else {
                         self->callback(ec, {});
@@ -142,7 +144,7 @@ namespace Fix {
 
 
 
-    AsioConnection::AsioConnection(std::shared_ptr<Socket> sockfd): sockfd_{sockfd} {}
+    AsioConnection::AsioConnection(std::shared_ptr<Socket> sockfd): sockfd_{std::move(sockfd)} {}
 
     void AsioConnection::async_read_some(MutableBuffer& buffer, ReadHandler handle) {
         sockfd_->async_read_some(buffer, std::move(handle));

@@ -5,14 +5,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(src)
 
-target_include_directories(fix_engine
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-)
 
 
-# add_subdirectory(tests)
+add_subdirectory(tests)
 # add_subdirectory(examples)
 
 

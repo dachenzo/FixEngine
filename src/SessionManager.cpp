@@ -1,4 +1,5 @@
 #include <memory>
+#include <iostream>
 #include <boost/asio.hpp>
 #include <fix/SessionManager.hpp>
 
@@ -24,7 +25,7 @@ namespace Fix {
             app_,
             timerFactory_
         );
-
+        std::cout << "Session Created\n";
         if (config.role == Fix::Role::ACCEPTOR) {
             connFactory_.async_connect(config.conn_config,
             [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
@@ -41,7 +42,23 @@ namespace Fix {
             }
             );
         } else {
-            
+            connFactory_.async_listen(
+                config.conn_config,
+                [w = std::weak_ptr<Session>(sess)]
+                (const boost::system::error_code ec,
+                std::shared_ptr<IConnection> conn
+                ) {
+                    if (ec) {
+                        return;
+                    }
+
+                    if (auto s = w.lock()) {
+                        s->set_connection(std::move(conn));
+                        s->start();
+                    }
+                }
+            );
+
         }
 
         

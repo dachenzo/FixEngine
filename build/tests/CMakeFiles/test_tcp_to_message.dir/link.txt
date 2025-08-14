@@ -1,0 +1,1 @@
+/usr/bin/c++ -O2 -g -DNDEBUG CMakeFiles/test_tcp_to_message.dir/test_tcp_to_message.cpp.o -o test_tcp_to_message  ../src/libfix_engine.a /usr/lib/x86_64-linux-gnu/libboost_system.so.1.83.0 

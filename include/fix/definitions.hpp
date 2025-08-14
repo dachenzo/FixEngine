@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdlib>
+#include <string>
+#include <cstdint>
 
 namespace Fix {
     

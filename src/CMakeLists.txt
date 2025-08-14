@@ -9,6 +9,7 @@ add_library(fix_engine
     Config.cpp
     SessionPool.cpp
     Reactor.cpp
+    utils.cpp
     Message.cpp
 )
 

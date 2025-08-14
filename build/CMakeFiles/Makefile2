@@ -65,15 +65,18 @@ CMAKE_BINARY_DIR = /home/michael/FixEngine/build
 # The main recursive "all" target.
 all: CMakeFiles/fix_main.dir/all
 all: src/all
+all: tests/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
 preinstall: src/preinstall
+preinstall: tests/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/fix_main.dir/clean
 clean: src/clean
+clean: tests/clean
 .PHONY : clean
 
 #=============================================================================
@@ -92,18 +95,33 @@ src/clean: src/CMakeFiles/fix_engine.dir/clean
 .PHONY : src/clean
 
 #=============================================================================
+# Directory level rules for directory tests
+
+# Recursive "all" directory target.
+tests/all: tests/CMakeFiles/test_tcp_to_message.dir/all
+.PHONY : tests/all
+
+# Recursive "preinstall" directory target.
+tests/preinstall:
+.PHONY : tests/preinstall
+
+# Recursive "clean" directory target.
+tests/clean: tests/CMakeFiles/test_tcp_to_message.dir/clean
+.PHONY : tests/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/fix_main.dir
 
 # All Build rule for target.
 CMakeFiles/fix_main.dir/all: src/CMakeFiles/fix_engine.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fix_main.dir/build.make CMakeFiles/fix_main.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/fix_main.dir/build.make CMakeFiles/fix_main.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=13,14 "Built target fix_main"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=14,15 "Built target fix_main"
 .PHONY : CMakeFiles/fix_main.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/fix_main.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 14
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 15
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/fix_main.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 0
 .PHONY : CMakeFiles/fix_main.dir/rule
@@ -124,12 +142,12 @@ CMakeFiles/fix_main.dir/clean:
 src/CMakeFiles/fix_engine.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12 "Built target fix_engine"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13 "Built target fix_engine"
 .PHONY : src/CMakeFiles/fix_engine.dir/all
 
 # Build rule for subdir invocation for target.
 src/CMakeFiles/fix_engine.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 12
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 13
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/fix_engine.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 0
 .PHONY : src/CMakeFiles/fix_engine.dir/rule
@@ -142,6 +160,32 @@ fix_engine: src/CMakeFiles/fix_engine.dir/rule
 src/CMakeFiles/fix_engine.dir/clean:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/clean
 .PHONY : src/CMakeFiles/fix_engine.dir/clean
+
+#=============================================================================
+# Target rules for target tests/CMakeFiles/test_tcp_to_message.dir
+
+# All Build rule for target.
+tests/CMakeFiles/test_tcp_to_message.dir/all: src/CMakeFiles/fix_engine.dir/all
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_tcp_to_message.dir/build.make tests/CMakeFiles/test_tcp_to_message.dir/depend
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_tcp_to_message.dir/build.make tests/CMakeFiles/test_tcp_to_message.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=16,17 "Built target test_tcp_to_message"
+.PHONY : tests/CMakeFiles/test_tcp_to_message.dir/all
+
+# Build rule for subdir invocation for target.
+tests/CMakeFiles/test_tcp_to_message.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 15
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_tcp_to_message.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/michael/FixEngine/build/CMakeFiles 0
+.PHONY : tests/CMakeFiles/test_tcp_to_message.dir/rule
+
+# Convenience name for target.
+test_tcp_to_message: tests/CMakeFiles/test_tcp_to_message.dir/rule
+.PHONY : test_tcp_to_message
+
+# clean rule for target.
+tests/CMakeFiles/test_tcp_to_message.dir/clean:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_tcp_to_message.dir/build.make tests/CMakeFiles/test_tcp_to_message.dir/clean
+.PHONY : tests/CMakeFiles/test_tcp_to_message.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

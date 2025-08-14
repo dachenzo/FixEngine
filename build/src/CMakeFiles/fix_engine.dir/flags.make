@@ -6,5 +6,5 @@ CXX_DEFINES = -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB
 
 CXX_INCLUDES = -I/home/michael/FixEngine/include
 
-CXX_FLAGS = -std=gnu++20
+CXX_FLAGS = -O2 -g -DNDEBUG -std=gnu++20
 

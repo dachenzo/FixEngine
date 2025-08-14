@@ -394,6 +394,30 @@ SessionPool.cpp.s:
 	cd /home/michael/FixEngine/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/SessionPool.cpp.s
 .PHONY : SessionPool.cpp.s
 
+utils.o: utils.cpp.o
+.PHONY : utils.o
+
+# target to build an object file
+utils.cpp.o:
+	cd /home/michael/FixEngine/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/utils.cpp.o
+.PHONY : utils.cpp.o
+
+utils.i: utils.cpp.i
+.PHONY : utils.i
+
+# target to preprocess a source file
+utils.cpp.i:
+	cd /home/michael/FixEngine/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/utils.cpp.i
+.PHONY : utils.cpp.i
+
+utils.s: utils.cpp.s
+.PHONY : utils.s
+
+# target to generate assembly for a file
+utils.cpp.s:
+	cd /home/michael/FixEngine/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/utils.cpp.s
+.PHONY : utils.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -436,6 +460,9 @@ help:
 	@echo "... SessionPool.o"
 	@echo "... SessionPool.i"
 	@echo "... SessionPool.s"
+	@echo "... utils.o"
+	@echo "... utils.i"
+	@echo "... utils.s"
 .PHONY : help
 
 

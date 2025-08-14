@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 #include <fix/Reactor.hpp>
 #include <fix/definitions.hpp>
 #include <fix/SessionManager.hpp>
@@ -9,19 +10,21 @@
 /// @brief  Tests that packets are sent between both Initiator and Acceptor configurations and that Fix::Parser is able to emmit a valid message when used
 /// @return int
 int main() {
-    
+    std::cout << "Test started\n";
 
     Fix::ConnectionConfig client_conn_config {
         "127.0.0.1",
         5001,
-        Fix::Role::ACCEPTOR
+        Fix::Role::ACCEPTOR, 
+        1
     };
 
 
     Fix::ConnectionConfig server_conn_config {
         "127.0.0.1",
         5001,
-        Fix::Role::INITIATOR
+        Fix::Role::INITIATOR,
+        1
     };
 
     Fix::SessionCreationConfig client_config{
@@ -40,23 +43,24 @@ int main() {
     };
 
     Fix::Reactor reactor{};
+    std::cout << "Reactor Created\n";
     Fix::Application app{};
+    std::cout << "App Created\n";
     Fix::AsioConnectionFactory conn_factory{reactor.context()};
+    std::cout << "AsioConnFactory Created\n";
     Fix::AsioTimerFactory timer_factory{reactor.context()};
+    std::cout << "TimerFactory Created\n";
     Fix::SessionManager session_manager{
         app,
         conn_factory,
         timer_factory
     };
-
+    std::cout << "Session Manager Created\n";
     session_manager.create_all(configs);
+    std::cout << "Sessions created\n";
 
     reactor.run();
     reactor.stop();
-
-    // session_manager.create_all(configs);
-    // session_manager.start_all();
-
 
 
 

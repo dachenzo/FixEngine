@@ -209,10 +209,24 @@ src/CMakeFiles/fix_engine.dir/Reactor.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/fix_engine.dir/Reactor.cpp.s"
 	cd /home/michael/FixEngine/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/michael/FixEngine/src/Reactor.cpp -o CMakeFiles/fix_engine.dir/Reactor.cpp.s
 
+src/CMakeFiles/fix_engine.dir/utils.cpp.o: src/CMakeFiles/fix_engine.dir/flags.make
+src/CMakeFiles/fix_engine.dir/utils.cpp.o: /home/michael/FixEngine/src/utils.cpp
+src/CMakeFiles/fix_engine.dir/utils.cpp.o: src/CMakeFiles/fix_engine.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/fix_engine.dir/utils.cpp.o"
+	cd /home/michael/FixEngine/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/fix_engine.dir/utils.cpp.o -MF CMakeFiles/fix_engine.dir/utils.cpp.o.d -o CMakeFiles/fix_engine.dir/utils.cpp.o -c /home/michael/FixEngine/src/utils.cpp
+
+src/CMakeFiles/fix_engine.dir/utils.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/fix_engine.dir/utils.cpp.i"
+	cd /home/michael/FixEngine/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/michael/FixEngine/src/utils.cpp > CMakeFiles/fix_engine.dir/utils.cpp.i
+
+src/CMakeFiles/fix_engine.dir/utils.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/fix_engine.dir/utils.cpp.s"
+	cd /home/michael/FixEngine/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/michael/FixEngine/src/utils.cpp -o CMakeFiles/fix_engine.dir/utils.cpp.s
+
 src/CMakeFiles/fix_engine.dir/Message.cpp.o: src/CMakeFiles/fix_engine.dir/flags.make
 src/CMakeFiles/fix_engine.dir/Message.cpp.o: /home/michael/FixEngine/src/Message.cpp
 src/CMakeFiles/fix_engine.dir/Message.cpp.o: src/CMakeFiles/fix_engine.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/fix_engine.dir/Message.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/CMakeFiles/fix_engine.dir/Message.cpp.o"
 	cd /home/michael/FixEngine/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/fix_engine.dir/Message.cpp.o -MF CMakeFiles/fix_engine.dir/Message.cpp.o.d -o CMakeFiles/fix_engine.dir/Message.cpp.o -c /home/michael/FixEngine/src/Message.cpp
 
 src/CMakeFiles/fix_engine.dir/Message.cpp.i: cmake_force
@@ -235,6 +249,7 @@ fix_engine_OBJECTS = \
 "CMakeFiles/fix_engine.dir/Config.cpp.o" \
 "CMakeFiles/fix_engine.dir/SessionPool.cpp.o" \
 "CMakeFiles/fix_engine.dir/Reactor.cpp.o" \
+"CMakeFiles/fix_engine.dir/utils.cpp.o" \
 "CMakeFiles/fix_engine.dir/Message.cpp.o"
 
 # External object files for target fix_engine
@@ -250,10 +265,11 @@ src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/MessageStore.cpp.o
 src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/Config.cpp.o
 src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/SessionPool.cpp.o
 src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/Reactor.cpp.o
+src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/utils.cpp.o
 src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/Message.cpp.o
 src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/build.make
 src/libfix_engine.a: src/CMakeFiles/fix_engine.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Linking CXX static library libfix_engine.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/michael/FixEngine/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Linking CXX static library libfix_engine.a"
 	cd /home/michael/FixEngine/build/src && $(CMAKE_COMMAND) -P CMakeFiles/fix_engine.dir/cmake_clean_target.cmake
 	cd /home/michael/FixEngine/build/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/fix_engine.dir/link.txt --verbose=$(VERBOSE)
 

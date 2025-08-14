@@ -142,6 +142,19 @@ fix_engine/fast:
 	$(MAKE) $(MAKESILENT) -f src/CMakeFiles/fix_engine.dir/build.make src/CMakeFiles/fix_engine.dir/build
 .PHONY : fix_engine/fast
 
+#=============================================================================
+# Target rules for targets named test_tcp_to_message
+
+# Build rule for target.
+test_tcp_to_message: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_tcp_to_message
+.PHONY : test_tcp_to_message
+
+# fast build rule for target.
+test_tcp_to_message/fast:
+	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_tcp_to_message.dir/build.make tests/CMakeFiles/test_tcp_to_message.dir/build
+.PHONY : test_tcp_to_message/fast
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -176,6 +189,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... fix_engine"
 	@echo "... fix_main"
+	@echo "... test_tcp_to_message"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

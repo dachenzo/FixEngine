@@ -4,6 +4,7 @@
 #include <optional>
 #include <fix/Session.hpp>
 #include <fix/Parser.hpp>
+#include <fix/utils.hpp>
 
 namespace Fix {
 
@@ -31,7 +32,11 @@ namespace Fix {
         conn_->close();
     }
 
+
+
     void Session::start() {
+        auto role_str = role_ == Fix::Role::INITIATOR ? "Iniator" : "Acceptor";
+        std::cout << role_str << "Started\n";
         do_read();
     }
 
