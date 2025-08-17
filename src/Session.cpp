@@ -20,7 +20,7 @@ namespace Fix {
                 role_{role},
                 store_{}
                 {
-        buff_.reserve(8192);
+        buff_.resize(8192);
 
     }
 

@@ -1,5 +1,6 @@
 #include <boost/asio.hpp>
 #include <memory>
+#include <iostream>
 #include <fix/IConnection.hpp>
 #include <fix/definitions.hpp>
 
@@ -26,6 +27,7 @@ namespace Fix {
         const Fix::ConnectionConfig& cfg,
         ConnectHandler handler
     ) {
+       
         using boost::asio::ip::tcp;
 
         auto op = std::make_shared<ConnectOP>(io_, std::move(handler));
@@ -33,6 +35,8 @@ namespace Fix {
         // Adapt these two lines to your actual field names in ConnectionConfig
         const std::string host   = std::string(cfg.ip);     
         const std::string service = std::to_string(cfg.port); 
+
+       
 
 
         op->resolver.async_resolve(host, service,
@@ -119,6 +123,7 @@ namespace Fix {
         const Fix::ConnectionConfig& cfg,
         ConnectHandler handler
     ) {
+        
 
         const std::string host = cfg.ip.empty() ? std::string("0.0.0.0") : cfg.ip;
         const int backlog   = cfg.backlog > 0 ? cfg.backlog : SOMAXCONN;
@@ -129,6 +134,8 @@ namespace Fix {
         if (ec) { handler(ec, {}); return; }
 
         tcp::endpoint ep(addr, cfg.port);
+
+        
 
         auto op = std::make_shared<ListenOp>(
             io_,

@@ -12,7 +12,7 @@ namespace Fix {
         Fix::ITimerFactory& timerFactory):
         app_{app}, 
         store_factory_{},
-        connFactory_{connFactory_},
+        connFactory_{connFactory},
         timerFactory_{timerFactory},
         session_pool_{}
         {
@@ -27,6 +27,7 @@ namespace Fix {
         );
         std::cout << "Session Created\n";
         if (config.role == Fix::Role::ACCEPTOR) {
+           
             connFactory_.async_connect(config.conn_config,
             [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
             std::shared_ptr<IConnection> conn) {
@@ -42,6 +43,7 @@ namespace Fix {
             }
             );
         } else {
+            
             connFactory_.async_listen(
                 config.conn_config,
                 [w = std::weak_ptr<Session>(sess)]

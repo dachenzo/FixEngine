@@ -60,7 +60,6 @@ int main() {
     std::cout << "Sessions created\n";
 
     reactor.run();
-    reactor.stop();
 
 
 
