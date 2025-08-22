@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <optional>
+#include <fix/Serializer.hpp>
 #include <fix/IConnection.hpp>
 #include <fix/definitions.hpp>
 #include <fix/MessageStore.hpp>
@@ -12,6 +13,12 @@
 
 
 namespace Fix {
+
+    enum class SessionState {
+        AWAITING_LOGON,
+        LOGON_SENT,
+        DISCONNECTED,
+    };
 
     
 
@@ -48,7 +55,7 @@ namespace Fix {
             // void checkInboundSeq(const Fix::Message&);
 
             // // FIX admin sends
-            // void sendLogon();
+            void send_logon();
             // void sendLogout(const std::string& reason);
             // void sendHeartbeat(const std::optional<std::string>& testReqId = {});
             // void sendTestRequest(const std::string& testReqId);
@@ -69,14 +76,18 @@ namespace Fix {
 
             void do_read();
 
+            void do_write();
+
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;
             Fix::Parser parser_;
+            Fix::Serializer serializer_;
             Fix::Role role_;
             Fix::SessionID id_;
             Fix::Application& app_;
             Fix::ITimerFactory& timers_;
             Fix::MessageStore store_;
+            Fix::SessionState state_;
 
 
 

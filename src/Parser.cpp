@@ -93,7 +93,7 @@ namespace Fix {
         
 
         if (errs_.empty()) {
-            Fix::Field field{tag, std::string{value_sv}, sv};
+            Fix::RawField field{tag, std::string{value_sv}, sv};
             message_builder.add(field);  
         }
     }

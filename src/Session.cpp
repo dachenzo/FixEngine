@@ -18,7 +18,9 @@ namespace Fix {
                 timers_{timers},
                 id_{id},
                 role_{role},
-                store_{}
+                store_{},
+                state_{Fix::SessionState::DISCONNECTED},
+                serializer_{}
                 {
         buff_.resize(8192);
 
@@ -37,7 +39,15 @@ namespace Fix {
     void Session::start() {
         auto role_str = role_ == Fix::Role::INITIATOR ? "Iniator" : "Acceptor";
         std::cout << role_str << "Started\n";
-        do_read();
+        do_read(); 
+
+        if (role_ == Fix::Role::INITIATOR) {
+            send_logon();
+        }
+    }
+
+    void Session::send_logon() {
+
     }
 
     void Session::do_read() {
@@ -54,7 +64,7 @@ namespace Fix {
 
                 if (msg.has_value()) {
                     dispatch(msg.value());
-                }
+                } 
 
                 do_read();
         };

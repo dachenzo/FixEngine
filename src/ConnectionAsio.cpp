@@ -158,7 +158,7 @@ namespace Fix {
     }
 
     void AsioConnection::async_write_some(ConstBuffer& buffer, WriteHandler handle) {
-
+        sockfd_->async_write_some(buffer, std::move(handle));
     }
 
     

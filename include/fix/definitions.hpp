@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <string>
 #include <cstdint>
+#include <optional>
 
 namespace Fix {
     
@@ -35,15 +36,25 @@ namespace Fix {
         Fix::ConnectionConfig conn_config;
     };
 
+    struct SessionParameters {
+        std::string fix_version = "FIX.4.4";
+        int heart_beat_int = 30;
+        int encrypt_method = 0;
+        bool reset_on_logon = true;
+        bool send_last_msg_prcessed_seq =true;
+        std::string sender_comp_id;
+        std::string target_comp_id;
+        std::optional<std::string> username;
+        std::optional<std::string> password;
+    }; 
 
-    enum class ConnectionEvent {
-        Readable,   // socket is ready to read
-        Writable,   // socket is ready to write queued data
-        Closed,     // socket was closed or error
-    };
+    struct AcceptorPolicy {
+        bool allow_reset_on_logon = true;     // honor 141=Y from peer
+        int  min_heart_bt = 5;                // clamp peer 108
+        int  max_heart_bt = 120;
+        bool require_credentials = false;     // if true, 553/554 must be present & valid
+};
 
-
-    
 
     enum class TimerType {};
 
