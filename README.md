@@ -1,3 +1,3 @@
 # FixEngine
 
-A fix4.4 engine designed to handle multiple sessions scalably on a single thread
+A fix4.4 engine designed to handle multiple sessions scalably on multiple threads
