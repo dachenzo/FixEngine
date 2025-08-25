@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include <span>
 #include <fix/InboundMessageStore.hpp>
 #include <fix/OutboundMessageStore.hpp>
 #include <fix/Message.hpp>
@@ -7,10 +7,7 @@
 
 namespace Fix {
 
-    struct MessageSlice {
-        int seq_num;
-        Fix::Message msg;
-    };
+   
     struct MessageStore {
         
         int  get_next_sender_seq() const;
@@ -18,9 +15,11 @@ namespace Fix {
         int  get_expected_target_seq() const;
         void set_expected_target_seq(int n);
 
+        int get_last_in_outbound() const;
+
         // outbound persistence
         void store_outbound(int seq, Fix::Message& msg);   // after stamping 8/9/35/... and before send
-        std::vector<Fix::MessageSlice> get_outbound_range(int begin, int end_inclusive_or_0_for_inf) const;
+        std::span<const Fix::OutboundMessaegStoreSlice> get_outbound_range(int begin, int end_inclusive_or_0_for_inf) const;
 
         // inbound (optional but recommended)
         void store_inbound(int seq, Fix::Message& msg);

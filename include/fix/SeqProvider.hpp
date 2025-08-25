@@ -1,13 +1,17 @@
 #pragma once
+#include <fix/MessageStore.hpp>
 
 namespace Fix {
     struct SeqProvider {
-        int next_out();
 
-        int last_in();
+        SeqProvider(Fix::MessageStore& store);
+
+        int next_out() const noexcept;
+
+        int last_in() const noexcept;
 
         private:
-        int seq_ = 1;
+        Fix::MessageStore& store_;
     };
 
     

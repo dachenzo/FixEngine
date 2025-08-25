@@ -23,6 +23,10 @@ namespace Fix {
         return inbound_.get_expected_inbound_seq();
     }
 
+    int MessageStore::get_last_in_outbound() const {
+        return inbound_.get_last_in();
+    }
+
     void MessageStore::set_expected_target_seq(int n) {
         inbound_.set_expected_seq(n);
     }
