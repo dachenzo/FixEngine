@@ -1,16 +1,21 @@
 add_library(fix_engine
-    ConnectionAsio.cpp
+    
     AsioTimer.cpp
+    Clock.cpp
+    Config.cpp
+    ConnectionAsio.cpp
+    Message.cpp
+    MessageFactory.cpp
+    MessageStore.cpp
+    Parser.cpp
+    Reactor.cpp
+    SeqProvider.cpp
+    Serializer.cpp
     Session.cpp
     SessionManager.cpp
-    Parser.cpp
-    Serializer.cpp
-    MessageStore.cpp
-    Config.cpp
     SessionPool.cpp
-    Reactor.cpp
     utils.cpp
-    Message.cpp
+    
 )
 
 

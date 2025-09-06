@@ -9,7 +9,7 @@ namespace Fix {
     inline void append_uint(int x, std::string& buff) {
         char tmp[32];
         auto [p, ec] = std::to_chars(std::begin(tmp), std::end(tmp), x);
-        buff.append(tmp, p);
+        buff.append(tmp, static_cast<std::size_t>(p - tmp));
     }
 
      std::size_t Serializer::serialize(Fix::Message& msg, std::string& buff) {

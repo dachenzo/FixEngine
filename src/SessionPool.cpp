@@ -17,11 +17,11 @@ namespace Fix {
     }
 
 
-    std::shared_ptr<Session> SessionPool::emplace_session(           
-                Fix::Role role,
-                Fix::Application& app,
-                Fix::ITimerFactory& timers,
-                Fix::SessionParameters params
+    std::shared_ptr<Session> SessionPool::emplace_session(      
+        Fix::Role role,
+        Fix::Application& app,
+        Fix::ITimerFactory& timers,
+        Fix::SessionParameters params
     ) {
         if (free_indices_.empty()) {
             Fix::SessionID session_id = {sessions_.size(), generate_session_Id_()};
@@ -43,7 +43,8 @@ namespace Fix {
                 session_id,
                 role,
                 app,
-                timers
+                timers,
+                params
             );
             return sessions_[nxt];
             

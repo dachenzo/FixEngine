@@ -1,5 +1,6 @@
 #include <fix/MessageFactory.hpp>
 #include <charconv>
+#include <iostream>
 
 
 
@@ -12,7 +13,7 @@ namespace Fix {
     }
 
 
-    Fix::Message MessageFactory::logon(int heartbeat_override = -1, bool echo_reset = false) {
+    Fix::Message MessageFactory::logon(int heartbeat_override, bool echo_reset) {
         Fix::Message msg{};
         stamp_header_(msg, "A");
         msg.add({98, std::to_string(params_.encrypt_method)});
@@ -22,7 +23,7 @@ namespace Fix {
         return msg;
     }
 
-    Fix::Message MessageFactory::heart_beat(std::optional<std::string> test_req_id = {}) {
+    Fix::Message MessageFactory::heart_beat(std::optional<std::string> test_req_id) {
         Fix::Message msg{};
         stamp_header_(msg, "0");
         if (test_req_id.has_value()) {msg.add({112, test_req_id.value()});}
@@ -58,7 +59,7 @@ namespace Fix {
         return msg;
     }
 
-    Fix::Message MessageFactory::logout(std::string text = {}) {
+    Fix::Message MessageFactory::logout(std::string text) {
         Fix::Message msg{};
         stamp_header_(msg, "5");
         msg.add({58, text});
@@ -69,7 +70,7 @@ namespace Fix {
 
     void MessageFactory::stamp_header_(Fix::Message& msg, std::string type) {
         msg.add({8, params_.fix_version});
-        msg.add({9, {}}); // body count
+        msg.add({9, ""}); // body count
         msg.add({35, type});
         msg.add({34, std::to_string(seq_provider_.next_out())});
         msg.add({49, params_.sender_comp_id});
@@ -95,11 +96,14 @@ namespace Fix {
     }
 
     std::uint64_t MessageFactory::compute_body_length_(Fix::Message& msg) {
-        std::uint64_t ans = 0;
-        for (auto& field: msg.get_fields_after(9)) {// we havent inserted 10 yet so we wont count it
-            ans += (tag_count_(field.tag) + 2 + field.value.size());
+        std::uint64_t len = 0;
+        for (const auto& f : msg.get_fields()) {
+            if (f.tag == 8 || f.tag == 9 || f.tag == 10) continue;
+            // bytes: digits(tag) + '=' + value bytes + SOH
+            len += static_cast<std::uint64_t>(tag_count_(f.tag)) + 1u
+                + static_cast<std::uint64_t>(f.value.size()) + 1u;
         }
-        return ans;
+        return len;
     }
 
     inline std::uint32_t MessageFactory::sum_tag_ascii_(int tag) {

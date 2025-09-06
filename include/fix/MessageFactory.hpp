@@ -14,7 +14,7 @@ namespace Fix {
         MessageFactory(SessionParameters& params, SeqProvider& seq_provider, Clock& clock);
 
 
-        Fix::Message logon(int heartbeat_override = -1, bool echo_reset = false);
+        Fix::Message logon(int heartbeat_override, bool echo_reset);
         Fix::Message heart_beat(std::optional<std::string> test_req_id = std::nullopt);
         Fix::Message test_request(std::string id);
         Fix::Message resend_request(int begin_seq_no, int end_seq_no);

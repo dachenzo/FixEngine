@@ -30,7 +30,7 @@ namespace Fix {
                 params_{params},
                 clock_{},
                 seq_provider_{store_},
-                msg_factory_{params, seq_provider_, clock_}
+                msg_factory_{params_, seq_provider_, clock_}
                 {
         buff_.resize(8192);
 
@@ -52,19 +52,28 @@ namespace Fix {
         do_read(); 
 
         if (role_ == Fix::Role::INITIATOR) {
+            
             send_logon();
             state_ = Fix::SessionState::LOGON_SENT;
         } else {
+            
             state_ = Fix::SessionState::AWAITING_LOGON;
         }
 
     }
-
-    void Session::send_logon() {
-        auto msg = msg_factory_.logon();
-        send_message_(msg);
-
+    void print_escaped(const std::string& s) {
+        for (unsigned char c : s) {
+            if (std::isprint(c)) {
+                std::cout << c;
+            } else {
+                std::cout << "\\x"
+                        << std::hex << std::setw(2) << std::setfill('0')
+                        << static_cast<int>(c)
+                        << std::dec; // reset back to decimal
+            }
     }
+    std::cout << "\n";
+}
 
     void Session::send_message_(Fix::Message& msg) {
         std::string wire{};
@@ -72,7 +81,11 @@ namespace Fix {
         std::size_t wire_len = serializer_.serialize(msg, wire);
         int seq = store_.get_next_sender_seq();
         store_.store_outbound(seq, msg);
+        print_escaped(wire);
+        send_bytes_(std::move(wire));
     }
+
+
 
     void Session::send_bytes_(std::string msg_wire) {
         write_q_.push_back({std::move(msg_wire), 0});
@@ -91,6 +104,7 @@ namespace Fix {
                     return;
                 }
                 auto sv = std::string_view{buff_.data(), n};
+                std::cout << sv;
                 auto msg = parser_.parse(sv);
 
                 if (msg.has_value()) {
@@ -169,5 +183,23 @@ namespace Fix {
     Fix::SessionID& Session::get_session_id() noexcept {
         return id_;
     }
+
+    void Session::send_logon() {
+        std::cout << "Got to send logon\n";
+        auto msg = msg_factory_.logon(0, true);
+        std::cout << "Message created\n";
+        send_message_(msg);
+        std::cout << "Message sent\n";
+
+    }
+
+    void Session::handle_logon(const Fix::Message&) {
+        std::cout << "Msg received";
+    }
+    void Session::handle_logout(const Fix::Message&) {}
+    void Session::handle_heartbeat(const Fix::Message&) {}
+    void Session::handle_test_request(const Fix::Message&) {}
+    void Session::handle_resend_request(const Fix::Message&) {}
+    void Session::handle_sequence_reset(const Fix::Message&) {}
 
 }

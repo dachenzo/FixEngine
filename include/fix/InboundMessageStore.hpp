@@ -13,7 +13,7 @@ namespace Fix {
     struct InboundStore {
 
         InboundStore() {
-            inbound_.reserve(100'000);
+            
         }
 
         void add(int seq, std::unique_ptr<Fix::Message> msg) {

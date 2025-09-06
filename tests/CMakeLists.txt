@@ -1,7 +1,7 @@
 
-add_executable(test_tcp_to_message
-    test_tcp_to_message.cpp
+add_executable(test_session_start
+    test_session_start.cpp
 )
 
 
-target_link_libraries(test_tcp_to_message PRIVATE  fix_engine)
+target_link_libraries(test_session_start PRIVATE fix_engine)

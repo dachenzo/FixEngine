@@ -31,12 +31,6 @@ namespace Fix {
         int backlog;
     }; 
 
-    struct SessionCreationConfig {
-        Fix::Role role;
-        Fix::ConnectionConfig conn_config;
-        Fix::SessionParameters params;
-    };
-
     struct SessionParameters {
         std::string fix_version = "FIX.4.4";
         int heart_beat_int = 30;
@@ -48,6 +42,14 @@ namespace Fix {
         std::optional<std::string> username;
         std::optional<std::string> password;
     }; 
+
+    struct SessionCreationConfig {
+        Fix::Role role;
+        Fix::ConnectionConfig conn_config;
+        Fix::SessionParameters params;
+    };
+
+    
 
     struct AcceptorPolicy {
         bool allow_reset_on_logon = true;     // honor 141=Y from peer

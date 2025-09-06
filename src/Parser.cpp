@@ -31,10 +31,15 @@ namespace Fix {
     std::string_view Parser::next_field_() {
         size_t start = read_idx_;
         // find SOH
-        while (buff_[read_idx_] != '\x01') ++read_idx_;
-        size_t end = read_idx_;
+        while (read_idx_ < buff_.size() && buff_[read_idx_] != '\x01') {++read_idx_;}
+        if (read_idx_ == buff_.size()) {
+            // No SOH found — caller must ensure there's a complete field before calling
+            throw FixParseException{"Internal parser state: expected complete field but none found"};
+        }
         // advance past SOH
-        ++read_idx_;
+        size_t end = read_idx_++;
+        
+     
         // now return [start..end)
         return std::string_view{ buff_.data() + start, end - start };
     }
@@ -55,7 +60,7 @@ namespace Fix {
 
     void Parser::parse_field_() {
         
-    
+        errs_.clear(); 
         
         complete_field_count_ -= 1;
 

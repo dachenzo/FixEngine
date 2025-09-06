@@ -47,10 +47,15 @@ namespace Fix {
 
     std::span<const Fix::Field> Message::get_fields_after(int tag)const {
         auto it = lookup.find(tag);
-        
-        if (it == lookup.end() || ++it == lookup.end()) {// throw error
+        if (it == lookup.end()) {
+            // empty span
+            return std::span<const Fix::Field>{message_.data() + message_.size(), 0};
         }
-        return std::span{message_.begin(), message_.end()}.subspan(it->second);
+        std::size_t idx = it->second + 1;       // start *after* the tag
+        if (idx > message_.size()) {
+            return std::span<const Fix::Field>{message_.data() + message_.size(), 0};
+        }
+        return std::span<const Fix::Field>{message_.data() + idx, message_.size() - idx};
     }
 
         
@@ -67,23 +72,30 @@ namespace Fix {
     };
  
     void MessageBuilder::add(Fix::RawField& raw_field) {
+        // Update checksum with *previous* bytes only; do not include tag 10.
+        // For any field except 10, add raw bytes to checksum.
+        if (raw_field.tag != 10) {
+            for (unsigned char c: raw_field.raw_bytes) { checksum_count_ += c; }
+        }
+
+        // Handle BodyLength
         if (raw_field.tag == 9) {
             body_length_ = std::stoi(raw_field.value);
-            body_length_count_ = 0;
+            body_length_count_ = 0; // start counting *after* 9-field
+        } else if (raw_field.tag != 10) {
+            body_length_count_ += raw_field.raw_bytes.size(); // count everything between 9 and 10
         }
 
+        // Handle CheckSum
         if (raw_field.tag == 10) {
-            std::size_t checksum = std::stoi(raw_field.value);
-            if (checksum_count_ % 256 != checksum) {}
-            if (body_length_count_ != body_length_) {}
-            ready_ = true;
+            const std::size_t checksum = std::stoi(raw_field.value);
+            const bool checksum_ok = (checksum_count_ % 256) == checksum;
+            const bool body_ok     = (body_length_count_ == body_length_);
+            ready_ = checksum_ok && body_ok;   // <-- only ready if both pass
         }
 
-
-        for (unsigned char c: raw_field.raw_bytes) {checksum_count_ += c;}
-        body_length_count_ += raw_field.raw_bytes.size();
-        Fix::Field field{raw_field.tag, std::move(raw_field.value)};
-        message_.add(field);
+        // Store field in the message
+        message_.add(Fix::Field{raw_field.tag, std::move(raw_field.value)});
     }
 
     bool MessageBuilder::ready() {return ready_;}
