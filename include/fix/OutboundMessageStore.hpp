@@ -23,7 +23,7 @@ namespace Fix {
         }
 
         std::span<const OutboundMessaegStoreSlice>
-        get_message_range(int begin, int end_inclusive_or_0_for_inf) {
+        get_message_range(int begin, int end_inclusive_or_0_for_inf) const {
             const int start = std::max(begin, start_seq_) - start_seq_;
             int end_excl = (end_inclusive_or_0_for_inf == 0)
                 ? static_cast<int>(outbound_.size())

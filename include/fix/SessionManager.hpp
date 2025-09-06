@@ -37,7 +37,6 @@ namespace Fix {
         private:
         Fix::SessionPool session_pool_;
         Fix::Application& app_;
-        Fix::MessageStoreFactory store_factory_;
         Fix::IConnectionFactory& connFactory_; 
         Fix::ITimerFactory& timerFactory_;
         

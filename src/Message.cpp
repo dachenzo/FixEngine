@@ -17,7 +17,7 @@ namespace Fix {
         lookup.reserve(32);
     }
     
-    std::optional<std::string_view> Message::get(int key) {
+    std::optional<std::string_view> Message::get(int key) const {
         auto it = lookup.find(key);
         if (it == lookup.end()) {
             return  std::nullopt;

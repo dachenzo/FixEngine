@@ -1,11 +1,15 @@
 #pragma once
 #include <memory>
 #include <optional>
+#include <deque>
+#include <fix/SeqProvider.hpp>
+#include <fix/Clock.hpp>
 #include <fix/Serializer.hpp>
 #include <fix/IConnection.hpp>
 #include <fix/definitions.hpp>
 #include <fix/MessageStore.hpp>
 #include <fix/Message.hpp>
+#include <fix/MessageFactory.hpp>
 #include <fix/Application.hpp>
 #include <fix/ITimer.hpp>
 #include <fix/Codec.hpp>
@@ -17,6 +21,7 @@ namespace Fix {
     enum class SessionState {
         AWAITING_LOGON,
         LOGON_SENT,
+        ACTIVE,
         DISCONNECTED,
     };
 
@@ -27,7 +32,9 @@ namespace Fix {
         Session(Fix::SessionID id,
                 Fix::Role role,
                 Fix::Application& app,
-                Fix::ITimerFactory& timers);
+                Fix::ITimerFactory& timers,
+                Fix::SessionParameters params
+            );
 
         ~Session();
 
@@ -51,7 +58,7 @@ namespace Fix {
 
         private:
             // core dispatch
-            void dispatch(const Fix::Message& msg);
+            void dispatch(Fix::Message& msg);
             // void checkInboundSeq(const Fix::Message&);
 
             // // FIX admin sends
@@ -63,21 +70,24 @@ namespace Fix {
             // void sendSequenceResetGapFill(std::size_t newSeqNo);
             // void resendBufferedMessages(std::size_t beginSeqNo, std::size_t endSeqNo);
 
-            // // FIX admin handlers
-            // void handleLogon(const Fix::Message&);
-            // void handleLogout(const Fix::Message&);
-            // void handleHeartbeat(const Fix::Message&);
-            // void handleTestRequest(const Fix::Message&);
-            // void handleResendRequest(const Fix::Message&);
-            // void handleSequenceReset(const Fix::Message&);
+            // FIX admin handlers
+            void handle_logon(const Fix::Message&);
+            void handle_logout(const Fix::Message&);
+            void handle_heartbeat(const Fix::Message&);
+            void handle_test_request(const Fix::Message&);
+            void handle_resend_request(const Fix::Message&);
+            void handle_sequence_reset(const Fix::Message&);
 
-            // // serialize, stamp header/trailer, persist & write
-            // void stampAndSend(Fix::Message&);
+            void send_message_(Fix::Message& msg);
 
+            void send_bytes_(std::string msg_wire);
+            
             void do_read();
 
             void do_write();
-
+            struct PendingWrite { std::string data; std::size_t sent = 0; };
+            std::deque<PendingWrite> write_q_;
+            bool write_inflight_ = false;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;
             Fix::Parser parser_;
@@ -88,6 +98,11 @@ namespace Fix {
             Fix::ITimerFactory& timers_;
             Fix::MessageStore store_;
             Fix::SessionState state_;
+            Fix::SessionParameters params_;
+            Fix::SeqProvider seq_provider_;
+            Fix::Clock clock_;
+            Fix::MessageFactory msg_factory_;
+            
 
 
 

@@ -34,6 +34,7 @@ namespace Fix {
     struct SessionCreationConfig {
         Fix::Role role;
         Fix::ConnectionConfig conn_config;
+        Fix::SessionParameters params;
     };
 
     struct SessionParameters {

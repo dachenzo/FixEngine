@@ -5,9 +5,9 @@
 
 namespace Fix {
 
-    MessageFactory::MessageFactory( SessionParameters params, 
+    MessageFactory::MessageFactory( SessionParameters& params, 
                                     SeqProvider& seq_provider, 
-                                    Clock& clock): seq_provider_{seq_provider}, clock_{clock}, params_{std::move(params)} {
+                                    Clock& clock): seq_provider_{seq_provider}, clock_{clock}, params_{params} {
         
     }
 

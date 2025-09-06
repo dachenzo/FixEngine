@@ -11,7 +11,6 @@ namespace Fix {
         Fix::IConnectionFactory& connFactory, 
         Fix::ITimerFactory& timerFactory):
         app_{app}, 
-        store_factory_{},
         connFactory_{connFactory},
         timerFactory_{timerFactory},
         session_pool_{}
@@ -23,7 +22,8 @@ namespace Fix {
         auto sess = session_pool_.emplace_session(
             config.role,
             app_,
-            timerFactory_
+            timerFactory_,
+            config.params
         );
         std::cout << "Session Created\n";
         if (config.role == Fix::Role::ACCEPTOR) {

@@ -26,7 +26,9 @@ namespace Fix {
         std::shared_ptr<Session> emplace_session(
                 Fix::Role role,
                 Fix::Application& app,
-                Fix::ITimerFactory& timers);
+                Fix::ITimerFactory& timers,
+                Fix::SessionParameters params
+            );
 
         bool remove(Fix::SessionID id);
 

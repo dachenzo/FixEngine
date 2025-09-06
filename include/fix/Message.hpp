@@ -28,7 +28,7 @@ namespace Fix {
     struct Message {
         Message();
 
-        std::optional<std::string_view> get(int key);
+        std::optional<std::string_view> get(int key) const;
 
         bool set_tag(int tag, std::string);
 

@@ -1,18 +1,24 @@
 #include <boost/asio.hpp>
 #include <string_view>
+#include <string>
 #include <iostream>
+#include <charconv>
 #include <optional>
 #include <fix/Session.hpp>
 #include <fix/Parser.hpp>
 #include <fix/utils.hpp>
 
 namespace Fix {
-
+    constexpr const int wire_pre_alloc = 200;
+    constexpr const int msg_type_key = 35;
+    constexpr const int msg_seq_num_key = 34;
     Session::Session(
                 Fix::SessionID id,
                 Fix::Role role,
                 Fix::Application& app,
-                Fix::ITimerFactory& timers):  
+                Fix::ITimerFactory& timers,
+                Fix::SessionParameters params
+            ):  
                 parser_{},
                 app_{app},
                 timers_{timers},
@@ -20,7 +26,11 @@ namespace Fix {
                 role_{role},
                 store_{},
                 state_{Fix::SessionState::DISCONNECTED},
-                serializer_{}
+                serializer_{},
+                params_{params},
+                clock_{},
+                seq_provider_{store_},
+                msg_factory_{params, seq_provider_, clock_}
                 {
         buff_.resize(8192);
 
@@ -43,10 +53,31 @@ namespace Fix {
 
         if (role_ == Fix::Role::INITIATOR) {
             send_logon();
+            state_ = Fix::SessionState::LOGON_SENT;
+        } else {
+            state_ = Fix::SessionState::AWAITING_LOGON;
         }
+
     }
 
     void Session::send_logon() {
+        auto msg = msg_factory_.logon();
+        send_message_(msg);
+
+    }
+
+    void Session::send_message_(Fix::Message& msg) {
+        std::string wire{};
+        wire.reserve(wire_pre_alloc);
+        std::size_t wire_len = serializer_.serialize(msg, wire);
+        int seq = store_.get_next_sender_seq();
+        store_.store_outbound(seq, msg);
+    }
+
+    void Session::send_bytes_(std::string msg_wire) {
+        write_q_.push_back({std::move(msg_wire), 0});
+        if (write_inflight_) return;
+        do_write();
 
     }
 
@@ -75,15 +106,64 @@ namespace Fix {
         
     }
 
+    void Session::do_write() {
+        if (write_q_.empty()) {write_inflight_ =  false; return;}
+
+        auto& front = write_q_.front();
+        auto* base = front.data.data() + front.sent;
+        auto left = front.data.size() - front.sent;
+
+        auto self = shared_from_this();
+        auto buffer = boost::asio::const_buffer(base, left);
+        conn_->async_write_some(
+            buffer,
+            [this, self] (boost::system::error_code ec, std::size_t n) {
+                if (ec) {
+                    conn_->close();
+                    write_q_.clear();
+                    write_inflight_ = false;
+                    return;
+                }
+                auto& f = write_q_.front();
+                f.sent += n;
+                if (f.sent >= f.data.size()) write_q_.pop_front();
+                do_write();
+            }
+        );
+    }
+
     void Session::set_connection(std::shared_ptr<Fix::IConnection> conn) {
             conn_ = conn;
     }
 
 
-    void Session::dispatch(const Fix::Message& msg) {
+    void Session::dispatch(Fix::Message& msg) {
         for (auto& field: msg.get_fields()) {
             std::cout << field.tag << '=' << field.value << '\n';
         }
+
+        auto seqnum_sv = msg.get(msg_seq_num_key);
+        if (!seqnum_sv.has_value()) { throw std::runtime_error("Every message should have a sequence number");}
+        int seqnum;
+        auto [ptr, ec] = std::from_chars(seqnum_sv.value().data(), seqnum_sv.value().data() + seqnum_sv.value().size(), seqnum);
+        if (!(ec == std::errc())) {throw std::runtime_error("sequence number string couldnt be converted to integer");}
+
+        
+
+
+        auto type = msg.get(msg_type_key);
+        if (!type.has_value()) {throw std::runtime_error("Message Must have a type");}
+
+        if (type == "A") {handle_logon(msg);}
+        else if (type == "5") {handle_logout(msg);}
+        else if (type == "0") {handle_heartbeat(msg);}
+        else if (type == "1") {handle_test_request(msg);}
+        else if (type == "2") {handle_resend_request(msg);}
+        else if (type == "4") {handle_sequence_reset(msg);}
+        else {}
+
+        store_.store_inbound(seqnum, msg);
+
     }
 
     Fix::SessionID& Session::get_session_id() noexcept {

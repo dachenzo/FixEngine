@@ -11,7 +11,7 @@
 namespace Fix {
 
     struct MessageFactory {
-        MessageFactory(SessionParameters params, SeqProvider& seq_provider, Clock& clock);
+        MessageFactory(SessionParameters& params, SeqProvider& seq_provider, Clock& clock);
 
 
         Fix::Message logon(int heartbeat_override = -1, bool echo_reset = false);
@@ -32,7 +32,7 @@ namespace Fix {
         std::uint8_t compute_check_sum_
         (Fix::Message& msg);
         constexpr int tag_count_(int tag) const noexcept;
-        SessionParameters params_;
+        SessionParameters& params_;
         SeqProvider& seq_provider_;
         Clock& clock_;
 
