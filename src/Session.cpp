@@ -52,11 +52,9 @@ namespace Fix {
         do_read(); 
 
         if (role_ == Fix::Role::INITIATOR) {
-            
             send_logon();
             state_ = Fix::SessionState::LOGON_SENT;
         } else {
-            
             state_ = Fix::SessionState::AWAITING_LOGON;
         }
 
@@ -71,9 +69,9 @@ namespace Fix {
                         << static_cast<int>(c)
                         << std::dec; // reset back to decimal
             }
+        }
+        std::cout << "\n";
     }
-    std::cout << "\n";
-}
 
     void Session::send_message_(Fix::Message& msg) {
         std::string wire{};
@@ -81,7 +79,6 @@ namespace Fix {
         std::size_t wire_len = serializer_.serialize(msg, wire);
         int seq = store_.get_next_sender_seq();
         store_.store_outbound(seq, msg);
-        print_escaped(wire);
         send_bytes_(std::move(wire));
     }
 
@@ -90,25 +87,31 @@ namespace Fix {
     void Session::send_bytes_(std::string msg_wire) {
         write_q_.push_back({std::move(msg_wire), 0});
         if (write_inflight_) return;
+        write_inflight_ = true;
         do_write();
 
     }
 
     void Session::do_read() {
+       
         auto self = shared_from_this();
-        auto boost_buff = boost::asio::buffer(buff_, buff_.capacity());
+        auto boost_buff = boost::asio::buffer(buff_, buff_.size());
         auto handler = [this, self](boost::system::error_code ec, std::size_t n) {
                 if (ec) {
                     // tear down on error
+                    std::cout << "Error reading\n";
                     conn_->close();
                     return;
                 }
                 auto sv = std::string_view{buff_.data(), n};
-                std::cout << sv;
+                std::cout << sv.size() << '\n';
+                std::cout << sv << '\n';
                 auto msg = parser_.parse(sv);
 
                 if (msg.has_value()) {
+                    std::cout << "got a message\n";
                     dispatch(msg.value());
+                    
                 } 
 
                 do_read();
@@ -133,21 +136,25 @@ namespace Fix {
             buffer,
             [this, self] (boost::system::error_code ec, std::size_t n) {
                 if (ec) {
+                    std::cout << "Error writing\n";
                     conn_->close();
                     write_q_.clear();
                     write_inflight_ = false;
                     return;
                 }
+                
                 auto& f = write_q_.front();
                 f.sent += n;
-                if (f.sent >= f.data.size()) write_q_.pop_front();
+                std::cout << "Wrote\n";
+                if (f.sent >= f.data.size()) write_q_.pop_front(); std::cout << "Written\n";
+               
                 do_write();
             }
         );
     }
 
     void Session::set_connection(std::shared_ptr<Fix::IConnection> conn) {
-            conn_ = conn;
+        conn_ = conn;
     }
 
 

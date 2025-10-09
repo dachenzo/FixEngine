@@ -37,8 +37,8 @@ namespace Fix {
         int encrypt_method = 0;
         bool reset_on_logon = true;
         bool send_last_msg_prcessed_seq =true;
-        std::string sender_comp_id;
-        std::string target_comp_id;
+        std::string sender_comp_id = "test_sender";
+        std::string target_comp_id = "test_target";
         std::optional<std::string> username;
         std::optional<std::string> password;
     }; 

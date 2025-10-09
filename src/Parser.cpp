@@ -41,7 +41,7 @@ namespace Fix {
         
      
         // now return [start..end)
-        return std::string_view{ buff_.data() + start, end - start };
+        return std::string_view{buff_.data() + start, end - start };
     }
 
     void Parser::add_new_messge_fragment_(std::string_view& sv) {
@@ -71,7 +71,7 @@ namespace Fix {
         
         
         auto it = sv.begin();
-        for (;it !=  sv.end() && *it != '='; it++) {
+        for (;it != sv.end() && *it != '='; it++) {
             if (idx == MAX_TAG_SIZE) {errs_.push_back(ParseErrors::Critical::MaxTagSize); break;}
             tag_buff_[idx] = *it;
             idx++;
@@ -99,7 +99,8 @@ namespace Fix {
 
         if (errs_.empty()) {
             Fix::RawField field{tag, std::string{value_sv}, sv};
-            message_builder.add(field);  
+            message_builder.add(field); 
+            
         }
     }
     

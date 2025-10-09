@@ -1,6 +1,7 @@
 #include <utility>
 #include <string>
 #include <string_view>
+#include <iostream>
 #include <vector>
 #include <optional>
 #include <span>
@@ -75,7 +76,9 @@ namespace Fix {
         // Update checksum with *previous* bytes only; do not include tag 10.
         // For any field except 10, add raw bytes to checksum.
         if (raw_field.tag != 10) {
-            for (unsigned char c: raw_field.raw_bytes) { checksum_count_ += c; }
+            for (unsigned char c: raw_field.raw_bytes) { checksum_count_ += c;  }
+            checksum_count_ += static_cast<unsigned char>('\x01');
+        
         }
 
         // Handle BodyLength
@@ -83,15 +86,17 @@ namespace Fix {
             body_length_ = std::stoi(raw_field.value);
             body_length_count_ = 0; // start counting *after* 9-field
         } else if (raw_field.tag != 10) {
-            body_length_count_ += raw_field.raw_bytes.size(); // count everything between 9 and 10
+            body_length_count_ += raw_field.raw_bytes.size()+1; // count everything between 9 and 10
         }
 
         // Handle CheckSum
         if (raw_field.tag == 10) {
             const std::size_t checksum = std::stoi(raw_field.value);
             const bool checksum_ok = (checksum_count_ % 256) == checksum;
-            const bool body_ok     = (body_length_count_ == body_length_);
-            ready_ = checksum_ok && body_ok;   // <-- only ready if both pass
+            const bool body_ok  = (body_length_count_ == body_length_);
+            ready_ = checksum_ok && body_ok;  
+             // <-- only ready if both pass
+            
         }
 
         // Store field in the message

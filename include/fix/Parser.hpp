@@ -42,6 +42,7 @@ namespace Fix {
         size_t read_idx_{0};
         Fix::MessageBuilder message_builder;
         std::vector<Fix::ParseErrors::Critical> errs_;
+        
         std::string_view next_field_();
 
         void add_new_messge_fragment_(std::string_view& sv);
