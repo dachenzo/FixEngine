@@ -59,6 +59,7 @@ namespace Fix {
         }
 
     }
+
     void print_escaped(const std::string& s) {
         for (unsigned char c : s) {
             if (std::isprint(c)) {
@@ -81,8 +82,6 @@ namespace Fix {
         store_.store_outbound(seq, msg);
         send_bytes_(std::move(wire));
     }
-
-
 
     void Session::send_bytes_(std::string msg_wire) {
         write_q_.push_back({std::move(msg_wire), 0});
@@ -111,6 +110,7 @@ namespace Fix {
                 if (msg.has_value()) {
                     std::cout << "got a message\n";
                     dispatch(msg.value());
+                    std::cout << "Called Dispatch\n";
                     
                 } 
 
@@ -159,21 +159,24 @@ namespace Fix {
 
 
     void Session::dispatch(Fix::Message& msg) {
-        for (auto& field: msg.get_fields()) {
-            std::cout << field.tag << '=' << field.value << '\n';
-        }
-
+       
         auto seqnum_sv = msg.get(msg_seq_num_key);
-        if (!seqnum_sv.has_value()) { throw std::runtime_error("Every message should have a sequence number");}
+        if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
         int seqnum;
         auto [ptr, ec] = std::from_chars(seqnum_sv.value().data(), seqnum_sv.value().data() + seqnum_sv.value().size(), seqnum);
         if (!(ec == std::errc())) {throw std::runtime_error("sequence number string couldnt be converted to integer");}
 
         
 
+        std::cout << "Here0";
 
-        auto type = msg.get(msg_type_key);
-        if (!type.has_value()) {throw std::runtime_error("Message Must have a type");}
+        auto op_type = msg.get(35);
+    
+        
+        if (!op_type.has_value()) {throw std::runtime_error("Message Must have a type");}
+        std::string_view type = op_type.value();
+     
+        
 
         if (type == "A") {handle_logon(msg);}
         else if (type == "5") {handle_logout(msg);}
@@ -201,7 +204,7 @@ namespace Fix {
     }
 
     void Session::handle_logon(const Fix::Message&) {
-        std::cout << "Msg received";
+        std::cout << " Logon received";
     }
     void Session::handle_logout(const Fix::Message&) {}
     void Session::handle_heartbeat(const Fix::Message&) {}

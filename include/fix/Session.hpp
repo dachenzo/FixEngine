@@ -58,7 +58,7 @@ namespace Fix {
 
         private:
             // core dispatch
-            void dispatch(Fix::Message& msg);
+            void dispatch(Fix::Message& msg) ;
             // void checkInboundSeq(const Fix::Message&);
 
             // // FIX admin sends
