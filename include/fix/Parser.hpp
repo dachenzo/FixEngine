@@ -28,9 +28,12 @@ namespace Fix {
         };
     };
 
+    constexpr const std::size_t D_PARSER_BUFFER_SIZE = 1u << 12;
 
     struct Parser {
 
+
+        Parser();
     
         std::optional<Fix::Message> parse(std::string_view& sv);  
 
@@ -40,6 +43,7 @@ namespace Fix {
         char tag_buff_[MAX_TAG_SIZE];
         size_t complete_field_count_{0};
         size_t read_idx_{0};
+        double compact_ratio_ = 0.25;
         Fix::MessageBuilder message_builder;
         std::vector<Fix::ParseErrors::Critical> errs_;
         
@@ -51,6 +55,10 @@ namespace Fix {
         bool has_complete_field_();
 
         void parse_field_();
+
+        void maybe_compact_buffer_();
+
+        std::size_t unread_() const noexcept;
     };  
 
 };
