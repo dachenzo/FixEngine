@@ -1,4 +1,5 @@
 #include <string>
+#include <cstring>
 #include <fix/Parser.hpp>
 #include <fix/Message.hpp>
 
@@ -16,12 +17,20 @@ namespace Fix {
             }
         }
 
+
+    Parser::Parser() {
+        buff_.reserve(D_PARSER_BUFFER_SIZE);
+    }
+
     
     std::optional<Fix::Message> Parser::parse(std::string_view& sv) {
         add_new_messge_fragment_(sv);
         while (has_complete_field_()) {
             parse_field_();
         }
+
+        maybe_compact_buffer_();
+
         if (message_builder.ready()) {return message_builder.get();}
         else {return std::nullopt;}
     }   
@@ -51,6 +60,30 @@ namespace Fix {
         }
 
         
+    }
+
+    std::size_t Parser::unread_() const noexcept {
+        return buff_.size() - read_idx_;
+    }
+
+    void Parser::maybe_compact_buffer_() {
+        std::size_t unread = unread_();
+       
+        if (unread == 0) {
+            read_idx_ = 0;
+            buff_.clear();
+            return;
+        }
+        
+
+        std::size_t sz = buff_.size();
+        
+        if (read_idx_ >= static_cast<std::size_t>(sz*compact_ratio_)) {
+             
+            std::memmove(buff_.data(), buff_.data()+read_idx_, unread);
+            buff_.resize(unread);
+            read_idx_ = 0;
+        }
     }
 
     
