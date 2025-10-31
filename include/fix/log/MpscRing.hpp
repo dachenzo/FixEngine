@@ -33,14 +33,12 @@ namespace Fix::Log {
 
             if (ticket != curr_epoch) return false;
 
-            
             c.data = std::move(data);
             c.epoch.store(ticket+1, std::memory_order_release);
             return true;
             
                 
         }
-
 
         void push(Data& data) {
             auto ticket = head_.fetch_add(1, std::memory_order_acq_rel);
@@ -52,6 +50,17 @@ namespace Fix::Log {
             c.data = std::move(data);
             c.epoch.store(ticket+1, std::memory_order_release);
 
+        }
+
+
+        bool pop(Data& out) {
+            RingCell& cell = buff_[tail_&mask];
+            uint64_t expect = tail+1;
+            if (cell.epoch.load(std::memory_order_acquire) != expect) return false;
+            out = std::move(cell.data);
+            cell.epoch.store(tail_+capacity, std::memory_order_release);
+            tail_++;
+            return true;
         }
 
 
