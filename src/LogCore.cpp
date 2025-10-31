@@ -10,4 +10,5 @@ namespace Fix::Log {
     void LogCore::push(Log::Entry& entry) {
 
     }
+    
 }
