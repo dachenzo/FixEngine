@@ -19,7 +19,7 @@ namespace Fix {
         io_context_.run();
     }
 
-    void Reactor::stop(){
+    void Reactor::stop() noexcept {
         work_guard_.reset();
         io_context_.stop();
     }

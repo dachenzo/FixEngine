@@ -15,7 +15,7 @@ namespace Fix {
 
         void run();
 
-        void stop();
+        void stop() noexcept;
 
 
         private:
