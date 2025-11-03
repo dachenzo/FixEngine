@@ -1,5 +1,7 @@
 #pragma once
+#include <thread>
 #include <fix/log/LogEntry.hpp>
+#include <fix/log/MpscRing.hpp>
 
 namespace Fix::Log {
     
@@ -11,6 +13,17 @@ namespace Fix::Log {
         LogCore& operator=(const LogCore&& other) = delete;
 
         void push(Log::Entry& entry);
+
+        bool try_push(Log::Entry& entry);
+
+
+        
+
+        private:
+        MpscRing<Log::Entry> q_;
+        std::thread t_;
+
+        void drain();
 
         
 

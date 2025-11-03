@@ -62,3 +62,12 @@ namespace Fix {
     enum class TimerType {};
 
 }
+
+namespace std {
+    template <>
+    struct hash<Fix::SessionID> {
+        size_t operator()(const Fix::SessionID& id) const noexcept {
+            return hash<size_t>()(id.id);
+        }
+    };
+} 

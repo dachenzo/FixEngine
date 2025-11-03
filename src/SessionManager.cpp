@@ -35,7 +35,7 @@ namespace Fix {
                     // log + schedule retry/backoff here
                     return;
                 }
-
+ 
                 if (auto s = w.lock()) {
                     s->set_connection(std::move(conn));
                     s->start();
