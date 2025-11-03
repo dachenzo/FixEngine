@@ -10,11 +10,11 @@ namespace Fix {
         std::size_t storage_index;
         std::size_t id;
 
-        bool operator==(const Fix::SessionID other) {
+        bool operator==(const Fix::SessionID& other) const noexcept {
             return other.id == this->id;
         }
 
-        bool operator!=(const Fix::SessionID other) {
+        bool operator!=(const Fix::SessionID& other) const noexcept {
             return other.id != this->id;
         }
     };
@@ -64,10 +64,33 @@ namespace Fix {
 }
 
 namespace std {
-    template <>
+    template<>
     struct hash<Fix::SessionID> {
         size_t operator()(const Fix::SessionID& id) const noexcept {
-            return hash<size_t>()(id.id);
+            return std::hash<std::size_t>{}(id.id);
         }
     };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 } 

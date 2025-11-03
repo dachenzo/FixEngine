@@ -15,7 +15,9 @@ add_library(fix_engine
     SessionManager.cpp
     SessionPool.cpp
     utils.cpp
-    
+    LogCore.cpp
+    LogFileSink.cpp
+    SessionLogger.cpp
 )
 
 

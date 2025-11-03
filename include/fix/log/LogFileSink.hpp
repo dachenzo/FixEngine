@@ -20,6 +20,10 @@ namespace Fix::Log
     struct LogFileSink {
 
         LogFileSink();
+        LogFileSink(const LogFileSink& other) = delete;
+        LogFileSink& operator=(const LogFileSink& other) = delete;
+        LogFileSink(const LogFileSink&& other) = delete;
+        LogFileSink& operator=(const LogFileSink&& other) = delete;
         ~LogFileSink();
 
         static constexpr std::size_t MAX_LRU_CACHE_SIZE = 128;

@@ -1,6 +1,7 @@
 #pragma once
 #include <thread>
 #include <fix/log/LogEntry.hpp>
+#include <fix/log/LogFileSink.hpp>
 #include <fix/log/MpscRing.hpp>
 
 namespace Fix::Log {
@@ -21,6 +22,7 @@ namespace Fix::Log {
 
         private:
         MpscRing<Log::Entry> q_;
+        Log::LogFileSink file_sink_;
         std::thread t_;
 
         void drain();

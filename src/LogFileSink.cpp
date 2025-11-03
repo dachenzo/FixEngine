@@ -40,7 +40,7 @@ namespace Fix::Log {
 
     void LogFileSink::add_session(Fix::SessionID& sess_id) {
         Log::SinkNode node = create_sink_node(sess_id);
-        sess_to_file_.emplace(sess_id, node);
+        sess_to_file_.emplace(std::move(sess_id), std::move(node));
     }
 
     void LogFileSink::log_internal(const Log::Entry& entry) {
@@ -49,7 +49,6 @@ namespace Fix::Log {
         } else {
             // if core log file is not open, there's not much we can do
             std::cerr << "Core log file is not open. Log entry: " << entry.to_json() << "\n";
-            open_file(core_log_file_);
         }
     }
 
