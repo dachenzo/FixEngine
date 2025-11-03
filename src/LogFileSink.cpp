@@ -1,4 +1,5 @@
 #include <iostream>
+#include <exception>
 #include <fix/log/LogFileSink.hpp>
 
 
@@ -13,7 +14,14 @@ namespace Fix::Log {
 
 
     LogFileSink::~LogFileSink() {
-        shutdown();
+
+        try {
+            shutdown();
+        }
+        catch (std::exception& e) {
+            // suppress all exceptions
+            std::cerr << "Exception during LogFileSink shutdown: " << e.what() << "\n";
+        }
     }
 
     void LogFileSink::shutdown() {
