@@ -18,7 +18,7 @@ int main() {
     for (int i = 0; i < thread_cnt; i++) {
         auto work = [i, &ring, &total]() {
             for (int start = i; start < total; start += 5) {
-                ring.push(start);
+                ring.push(std::move(start));
             }
         };
         ts.emplace_back(work);

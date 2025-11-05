@@ -1,5 +1,6 @@
 #pragma once
 #include <thread>
+#include <semaphore>
 #include <fix/log/LogEntry.hpp>
 #include <fix/log/LogFileSink.hpp>
 #include <fix/log/MpscRing.hpp>
@@ -13,6 +14,7 @@ namespace Fix::Log {
         LogCore& operator=(const LogCore& other) = delete;
         LogCore(const LogCore&& other) = delete;
         LogCore& operator=(const LogCore&& other) = delete;
+        ~LogCore();
 
         void push(Log::Entry&& entry);
 
@@ -26,9 +28,10 @@ namespace Fix::Log {
         private:
         MpscRing<Log::Entry> q_;
         Log::LogFileSink file_sink_;
-        std::thread t_;
+        std::jthread t_;
+        std::counting_semaphore<MpscRing<Log::Entry>::capacity> sem_{0};
 
-        void drain();
+        void drain(std::stop_token st);
 
         
 

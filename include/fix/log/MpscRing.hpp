@@ -41,7 +41,7 @@ namespace Fix::Log {
         MpscRing(MpscRing&& other) = delete;
         MpscRing& operator=(MpscRing&& other) = delete;
 
-        bool try_push(Data& data) {
+        bool try_push(Data&& data) {
             auto ticket = head_.fetch_add(1, std::memory_order_acq_rel);
             RingCell<Data>& c = buff_[ticket & mask];
             auto curr_epoch = c.epoch.load(std::memory_order_acquire);
@@ -55,7 +55,7 @@ namespace Fix::Log {
                 
         }
 
-        void push(Data& data) {
+        void push(Data&& data) {
             auto ticket = head_.fetch_add(1, std::memory_order_acq_rel);
             RingCell<Data>& c = buff_[ticket & mask];
 
