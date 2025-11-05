@@ -1,11 +1,12 @@
 #include <fix/log/LogFileSink.hpp>
 #include <fix/log/LogEntry.hpp>
+#include <fix/SessionManager.hpp>
 #include <vector>
 #include <fix/definitions.hpp>
 
 int main() {
 
-    Fix::Log::LogFileSink log_sink{};
+    Fix::Log::LogFileSink log_sink{Fix::SessionManager::generate_engine_id()};
 
     std::size_t session_counter = 10;
     int write_loop = 20;

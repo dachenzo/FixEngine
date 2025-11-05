@@ -17,7 +17,8 @@ namespace Fix {
                 Fix::Role role,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
-                Fix::SessionParameters params
+                Fix::SessionParameters params,
+                Fix::Log::LogCore& log_core
             ):  
                 parser_{},
                 app_{app},
@@ -30,7 +31,8 @@ namespace Fix {
                 params_{params},
                 clock_{},
                 seq_provider_{store_},
-                msg_factory_{params_, seq_provider_, clock_}
+                msg_factory_{params_, seq_provider_, clock_},
+                logger_{id_, log_core}
                 {
         buff_.resize(8192);
 

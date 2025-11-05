@@ -14,6 +14,8 @@
 #include <fix/ITimer.hpp>
 #include <fix/Codec.hpp>
 #include <fix/Parser.hpp>
+#include <fix/log/LogCore.hpp>
+#include <fix/log/SessionLogger.hpp>
 
 
 namespace Fix {
@@ -33,7 +35,8 @@ namespace Fix {
                 Fix::Role role,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
-                Fix::SessionParameters params
+                Fix::SessionParameters params,
+                Fix::Log::LogCore& log_core
             );
 
         ~Session();
@@ -102,6 +105,7 @@ namespace Fix {
             Fix::SeqProvider seq_provider_;
             Fix::Clock clock_;
             Fix::MessageFactory msg_factory_;
+            Fix::Log::SessionLogger logger_;
             
 
 

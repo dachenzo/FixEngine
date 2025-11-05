@@ -19,7 +19,7 @@ namespace Fix::Log
     
     struct LogFileSink {
 
-        LogFileSink();
+        LogFileSink(std::string&& engine_run_id);
         LogFileSink(const LogFileSink& other) = delete;
         LogFileSink& operator=(const LogFileSink& other) = delete;
         LogFileSink(const LogFileSink&& other) = delete;
@@ -45,6 +45,7 @@ namespace Fix::Log
         std::list<Fix::SessionID> lru_cache_;
         std::unordered_map<Fix::SessionID, Log::SinkNode> sess_to_file_;
         Log::LogFile core_log_file_;
+        std::string engine_run_id_;
         std::size_t currently_open_files_ = 0;
 
 

@@ -6,8 +6,8 @@
 
 namespace Fix::Log {
 
-    LogFileSink::LogFileSink() {
-        core_log_file_.path = LogFileSink::make_path("logs", "core_log.json");
+    LogFileSink::LogFileSink(std::string&& engine_run_id): engine_run_id_{engine_run_id} {
+        core_log_file_.path = LogFileSink::make_path("logs", engine_run_id_, "core_log.json");
         open_file(core_log_file_);
     }
 
@@ -35,12 +35,22 @@ namespace Fix::Log {
     void LogFileSink::write(const Log::Entry& entry) {
         auto& node = get_node(entry.sess_id);
         ensure_open(entry.sess_id, node);
-        node.file.stream << entry.to_json() << "\n";
+        node.file.stream << entry.to_json() << std::endl; // might want to switch back to non forced flushing
     }
 
     void LogFileSink::add_session(Fix::SessionID& sess_id) {
         Log::SinkNode node = create_sink_node(sess_id);
         sess_to_file_.emplace(std::move(sess_id), std::move(node));
+        Log::Entry entry {
+            .message = "Added session to LogFileSink",
+            .sess_id = sess_id,
+            .context = {
+                .layer = Fix::Error::Layer::Peripheral,
+                .cat = Fix::Error::Category::Info,
+                .sev = Fix::Error::Severity::Low
+            }
+        };
+        write(entry);
     }
 
     void LogFileSink::log_internal(const Log::Entry& entry) {
@@ -56,7 +66,7 @@ namespace Fix::Log {
         Log::LogFile log_file{};
         std::string file_name = std::to_string(sess_id.id);
         file_name.append(".json");
-        log_file.path = std::move(LogFileSink::make_path("logs", "sessions", file_name));
+        log_file.path = std::move(LogFileSink::make_path("logs", engine_run_id_, "sessions", file_name));
         Log::SinkNode node{std::move(log_file), {}, false};
         return node;
     }

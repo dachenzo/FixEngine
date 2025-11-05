@@ -2,10 +2,22 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <fix/SessionManager.hpp>
+#include <fix/utils.hpp>
 
 
 
 namespace Fix {
+
+    std::string SessionManager::generate_engine_id() {
+        auto now = std::chrono::system_clock::now();
+        std::string id = std::format("{:%Y-%m-%d %H:%M:%S}", 
+                                        std::chrono::floor<std::chrono::seconds>(now));
+        id.push_back('-');
+        id += std::to_string(Fix::Utils::get_pid());
+        return id;
+        
+    }
+
     SessionManager::SessionManager(
         Fix::Application& app,  
         Fix::IConnectionFactory& connFactory, 
@@ -13,7 +25,8 @@ namespace Fix {
         app_{app}, 
         connFactory_{connFactory},
         timerFactory_{timerFactory},
-        session_pool_{}
+        session_pool_{},
+        log_core_{generate_engine_id()}
         {
         } 
 
@@ -23,8 +36,12 @@ namespace Fix {
             config.role,
             app_,
             timerFactory_,
-            config.params
+            config.params,
+            log_core_
         );
+
+        log_core_.add_session(sess->get_session_id());
+
         std::cout << "Session Created\n";
         if (config.role == Fix::Role::ACCEPTOR) {
            
