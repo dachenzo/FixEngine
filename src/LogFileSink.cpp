@@ -44,8 +44,8 @@ namespace Fix::Log {
          // might want to switch back to non forced flushing
     }
 
-    void LogFileSink::add_session(Fix::SessionID& sess_id) {
-        Log::SinkNode node = create_sink_node(sess_id);
+    void LogFileSink::add_session(Fix::SessionID& sess_id,  std::string && readable_id) {
+        Log::SinkNode node = create_sink_node(sess_id, std::move(readable_id));
         sess_to_file_.emplace(std::move(sess_id), std::move(node));
         Log::Entry entry {
             .message = "Added session to LogFileSink",
@@ -68,9 +68,9 @@ namespace Fix::Log {
         }
     }
 
-    Log::SinkNode LogFileSink::create_sink_node(Fix::SessionID& sess_id) {
+    Log::SinkNode LogFileSink::create_sink_node(Fix::SessionID& sess_id,  std::string && readable_id) {
         Log::LogFile log_file{};
-        std::string file_name = std::to_string(sess_id.id);
+        std::string file_name = readable_id;
         file_name.append(".json");
         log_file.path = std::move(LogFileSink::make_path("logs", engine_run_id_, "sessions", file_name));
         Log::SinkNode node{std::move(log_file), {}, false};

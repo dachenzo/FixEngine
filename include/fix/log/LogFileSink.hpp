@@ -40,7 +40,7 @@ namespace Fix::Log
 
         void shutdown();
 
-        void add_session(Fix::SessionID& id);
+        void add_session(Fix::SessionID& id,  std::string && readable_id);
 
         private:
         std::list<Fix::SessionID> lru_cache_;
@@ -66,7 +66,7 @@ namespace Fix::Log
 
 
 
-        Log::SinkNode create_sink_node(Fix::SessionID& sess_id);
+        Log::SinkNode create_sink_node(Fix::SessionID& sess_id,  std::string && readable_id);
 
         
 

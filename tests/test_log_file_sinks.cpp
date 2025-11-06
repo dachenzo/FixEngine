@@ -18,7 +18,7 @@ int main() {
             .storage_index = i,
             .id = i + 1000u
         };
-        log_sink.add_session(sid);
+        log_sink.add_session(sid, "TestSession_" + std::to_string(i));
         ids.push_back(sid);
     }
 

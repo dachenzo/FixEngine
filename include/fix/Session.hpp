@@ -49,9 +49,11 @@ namespace Fix {
         // void onBytes(std::string_view chunk);
         // void onWritable();
 
-        Fix::SessionID& get_session_id() noexcept;
+        Fix::SessionID get_session_id()const noexcept;
 
         void set_connection(std::shared_ptr<Fix::IConnection> conn);
+
+        std::string readable_id() const noexcept;
 
         // // timer callbacks (heartbeat, test‐req, logout)
         // void onTimer(Fix::TimerType which);
@@ -86,6 +88,10 @@ namespace Fix {
             void send_bytes_(std::string msg_wire);
             
             void do_read();
+
+            
+
+
 
             void do_write();
             struct PendingWrite { std::string data; std::size_t sent = 0; };

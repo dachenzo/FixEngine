@@ -34,8 +34,8 @@ namespace Fix::Log {
         return false;
     }
 
-    void LogCore::add_session(Fix::SessionID& id) {
-        file_sink_.add_session(id);
+    void LogCore::add_session(Fix::SessionID& id, std::string && readable_id) {
+        file_sink_.add_session(id, std::move(readable_id));
     }
 
     void LogCore::drain(std::stop_token st) {

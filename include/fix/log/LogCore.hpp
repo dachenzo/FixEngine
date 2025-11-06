@@ -20,7 +20,7 @@ namespace Fix::Log {
 
         bool try_push(Log::Entry&& entry);
 
-        void add_session(Fix::SessionID& id);
+        void add_session(Fix::SessionID& id, std::string&& readable_id);
 
 
         

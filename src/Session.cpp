@@ -82,18 +82,8 @@ namespace Fix {
 
     }
 
-    void print_escaped(const std::string& s) {
-        for (unsigned char c : s) {
-            if (std::isprint(c)) {
-                std::cout << c;
-            } else {
-                std::cout << "\\x"
-                        << std::hex << std::setw(2) << std::setfill('0')
-                        << static_cast<int>(c)
-                        << std::dec; // reset back to decimal
-            }
-        }
-        std::cout << "\n";
+    std::string Session::readable_id() const noexcept {
+        return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
     void Session::send_message_(Fix::Message& msg) {
@@ -207,7 +197,7 @@ namespace Fix {
 
     }
 
-    Fix::SessionID& Session::get_session_id() noexcept {
+    Fix::SessionID Session::get_session_id() const noexcept {
         return id_;
     }
 

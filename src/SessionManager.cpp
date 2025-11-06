@@ -39,8 +39,8 @@ namespace Fix {
             config.params,
             log_core_
         );
-
-        log_core_.add_session(sess->get_session_id());
+        auto id = sess->get_session_id();
+        log_core_.add_session(id, sess->readable_id());
 
         std::cout << "Session Created\n";
         if (config.role == Fix::Role::ACCEPTOR) {
