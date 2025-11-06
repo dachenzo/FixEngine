@@ -14,6 +14,7 @@ namespace Fix::Log
         Log::LogFile file;
         std::list<Fix::SessionID>::iterator lru_iterator;
         bool in_lru = false;
+        bool first_write = true;
     }; 
     
     
@@ -59,7 +60,7 @@ namespace Fix::Log
 
         void open_file(Log::LogFile& file);
 
-        void close_file(Log::LogFile& file);
+        void close_file(Log::SinkNode& node);
 
         void log_internal(const Log::Entry& entry);
 

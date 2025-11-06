@@ -26,7 +26,7 @@ namespace Fix::Log {
 
     void LogFileSink::shutdown() {
         for (auto& [sid, node] : sess_to_file_) {
-            close_file(node.file);
+            close_file(node);
         }
 
     }
@@ -35,7 +35,13 @@ namespace Fix::Log {
     void LogFileSink::write(const Log::Entry& entry) {
         auto& node = get_node(entry.sess_id);
         ensure_open(entry.sess_id, node);
-        node.file.stream << entry.to_json() << std::endl; // might want to switch back to non forced flushing
+        if (node.first_write) {
+            node.first_write = false;
+            node.file.stream << "[\n" << entry.to_json();
+        } else {
+            node.file.stream << ",\n" << entry.to_json() << std::flush;
+        }
+         // might want to switch back to non forced flushing
     }
 
     void LogFileSink::add_session(Fix::SessionID& sess_id) {
@@ -100,7 +106,7 @@ namespace Fix::Log {
         if (currently_open_files_ == 0) return;
         const auto& victim_sid = lru_cache_.back();
         auto& v = sess_to_file_.at(victim_sid);
-        close_file(v.file);                // flush & close if fd
+        close_file(v);                // flush & close if fd
         v.in_lru = false;
         lru_cache_.pop_back();
         --currently_open_files_;
@@ -155,11 +161,16 @@ namespace Fix::Log {
 
     }
 
-    void LogFileSink::close_file(Log::LogFile& file) {
+    void LogFileSink::close_file(Log::SinkNode& node) {
 
-        if (file.is_open()) {
-            file.stream.flush();
-            file.stream.close();
+        if (!node.first_write) {
+            ensure_open({}, node); // make sure file is open to write closing bracket
+            node.file.stream << "\n]\n";
+        }
+
+        if (node.file.is_open()) {
+            node.file.stream.flush();
+            node.file.stream.close();
         }
 
     }
