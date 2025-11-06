@@ -4,6 +4,7 @@
 #include <iostream>
 #include <charconv>
 #include <optional>
+#include <fix/log/LogEntry.hpp>
 #include <fix/Session.hpp>
 #include <fix/Parser.hpp>
 #include <fix/utils.hpp>
@@ -17,7 +18,8 @@ namespace Fix {
                 Fix::Role role,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
-                Fix::SessionParameters params
+                Fix::SessionParameters params,
+                Fix::Log::LogCore& log_core
             ):  
                 parser_{},
                 app_{app},
@@ -30,14 +32,20 @@ namespace Fix {
                 params_{params},
                 clock_{},
                 seq_provider_{store_},
-                msg_factory_{params_, seq_provider_, clock_}
+                msg_factory_{params_, seq_provider_, clock_},
+                logger_{id_, log_core}
                 {
         buff_.resize(8192);
 
     }
 
     void Session::stop() {
-        std::cout << "Session_stopped" <<'\n';
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Session stopping"
+        );
     }
 
     Session::~Session() {
@@ -47,12 +55,26 @@ namespace Fix {
 
 
     void Session::start() {
-        auto role_str = role_ == Fix::Role::INITIATOR ? "Iniator" : "Acceptor";
-        std::cout << role_str << "Started\n";
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Session started"
+        );
+        
         do_read(); 
 
         if (role_ == Fix::Role::INITIATOR) {
             send_logon();
+            
+                
+            
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Logon sent"
+            );
             state_ = Fix::SessionState::LOGON_SENT;
         } else {
             state_ = Fix::SessionState::AWAITING_LOGON;
@@ -60,18 +82,8 @@ namespace Fix {
 
     }
 
-    void print_escaped(const std::string& s) {
-        for (unsigned char c : s) {
-            if (std::isprint(c)) {
-                std::cout << c;
-            } else {
-                std::cout << "\\x"
-                        << std::hex << std::setw(2) << std::setfill('0')
-                        << static_cast<int>(c)
-                        << std::dec; // reset back to decimal
-            }
-        }
-        std::cout << "\n";
+    std::string Session::readable_id() const noexcept {
+        return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
     void Session::send_message_(Fix::Message& msg) {
@@ -103,14 +115,10 @@ namespace Fix {
                     return;
                 }
                 auto sv = std::string_view{buff_.data(), n};
-                std::cout << sv.size() << '\n';
-                std::cout << sv << '\n';
                 auto msg = parser_.parse(sv);
 
-                if (msg.has_value()) {
-                    std::cout << "got a message\n";
+                if (msg.has_value()) {     
                     dispatch(msg.value());
-                    std::cout << "Called Dispatch\n";
                     
                 } 
 
@@ -145,8 +153,7 @@ namespace Fix {
                 
                 auto& f = write_q_.front();
                 f.sent += n;
-                std::cout << "Wrote\n";
-                if (f.sent >= f.data.size()) write_q_.pop_front(); std::cout << "Written\n";
+                if (f.sent >= f.data.size()) write_q_.pop_front(); 
                
                 do_write();
             }
@@ -168,7 +175,7 @@ namespace Fix {
 
         
 
-        std::cout << "Here0";
+       
 
         auto op_type = msg.get(35);
     
@@ -190,7 +197,7 @@ namespace Fix {
 
     }
 
-    Fix::SessionID& Session::get_session_id() noexcept {
+    Fix::SessionID Session::get_session_id() const noexcept {
         return id_;
     }
 
@@ -204,7 +211,12 @@ namespace Fix {
     }
 
     void Session::handle_logon(const Fix::Message&) {
-        std::cout << " Logon received";
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Logon received"
+        );
     }
     void Session::handle_logout(const Fix::Message&) {}
     void Session::handle_heartbeat(const Fix::Message&) {}

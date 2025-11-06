@@ -9,7 +9,7 @@
 namespace Fix {
 
     struct IConnection {
-       using ReadHandler  = std::function<void(boost::system::error_code, std::size_t)>;
+        using ReadHandler  = std::function<void(boost::system::error_code, std::size_t)>;
         using WriteHandler = std::function<void(boost::system::error_code, std::size_t)>;
 
         using MutableBuffer = boost::asio::mutable_buffer;
@@ -31,11 +31,11 @@ namespace Fix {
 
         virtual ~IConnectionFactory() = default;
 
-        // Initiator side (client dials out)
+
         virtual void async_connect(const Fix::ConnectionConfig& cfg,
                                     ConnectHandler handler) = 0;
 
-        // (Optional) Acceptor side (server listens) — not needed for this step
+ 
         virtual void async_listen(const Fix::ConnectionConfig& cfg,
                                     ConnectHandler handler) = 0;
 };

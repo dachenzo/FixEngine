@@ -21,7 +21,8 @@ namespace Fix {
         Fix::Role role,
         Fix::Application& app,
         Fix::ITimerFactory& timers,
-        Fix::SessionParameters params
+        Fix::SessionParameters params,
+        Fix::Log::LogCore& log_core
     ) {
         if (free_indices_.empty()) {
             Fix::SessionID session_id = {sessions_.size(), generate_session_Id_()};
@@ -31,7 +32,8 @@ namespace Fix {
                     role,
                     app,
                     timers,
-                    params
+                    params,
+                    log_core
                 )
             );
             return sessions_.back();
@@ -44,7 +46,9 @@ namespace Fix {
                 role,
                 app,
                 timers,
-                params
+                params,
+                log_core
+
             );
             return sessions_[nxt];
             

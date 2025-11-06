@@ -13,6 +13,7 @@
 #include <fix/ITimer.hpp>
 #include <fix/Codec.hpp>
 #include <fix/Parser.hpp>
+#include <fix/log/LogCore.hpp>
 
 
 namespace Fix {
@@ -27,7 +28,8 @@ namespace Fix {
                 Fix::Role role,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
-                Fix::SessionParameters params
+                Fix::SessionParameters params,
+                Fix::Log::LogCore& log_core
             );
 
         bool remove(Fix::SessionID id);

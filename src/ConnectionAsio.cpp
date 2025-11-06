@@ -7,6 +7,7 @@
 
 
 
+
 namespace Fix {
 
     AsioConnectionFactory::AsioConnectionFactory(boost::asio::io_context& io)
@@ -32,8 +33,8 @@ namespace Fix {
 
         auto op = std::make_shared<ConnectOP>(io_, std::move(handler));
 
-        // Adapt these two lines to your actual field names in ConnectionConfig
-        const std::string host   = std::string(cfg.ip);     
+
+        const std::string host = std::string(cfg.ip);     
         const std::string service = std::to_string(cfg.port); 
 
        
@@ -41,14 +42,14 @@ namespace Fix {
 
         op->resolver.async_resolve(host, service,
             [op](const boost::system::error_code& ec, tcp::resolver::results_type results) {
-                if (ec) {op->callback(ec, {}); return;}
+                if (ec) {op->callback(ec, {}); return;} 
 
                 boost::asio::async_connect(op->socket, results,
                     [op](const boost::system::error_code& ec, const tcp::endpoint&) {
                         if (ec) { op->callback(ec, {}); return; }
 
                         // Success: wrap the connected socket in our IConnection
-                         auto shared_sock = std::make_shared<boost::asio::ip::tcp::socket>(std::move(op->socket));
+                        auto shared_sock = std::make_shared<boost::asio::ip::tcp::socket>(std::move(op->socket));
                         auto conn = std::make_shared<AsioConnection>(std::move(shared_sock));
                         op->callback({}, std::move(conn));
                     }
@@ -78,7 +79,7 @@ namespace Fix {
         void start() {
             boost::system::error_code ec;
             acceptor.open(endpoint.protocol(), ec);
-
+ 
             if (ec) {callback(ec, {}); return;}
 
             acceptor.set_option(tcp::acceptor::reuse_address(true), ec);

@@ -14,6 +14,8 @@
 #include <fix/ITimer.hpp>
 #include <fix/Codec.hpp>
 #include <fix/Parser.hpp>
+#include <fix/log/LogCore.hpp>
+#include <fix/log/SessionLogger.hpp>
 
 
 namespace Fix {
@@ -33,7 +35,8 @@ namespace Fix {
                 Fix::Role role,
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
-                Fix::SessionParameters params
+                Fix::SessionParameters params,
+                Fix::Log::LogCore& log_core
             );
 
         ~Session();
@@ -46,9 +49,11 @@ namespace Fix {
         // void onBytes(std::string_view chunk);
         // void onWritable();
 
-        Fix::SessionID& get_session_id() noexcept;
+        Fix::SessionID get_session_id()const noexcept;
 
         void set_connection(std::shared_ptr<Fix::IConnection> conn);
+
+        std::string readable_id() const noexcept;
 
         // // timer callbacks (heartbeat, test‐req, logout)
         // void onTimer(Fix::TimerType which);
@@ -84,6 +89,10 @@ namespace Fix {
             
             void do_read();
 
+            
+
+
+
             void do_write();
             struct PendingWrite { std::string data; std::size_t sent = 0; };
             std::deque<PendingWrite> write_q_;
@@ -102,6 +111,7 @@ namespace Fix {
             Fix::SeqProvider seq_provider_;
             Fix::Clock clock_;
             Fix::MessageFactory msg_factory_;
+            Fix::Log::SessionLogger logger_;
             
 
 
