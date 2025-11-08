@@ -49,7 +49,16 @@ namespace Fix {
             [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
             std::shared_ptr<IConnection> conn) {
                 if (ec) {
-                    // log + schedule retry/backoff here
+                    if (auto s = w.lock()) {
+                        s->logger().log(
+                            {
+                                Fix::Error::Layer::Transport,
+                                Fix::Error::Category::Error,
+                                Fix::Error::Severity::High
+                            },
+                            "Failed to connect: " + ec.message()
+                        );
+                    }
                     return;
                 }
  

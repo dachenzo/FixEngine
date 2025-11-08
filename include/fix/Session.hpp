@@ -55,6 +55,8 @@ namespace Fix {
 
         std::string readable_id() const noexcept;
 
+        Log::SessionLogger& logger() ;
+
         // // timer callbacks (heartbeat, test‐req, logout)
         // void onTimer(Fix::TimerType which);
 

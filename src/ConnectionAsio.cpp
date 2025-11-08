@@ -42,7 +42,9 @@ namespace Fix {
 
         op->resolver.async_resolve(host, service,
             [op](const boost::system::error_code& ec, tcp::resolver::results_type results) {
-                if (ec) {op->callback(ec, {}); return;} 
+                if (ec) {
+                    return;
+                } 
 
                 boost::asio::async_connect(op->socket, results,
                     [op](const boost::system::error_code& ec, const tcp::endpoint&) {
