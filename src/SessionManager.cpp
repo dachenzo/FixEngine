@@ -65,6 +65,8 @@ namespace Fix {
                 if (auto s = w.lock()) {
                     s->set_connection(std::move(conn));
                     s->start();
+                } else {
+                    conn->close();
                 }
             }
             );
