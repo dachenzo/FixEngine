@@ -52,6 +52,10 @@ namespace Fix {
         conn_->close();
     }
 
+    Log::SessionLogger& Session::logger() {
+        return logger_;
+    }
+
 
 
     void Session::start() {

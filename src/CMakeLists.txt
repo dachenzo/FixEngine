@@ -1,9 +1,10 @@
 add_library(fix_engine
-    
+    AsioConnection.cpp
+    AsioConnectionFactory.cpp
     AsioTimer.cpp
     Clock.cpp
     Config.cpp
-    ConnectionAsio.cpp
+    ## ConnectionAsio.cpp (discontinued implementation)
     Message.cpp
     MessageFactory.cpp
     MessageStore.cpp
