@@ -41,4 +41,25 @@ namespace Fix::Error {
 
         return RetryClass::Transient;
     }
+
+    inline RetryClass classify_readwrite_error(const boost::system::error_code ec) {
+        if (ec == boost::asio::error::operation_aborted ||
+            ec == boost::asio::error::eof
+        ) return RetryClass::Canceled;
+
+        if (ec == boost::asio::error::would_block ||
+            ec == boost::asio::error::try_again||
+            ec == boost::asio::error::timed_out) return RetryClass::Transient;
+
+        if (ec == boost::asio::error::not_connected ||
+            ec == boost::asio::error::connection_reset ||
+            ec == boost::asio::error::connection_aborted ||
+            ec == boost::asio::error::broken_pipe ||
+            ec == boost::asio::error::network_down ||
+            ec == boost::asio::error::network_unreachable ||
+            ec == boost::asio::error::host_unreachable ||
+            ec == boost::asio::error::bad_descriptor) return RetryClass::Permanent;
+
+        return RetryClass::Transient;
+    }
 }
