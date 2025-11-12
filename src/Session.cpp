@@ -5,6 +5,7 @@
 #include <charconv>
 #include <optional>
 #include <fix/log/LogEntry.hpp>
+#include <fix/error/Network.hpp>
 #include <fix/Session.hpp>
 #include <fix/Parser.hpp>
 #include <fix/utils.hpp>
@@ -113,8 +114,27 @@ namespace Fix {
         auto boost_buff = boost::asio::buffer(buff_, buff_.size());
         auto handler = [this, self](boost::system::error_code ec, std::size_t n) {
                 if (ec) {
-                    // tear down on error
-                    std::cout << "Error reading\n";
+                    std::string err_msg = "Read error: " + ec.message();
+                    
+                    if (Error::classify_readwrite_error(ec) == Fix::Error::RetryClass::Transient) {
+                        logger_.log(
+                            {Fix::Error::Layer::Transport, 
+                            Fix::Error::Category::Warn, 
+                            Fix::Error::Severity::Moderate},
+                            err_msg
+                        );
+                        do_read();
+                        return;
+                    }
+
+
+                    
+                    logger_.log(
+                        {Fix::Error::Layer::Transport, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        err_msg
+                    );
                     conn_->close();
                     return;
                 }
@@ -148,7 +168,25 @@ namespace Fix {
             buffer,
             [this, self] (boost::system::error_code ec, std::size_t n) {
                 if (ec) {
-                    std::cout << "Error writing\n";
+                    std::string err_msg = "Write error: " + ec.message();
+                    if (Error::classify_readwrite_error(ec) == Fix::Error::RetryClass::Transient) {
+                        logger_.log(
+                            {Fix::Error::Layer::Transport, 
+                            Fix::Error::Category::Warn, 
+                            Fix::Error::Severity::Moderate},
+                            err_msg
+                        );
+                        do_write();
+                        return;
+                    }
+
+                    logger_.log(
+                        {Fix::Error::Layer::Transport, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        err_msg
+                    );
+                    
                     conn_->close();
                     write_q_.clear();
                     write_inflight_ = false;
