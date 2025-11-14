@@ -102,6 +102,7 @@ namespace Fix {
 
             boost::asio::strand<boost::asio::any_io_executor> exec_{boost::asio::system_executor()};
             std::deque<PendingWrite> write_q_;
+            bool stopped_ = false;
             bool write_inflight_ = false;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;

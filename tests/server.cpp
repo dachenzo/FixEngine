@@ -48,7 +48,10 @@ int main() {
     session_manager.create_all(configs);
     std::cout << "Sessions created\n";
 
-    reactor.run(1);
+
+    // reactor.run_single();
+
+    reactor.run(2);
 
     // ---- keep the process alive somehow here ----
     std::cout << "Press ENTER to stop...\n";

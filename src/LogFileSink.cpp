@@ -165,7 +165,7 @@ namespace Fix::Log {
 
         if (!node.first_write) {
             ensure_open({}, node); // make sure file is open to write closing bracket
-            node.file.stream << "\n]\n";
+            node.file.stream << "\n]";
         }
 
         if (node.file.is_open()) {

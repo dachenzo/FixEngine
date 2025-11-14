@@ -104,7 +104,7 @@ namespace Fix {
 
     void SessionManager::stop_all() {
         for (auto sess: session_pool_.get_all()) {
-            sess->stop();
+            if (sess) sess->stop();
         }
     }
 
