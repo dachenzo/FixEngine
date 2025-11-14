@@ -50,7 +50,18 @@ int main() {
     session_manager.create_all(configs);
     std::cout << "Sessions created\n";
 
-    reactor.run();
+    reactor.run(1);
+
+     // ---- keep the process alive somehow here ----
+    std::cout << "Press ENTER to stop...\n";
+    std::string dummy;
+    std::getline(std::cin, dummy);
+
+    // orderly shutdown
+    session_manager.stop_all();  // tell sessions to stop
+    reactor.stop();              // stop io_context
+    reactor.wait();              // join worker thread(s) *before*
+                                 // session_manager is destroyed
 
 
 
