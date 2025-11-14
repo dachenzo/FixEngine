@@ -50,7 +50,9 @@ namespace Fix {
     }
 
     Session::~Session() {
-        conn_->close();
+        if (conn_) {
+            conn_->close();
+        }
     }
 
     Log::SessionLogger& Session::logger() {
@@ -112,7 +114,8 @@ namespace Fix {
        
         auto self = shared_from_this();
         auto boost_buff = boost::asio::buffer(buff_, buff_.size());
-        auto handler = [this, self](boost::system::error_code ec, std::size_t n) {
+        auto handler = boost::asio::bind_executor(exec_,
+            [this, self](boost::system::error_code ec, std::size_t n) {
                 if (ec) {
                     std::string err_msg = "Read error: " + ec.message();
                     
@@ -147,7 +150,8 @@ namespace Fix {
                 } 
 
                 do_read();
-        };
+            }
+        );
 
     
         conn_->async_read_some(boost_buff, handler);
@@ -166,44 +170,49 @@ namespace Fix {
         auto buffer = boost::asio::const_buffer(base, left);
         conn_->async_write_some(
             buffer,
-            [this, self] (boost::system::error_code ec, std::size_t n) {
-                if (ec) {
-                    std::string err_msg = "Write error: " + ec.message();
-                    if (Error::classify_readwrite_error(ec) == Fix::Error::RetryClass::Transient) {
+            boost::asio::bind_executor(exec_, 
+                [this, self] (boost::system::error_code ec, std::size_t n) {
+                    if (ec) {
+                        std::string err_msg = "Write error: " + ec.message();
+                        if (Error::classify_readwrite_error(ec) == Fix::Error::RetryClass::Transient) {
+                            logger_.log(
+                                {Fix::Error::Layer::Transport, 
+                                Fix::Error::Category::Warn, 
+                                Fix::Error::Severity::Moderate},
+                                err_msg
+                            );
+                            do_write();
+                            return;
+                        }
+
                         logger_.log(
                             {Fix::Error::Layer::Transport, 
-                            Fix::Error::Category::Warn, 
-                            Fix::Error::Severity::Moderate},
+                            Fix::Error::Category::Error, 
+                            Fix::Error::Severity::High},
                             err_msg
                         );
-                        do_write();
+                        
+                        conn_->close();
+                        write_q_.clear();
+                        write_inflight_ = false;
                         return;
                     }
-
-                    logger_.log(
-                        {Fix::Error::Layer::Transport, 
-                        Fix::Error::Category::Error, 
-                        Fix::Error::Severity::High},
-                        err_msg
-                    );
                     
-                    conn_->close();
-                    write_q_.clear();
-                    write_inflight_ = false;
-                    return;
-                }
+                    auto& f = write_q_.front();
+                    f.sent += n;
+                    if (f.sent >= f.data.size()) write_q_.pop_front(); 
                 
-                auto& f = write_q_.front();
-                f.sent += n;
-                if (f.sent >= f.data.size()) write_q_.pop_front(); 
-               
-                do_write();
-            }
+                    do_write();
+                }
+            
+            )
         );
     }
 
     void Session::set_connection(std::shared_ptr<Fix::IConnection> conn) {
         conn_ = conn;
+        exec_ = boost::asio::strand<boost::asio::any_io_executor>(conn_->get_executor());
+
     }
 
 
