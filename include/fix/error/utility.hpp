@@ -37,4 +37,7 @@ namespace Fix::Error {
         }
     }
 
+    
+
+
 } // namespace Fix::Error

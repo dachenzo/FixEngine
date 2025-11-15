@@ -95,7 +95,7 @@ namespace Fix {
         do_read(); 
 
         if (role_ == Fix::Role::INITIATOR) {
-            send_logon();
+            send_logon();     
             
             logger_.log(
                 {Fix::Error::Layer::Fix, 
@@ -167,6 +167,8 @@ namespace Fix {
                     return;
                 }
                 auto sv = std::string_view{buff_.data(), n};
+
+                // need to run some timer here
                 auto msg = parser_.parse(sv);
 
                 if (msg.has_value()) {     
