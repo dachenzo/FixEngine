@@ -37,7 +37,7 @@ namespace Fix {
 
 
     bool Message::add(Fix::Field field) {
-        auto it = lookup.insert({field.tag, message_.size()-1});
+        auto it = lookup.insert({field.tag, message_.size()});
         if (!it.second) {
             return false;
         }

@@ -12,24 +12,34 @@ namespace Fix {
 
     
     ParseResult Parser::parse(std::string_view& sv) {
+
+        errs_.clear();
         add_new_messge_fragment_(sv);
-        while (has_complete_field_() && !has_errors_()) {
+        while (has_complete_field_() && errs_.empty()) {
             parse_field_();
         }
 
+        if (!errs_.empty()) {
+            message_builder.reset_state(); // expecting a new message next time
+            return {errs_, std::nullopt, Error::Severity::Fatal};
+        }
+
         maybe_compact_buffer_();
+
         auto build_result = message_builder.ready();
         if (!build_result.has_errors && build_result.ready) {
             return {{}, message_builder.get(), Error::Severity::NA};
         }
         else if (build_result.has_errors) {
             auto builder_errs = message_builder.get_error_state();
-            Error::Severity error_severity = errs_.empty() ? builder_errs.sev : Error::Severity::Fatal;
-            errs_.insert(errs_.end(), builder_errs.errs.begin(), builder_errs.errs.end());        
-            return {errs_, {}, error_severity};
+            std::vector<Error::Parse> all(builder_errs.errs.begin(), builder_errs.errs.end());
+            if (builder_errs.sev == Error::Severity::Fatal) {
+                message_builder.reset_state(); // expecting a new message next time // unrecoverable
+            }
+            return {std::move(all), std::nullopt, builder_errs.sev};
         }
         else {
-            return {{}, {}, Error::Severity::NA};
+            return {{}, std::nullopt, Error::Severity::NA};
         }
     }   
 
@@ -91,7 +101,6 @@ namespace Fix {
 
     void Parser::parse_field_() {
         
-        errs_.clear();
         complete_field_count_ -= 1;
 
         std::string_view sv = next_field_();   // "tag=value"
@@ -144,9 +153,6 @@ namespace Fix {
         }
     }
 
-    bool Parser::has_errors_() {
-        return !errs_.empty();
-    }
     
 
 }

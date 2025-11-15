@@ -18,4 +18,7 @@ namespace Fix::Utils {
 
     inline std::string_view role_to_string(Fix::Role role) noexcept;
 
+
+    inline bool parse_int(std::string_view sv, std::size_t& out) noexcept;
+
 }

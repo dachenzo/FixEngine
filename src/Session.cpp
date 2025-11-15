@@ -169,12 +169,14 @@ namespace Fix {
                 auto sv = std::string_view{buff_.data(), n};
 
                 // need to run some timer here
-                auto msg = parser_.parse(sv);
+                auto parse_res = parser_.parse(sv);
 
-                if (msg.has_value()) {     
-                    dispatch(msg.value());
-                    
-                } 
+                if (parse_res.errs.empty()){
+                    auto msg = parse_res.message.value();
+                    dispatch(msg);
+                } else {
+                    // handle errors
+                }
 
 
                 do_read();

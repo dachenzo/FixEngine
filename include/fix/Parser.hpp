@@ -12,7 +12,7 @@
 #include <fix/error/ParserErrors.hpp>
 #include <fix/error/Severity.hpp>
 
-const size_t MAX_TAG_SIZE = 6;
+const size_t MAX_TAG_SIZE = 10;
 
 namespace Fix {
 
@@ -39,7 +39,6 @@ namespace Fix {
         
         private:
         std::vector<char> buff_;
-        char tag_buff_[MAX_TAG_SIZE];
         size_t complete_field_count_{0};
         size_t read_idx_{0};
         double compact_ratio_ = 0.25;
@@ -57,7 +56,7 @@ namespace Fix {
 
         void maybe_compact_buffer_();
 
-        bool has_errors_();
+      
 
         std::size_t unread_() const noexcept;
     };  

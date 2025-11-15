@@ -39,6 +39,8 @@ namespace Fix {
 
         MessageErrorView get_error_state() const;
 
+        void reset_state();
+
         Fix::Message get();
 
         private:
@@ -49,6 +51,6 @@ namespace Fix {
         Fix::Message message_;
         bool ready_{false};
 
-        void reset_state_();
+        
     };
 }

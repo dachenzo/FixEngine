@@ -1,4 +1,5 @@
 #include <fix/MessageBuilder.hpp>
+#include <fix/utils.hpp>
 
 
 namespace Fix {
@@ -13,7 +14,13 @@ namespace Fix {
 
         // Handle BodyLength
         if (raw_field.tag == 9) {
-            body_length_ = std::stoi(raw_field.value);
+            std::size_t body_len;
+            if (!Utils::parse_int(raw_field.value, body_len)) {
+                error_.errs.push_back(Error::Parse::Wrong_body_length);
+                error_.sev = Error::Severity::Fatal;
+                return;
+            }
+            body_length_ = body_len; 
             body_length_count_ = 0; // start counting *after* 9-field
         } else if (raw_field.tag != 10) {
             body_length_count_ += raw_field.raw_bytes.size()+1; // count everything between 9 and 10
@@ -21,7 +28,13 @@ namespace Fix {
 
         // Handle CheckSum
         if (raw_field.tag == 10) {
-            const std::size_t checksum = std::stoi(raw_field.value);
+
+            std::size_t checksum = 0;
+            if (!Utils::parse_int(raw_field.value, checksum)) {
+                error_.errs.push_back(Error::Parse::Failed_checksum);
+                error_.sev = Error::Severity::Fatal;
+                return;
+            }
             const bool checksum_ok = (checksum_count_ % 256) == checksum;
             const bool body_ok  = (body_length_count_ == body_length_);
             if (!checksum_ok) error_.errs.push_back(Error::Parse::Failed_checksum);
@@ -29,7 +42,7 @@ namespace Fix {
             ready_ = checksum_ok && body_ok;  
              // <-- only ready if both pass
 
-            if (!ready) error_.sev = Error::Severity::Fatal;
+            if (!ready_) error_.sev = Error::Severity::Fatal;
             
         }
 
@@ -49,7 +62,7 @@ namespace Fix {
 
     Fix::Message MessageBuilder::get()  {
         Fix::Message result = std::move(message_);
-        reset_state_();
+        reset_state();
         return result;
     }
 
@@ -59,7 +72,7 @@ namespace Fix {
 
     
 
-    void MessageBuilder::reset_state_() {
+    void MessageBuilder::reset_state() {
         message_ = Fix::Message();
         checksum_count_ = 0;
         body_length_count_ = 0;
