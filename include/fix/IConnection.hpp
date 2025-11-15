@@ -22,6 +22,9 @@ namespace Fix {
         virtual void async_write_some(ConstBuffer& buffer, WriteHandler handle) = 0;
 
         virtual void close() = 0;
+
+        virtual boost::asio::any_io_executor get_executor() const = 0;
+
     };
 
      
@@ -51,6 +54,8 @@ namespace Fix {
         void async_write_some(ConstBuffer& buffer, WriteHandler handle);
 
         void close();
+
+        boost::asio::any_io_executor get_executor() const;
 
 
         private:

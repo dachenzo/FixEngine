@@ -2,6 +2,8 @@
 #include <boost/asio.hpp>
 #include <memory>
 #include <functional>
+#include <vector>
+#include <thread>
 
 
 namespace Fix {
@@ -13,9 +15,13 @@ namespace Fix {
 
         boost::asio::io_context& context() noexcept;
 
-        void run();
+        void run(std::size_t n = std::thread::hardware_concurrency());
+
+        void run_single();
 
         void stop() noexcept;
+
+        void wait();
 
 
         private:
@@ -23,6 +29,7 @@ namespace Fix {
         boost::asio::executor_work_guard<
             boost::asio::io_context::executor_type
         > work_guard_;
+        std::vector<std::jthread> workers_;
 
     };
 }

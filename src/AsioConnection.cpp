@@ -29,4 +29,8 @@ namespace Fix {
             }
         }
     }
+
+    boost::asio::any_io_executor AsioConnection::get_executor() const {
+        return sockfd_->get_executor();
+    }
 }

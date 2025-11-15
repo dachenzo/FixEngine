@@ -23,6 +23,10 @@ add_executable(test_log_file_sinks
     test_log_file_sinks.cpp
 )
 
+add_executable(test_multi
+    test_multi.cpp
+)
+
 
 
 
@@ -34,3 +38,4 @@ target_link_libraries(server PRIVATE fix_engine)
 target_link_libraries(test_parser PRIVATE fix_engine) 
 target_link_libraries(test_log_file_sinks PRIVATE fix_engine) 
 target_link_libraries(test_log_mpsc PRIVATE fix_engine) 
+target_link_libraries(test_multi PRIVATE fix_engine) 

@@ -27,7 +27,7 @@ namespace Fix {
         DISCONNECTED,
     };
 
-    
+
 
     struct Session: public std::enable_shared_from_this<Fix::Session> {
         // ctor/dtor
@@ -96,8 +96,13 @@ namespace Fix {
 
 
             void do_write();
+
+
             struct PendingWrite { std::string data; std::size_t sent = 0; };
+
+            boost::asio::strand<boost::asio::any_io_executor> exec_{boost::asio::system_executor()};
             std::deque<PendingWrite> write_q_;
+            bool stopped_ = false;
             bool write_inflight_ = false;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;

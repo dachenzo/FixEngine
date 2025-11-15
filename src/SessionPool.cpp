@@ -79,10 +79,18 @@ namespace Fix {
     }
 
     std::vector<std::shared_ptr<Fix::Session>> SessionPool::get_all() {
-        std::vector<std::shared_ptr<Fix::Session>> result(size());
+        std::vector<std::shared_ptr<Fix::Session>> result;
+        result.reserve(size());  // optional, just an optimization
+
         auto& free = free_indices_;
-        for (auto& session: sessions_) {
-            auto it = std::find(free.begin(), free.end(), session->get_session_id().storage_index);
+        for (auto& session : sessions_) {
+            // If you can ever have null entries in sessions_, guard this:
+            if (!session) continue;
+
+            auto it = std::find(
+                free.begin(), free.end(),
+                session->get_session_id().storage_index
+            );
             if (it == free.end()) {
                 result.push_back(session);
             }
