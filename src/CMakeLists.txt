@@ -6,6 +6,7 @@ add_library(fix_engine
     Config.cpp
     ## ConnectionAsio.cpp (discontinued implementation)
     Message.cpp
+    MessageBuilder.cpp
     MessageFactory.cpp
     MessageStore.cpp
     Parser.cpp

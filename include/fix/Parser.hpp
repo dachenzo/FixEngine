@@ -8,44 +8,42 @@
 #include <utility>
 #include <charconv>
 #include <vector>
-#include <fix/Message.hpp>
+#include <fix/MessageBuilder.hpp>
+#include <fix/error/ParserErrors.hpp>
+#include <fix/error/Severity.hpp>
 
-const size_t MAX_TAG_SIZE = 6;
+const size_t MAX_TAG_SIZE = 10;
 
 namespace Fix {
 
     struct FixParseException: std::runtime_error {
         using std::runtime_error::runtime_error;
     };
-    
-    struct ParseErrors {
-        enum class Critical {
-            NoTag,
-            MaxTagSize,
-            MalformedTag,
-            MissingEqualSign,
-            MissingValue
-        };
-    };
 
-    constexpr const std::size_t D_PARSER_BUFFER_SIZE = 1u << 12;
+    struct ParseResult {
+        std::vector<Error::Parse> errs;
+        std::optional<Fix::Message> message; 
+        Error::Severity sev;
+    };
+    
+    
+    constexpr const std::size_t DEFAULT_PARSER_BUFFER_SIZE = 1u << 12;
 
     struct Parser {
 
 
         Parser();
     
-        std::optional<Fix::Message> parse(std::string_view& sv);  
+        ParseResult parse(std::string_view& sv);  
 
         
         private:
         std::vector<char> buff_;
-        char tag_buff_[MAX_TAG_SIZE];
         size_t complete_field_count_{0};
         size_t read_idx_{0};
         double compact_ratio_ = 0.25;
         Fix::MessageBuilder message_builder;
-        std::vector<Fix::ParseErrors::Critical> errs_;
+        std::vector<Fix::Error::Parse> errs_;
         
         std::string_view next_field_();
 
@@ -57,6 +55,8 @@ namespace Fix {
         void parse_field_();
 
         void maybe_compact_buffer_();
+
+      
 
         std::size_t unread_() const noexcept;
     };  
