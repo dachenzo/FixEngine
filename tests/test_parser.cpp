@@ -34,14 +34,15 @@ int main() {
         {99, kFixLogon.size()}
     };
 
-    std::optional<Fix::Message> res;
+    Fix::ParseResult res;
     for (auto [lo, hi] : ranges) {
         std::string_view sv{kFixLogon.data() + lo, hi - lo};
         res = p.parse(sv);
-        if (res.has_value()) break;
+
+        if (res.errs.empty()) break;
     }
 
-    if (res) std::cout << "PARSE SUCCEEDED\n";
+    if (res.errs.empty()) std::cout << "PARSE SUCCEEDED\n";
     else     std::cout << "PARSE FAILED\n";
     
 }
