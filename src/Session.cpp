@@ -44,6 +44,7 @@ namespace Fix {
     }
 
     void Session::stop() {
+        if (stopped_) return;
         auto self = shared_from_this();
         self->logger_.log(
                 {Fix::Error::Layer::Fix, 
@@ -138,6 +139,32 @@ namespace Fix {
             logon_timer_.async_wait(handler);
         } else {
             state_ = Fix::SessionState::AWAITING_LOGON;
+            auto handler  = [self = shared_from_this()](std::error_code ec) {
+                if (ec) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Couldnt start logon timer"
+                    );
+                    return;
+                };
+
+
+                if (self->state_ == Fix::SessionState::AWAITING_LOGON) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Logon timer expired without receiving logon"
+                    );
+
+                    self->stop();
+                }
+            };
+
+            logon_timer_.expires_after(std::chrono::seconds(logon_response_timeout));
+            logon_timer_.async_wait(handler);
         }
 
     }
@@ -340,6 +367,12 @@ namespace Fix {
             Fix::Error::Severity::NA},
             "Logon received"
         );
+
+        if (role_ == Fix::Role::ACCEPTOR) {
+            state_ = Fix::SessionState::LOGON_RECEIVED; // will move to ACTIVE after sending logon response
+        } else {
+            state_ = Fix::SessionState::ACTIVE;
+        }
     }
     void Session::handle_logout(const Fix::Message&) {}
     void Session::handle_heartbeat(const Fix::Message&) {}
