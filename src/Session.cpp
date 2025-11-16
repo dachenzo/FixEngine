@@ -66,6 +66,8 @@ namespace Fix {
 
             // Cancel timers
             self->logon_timer_.cancel();
+            self->inbound_timer_.cancel();
+            self->heartbeat_timer_.cancel();
             
             
             // Close connection (this will cause async reads/writes to complete with ec=operation_aborted)
@@ -85,6 +87,36 @@ namespace Fix {
 
     Log::SessionLogger& Session::logger() {
         return logger_;
+    }
+
+
+    void Session::schedule_logon_timeout_(Fix::SessionState expected_state) {
+        auto handler  = [self = shared_from_this(), expected_state](std::error_code ec) {
+                if (ec) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Couldnt start logon timer"
+                    );
+                    return;
+                };
+
+
+                if (self->state_ == expected_state) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Logon timer expired without receiving logon"
+                    );
+
+                    self->stop();
+                }
+            };
+
+            logon_timer_.expires_after(std::chrono::seconds(logon_response_timeout));
+            logon_timer_.async_wait(handler);
     }
 
 
@@ -111,60 +143,10 @@ namespace Fix {
 
             state_ = Fix::SessionState::LOGON_SENT;
 
-            auto handler  = [self = shared_from_this()](std::error_code ec) {
-                if (ec) {
-                    self->logger_.log(
-                        {Fix::Error::Layer::Fix, 
-                        Fix::Error::Category::Error, 
-                        Fix::Error::Severity::High},
-                        "Couldnt start logon timer"
-                    );
-                    return;
-                };
-
-
-                if (self->state_ == Fix::SessionState::LOGON_SENT) {
-                    self->logger_.log(
-                        {Fix::Error::Layer::Fix, 
-                        Fix::Error::Category::Error, 
-                        Fix::Error::Severity::High},
-                        "Logon timer expired without receiving logon"
-                    );
-
-                    self->stop();
-                }
-            };
-
-            logon_timer_.expires_after(std::chrono::seconds(logon_response_timeout));
-            logon_timer_.async_wait(handler);
+            schedule_logon_timeout_(Fix::SessionState::LOGON_SENT);
         } else {
             state_ = Fix::SessionState::AWAITING_LOGON;
-            auto handler  = [self = shared_from_this()](std::error_code ec) {
-                if (ec) {
-                    self->logger_.log(
-                        {Fix::Error::Layer::Fix, 
-                        Fix::Error::Category::Error, 
-                        Fix::Error::Severity::High},
-                        "Couldnt start logon timer"
-                    );
-                    return;
-                };
-
-
-                if (self->state_ == Fix::SessionState::AWAITING_LOGON) {
-                    self->logger_.log(
-                        {Fix::Error::Layer::Fix, 
-                        Fix::Error::Category::Error, 
-                        Fix::Error::Severity::High},
-                        "Logon timer expired without receiving logon"
-                    );
-
-                    self->stop();
-                }
-            };
-
-            logon_timer_.expires_after(std::chrono::seconds(logon_response_timeout));
-            logon_timer_.async_wait(handler);
+            schedule_logon_timeout_(Fix::SessionState::AWAITING_LOGON);
         }
 
     }
