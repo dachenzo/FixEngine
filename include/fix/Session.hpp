@@ -22,6 +22,7 @@ namespace Fix {
 
     enum class SessionState {
         AWAITING_LOGON,
+        LOGON_RECEIVED,
         LOGON_SENT,
         ACTIVE,
         DISCONNECTED,
@@ -30,6 +31,8 @@ namespace Fix {
 
 
     struct Session: public std::enable_shared_from_this<Fix::Session> {
+
+        static constexpr const int logon_response_timeout = 20;
         // ctor/dtor
         Session(Fix::SessionID id,
                 Fix::Role role,
@@ -119,7 +122,10 @@ namespace Fix {
             Fix::Clock clock_;
             Fix::MessageFactory msg_factory_;
             Fix::Log::SessionLogger logger_;
-            
+            boost::asio::steady_timer logon_timer_;
+            boost::asio::steady_timer inbound_timer_;
+            boost::asio::steady_timer heartbeat_timer_;
+           
 
 
 

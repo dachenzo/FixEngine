@@ -34,7 +34,10 @@ namespace Fix {
                 clock_{},
                 seq_provider_{store_},
                 msg_factory_{params_, seq_provider_, clock_},
-                logger_{id_, log_core}
+                logger_{id_, log_core},
+                logon_timer_{exec_},
+                inbound_timer_{exec_},
+                heartbeat_timer_{exec_}
                 {
         buff_.resize(8192);
 
@@ -61,6 +64,7 @@ namespace Fix {
             self->stopped_ = true;
 
             // Cancel timers
+            self->logon_timer_.cancel();
             
             
             // Close connection (this will cause async reads/writes to complete with ec=operation_aborted)
@@ -103,7 +107,35 @@ namespace Fix {
                 Fix::Error::Severity::NA},
                 "Logon sent"
             );
+
             state_ = Fix::SessionState::LOGON_SENT;
+
+            auto handler  = [self = shared_from_this()](std::error_code ec) {
+                if (ec) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Couldnt start logon timer"
+                    );
+                    return;
+                };
+
+
+                if (self->state_ == Fix::SessionState::LOGON_SENT) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Logon timer expired without receiving logon"
+                    );
+
+                    self->stop();
+                }
+            };
+
+            logon_timer_.expires_after(std::chrono::seconds(logon_response_timeout));
+            logon_timer_.async_wait(handler);
         } else {
             state_ = Fix::SessionState::AWAITING_LOGON;
         }
@@ -171,11 +203,13 @@ namespace Fix {
                 // need to run some timer here
                 auto parse_res = parser_.parse(sv);
 
-                if (parse_res.errs.empty()){
+                if (parse_res.errs.empty() && parse_res.message.has_value()) {
                     auto msg = parse_res.message.value();
                     dispatch(msg);
+                } else if (!parse_res.errs.empty()) {
+                    // TODO: handle errors
                 } else {
-                    // handle errors
+                    // incomplete message, continue reading
                 }
 
 
@@ -248,7 +282,9 @@ namespace Fix {
     void Session::set_connection(std::shared_ptr<Fix::IConnection> conn) {
         conn_ = conn;
         exec_ = boost::asio::strand<boost::asio::any_io_executor>(conn_->get_executor());
-
+        logon_timer_ = boost::asio::steady_timer(exec_);
+        inbound_timer_ = boost::asio::steady_timer(exec_);
+        heartbeat_timer_ = boost::asio::steady_timer(exec_);
     }
 
 

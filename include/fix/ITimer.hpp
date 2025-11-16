@@ -33,7 +33,7 @@ namespace Fix {
      
         AsioTimer(boost::asio::io_context& io);
 
-        void start(std::chrono::milliseconds duration, Handler& handler);
+        void start(std::chrono::milliseconds duration, Handler handler);
 
         void cancel() noexcept;
 
