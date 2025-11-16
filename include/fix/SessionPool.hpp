@@ -44,7 +44,7 @@ namespace Fix {
         private:
         std::vector<std::shared_ptr<Fix::Session>> sessions_;
         std::vector<std::size_t> free_indices_;
-        std::size_t next_idx;
+        std::size_t next_idx = 0;
 
         std::size_t generate_session_Id_() noexcept;
     };

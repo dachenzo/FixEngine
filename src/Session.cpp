@@ -34,13 +34,17 @@ namespace Fix {
                 clock_{},
                 seq_provider_{store_},
                 msg_factory_{params_, seq_provider_, clock_},
-                logger_{id_, log_core}
+                logger_{id_, log_core},
+                logon_timer_{exec_},
+                inbound_timer_{exec_},
+                heartbeat_timer_{exec_}
                 {
         buff_.resize(8192);
 
     }
 
     void Session::stop() {
+        if (stopped_) return;
         auto self = shared_from_this();
         self->logger_.log(
                 {Fix::Error::Layer::Fix, 
@@ -61,6 +65,9 @@ namespace Fix {
             self->stopped_ = true;
 
             // Cancel timers
+            self->logon_timer_.cancel();
+            self->inbound_timer_.cancel();
+            self->heartbeat_timer_.cancel();
             
             
             // Close connection (this will cause async reads/writes to complete with ec=operation_aborted)
@@ -80,6 +87,36 @@ namespace Fix {
 
     Log::SessionLogger& Session::logger() {
         return logger_;
+    }
+
+
+    void Session::schedule_logon_timeout_(Fix::SessionState expected_state) {
+        auto handler  = [self = shared_from_this(), expected_state](std::error_code ec) {
+                if (ec) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Couldnt start logon timer"
+                    );
+                    return;
+                };
+
+
+                if (self->state_ == expected_state) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Logon timer expired without receiving logon"
+                    );
+
+                    self->stop();
+                }
+            };
+
+            logon_timer_.expires_after(std::chrono::seconds(logon_response_timeout));
+            logon_timer_.async_wait(handler);
     }
 
 
@@ -103,9 +140,13 @@ namespace Fix {
                 Fix::Error::Severity::NA},
                 "Logon sent"
             );
+
             state_ = Fix::SessionState::LOGON_SENT;
+
+            schedule_logon_timeout_(Fix::SessionState::LOGON_SENT);
         } else {
             state_ = Fix::SessionState::AWAITING_LOGON;
+            schedule_logon_timeout_(Fix::SessionState::AWAITING_LOGON);
         }
 
     }
@@ -171,11 +212,13 @@ namespace Fix {
                 // need to run some timer here
                 auto parse_res = parser_.parse(sv);
 
-                if (parse_res.errs.empty()){
+                if (parse_res.errs.empty() && parse_res.message.has_value()) {
                     auto msg = parse_res.message.value();
                     dispatch(msg);
+                } else if (!parse_res.errs.empty()) {
+                    // TODO: handle errors
                 } else {
-                    // handle errors
+                    // incomplete message, continue reading
                 }
 
 
@@ -248,7 +291,9 @@ namespace Fix {
     void Session::set_connection(std::shared_ptr<Fix::IConnection> conn) {
         conn_ = conn;
         exec_ = boost::asio::strand<boost::asio::any_io_executor>(conn_->get_executor());
-
+        logon_timer_ = boost::asio::steady_timer(exec_);
+        inbound_timer_ = boost::asio::steady_timer(exec_);
+        heartbeat_timer_ = boost::asio::steady_timer(exec_);
     }
 
 
@@ -304,6 +349,12 @@ namespace Fix {
             Fix::Error::Severity::NA},
             "Logon received"
         );
+
+        if (role_ == Fix::Role::ACCEPTOR) {
+            state_ = Fix::SessionState::LOGON_RECEIVED; // will move to ACTIVE after sending logon response
+        } else {
+            state_ = Fix::SessionState::ACTIVE;
+        }
     }
     void Session::handle_logout(const Fix::Message&) {}
     void Session::handle_heartbeat(const Fix::Message&) {}
