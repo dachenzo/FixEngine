@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 #include <boost/asio.hpp>
-#include <fix/definitions.hpp>
+#include <fix/core/definitions.hpp>
 
 
 namespace Fix {

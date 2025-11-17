@@ -1,5 +1,5 @@
 #pragma once
-#include <fix/MessageStore.hpp>
+#include <fix/core/MessageStore.hpp>
 
 namespace Fix {
     struct SeqProvider {

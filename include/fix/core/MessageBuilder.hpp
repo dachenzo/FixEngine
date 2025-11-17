@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdlib>
 #include <span>
-#include <fix/Message.hpp>
+#include <fix/core/Message.hpp>
 #include <fix/error/ParserErrors.hpp>
 #include <fix/error/Severity.hpp>
 #include <vector>

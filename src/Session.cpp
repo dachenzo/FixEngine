@@ -6,9 +6,9 @@
 #include <optional>
 #include <fix/log/LogEntry.hpp>
 #include <fix/error/Network.hpp>
-#include <fix/Session.hpp>
-#include <fix/Parser.hpp>
-#include <fix/utils.hpp>
+#include <fix/core/Session.hpp>
+#include <fix/core/Parser.hpp>
+#include <fix/core/utils.hpp>
 
 namespace Fix {
     constexpr const int wire_pre_alloc = 200;

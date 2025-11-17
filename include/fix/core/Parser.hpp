@@ -8,7 +8,7 @@
 #include <utility>
 #include <charconv>
 #include <vector>
-#include <fix/MessageBuilder.hpp>
+#include <fix/core/MessageBuilder.hpp>
 #include <fix/error/ParserErrors.hpp>
 #include <fix/error/Severity.hpp>
 

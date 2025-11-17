@@ -3,10 +3,10 @@
 #include <string>
 #include <cstdint>
 #include <string_view>
-#include <fix/definitions.hpp>
-#include <fix/Clock.hpp>
-#include <fix/SeqProvider.hpp>
-#include <fix/Message.hpp>
+#include <fix/core/definitions.hpp>
+#include <fix/core/Clock.hpp>
+#include <fix/core/SeqProvider.hpp>
+#include <fix/core/Message.hpp>
 
 namespace Fix {
 

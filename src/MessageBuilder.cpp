@@ -1,5 +1,5 @@
-#include <fix/MessageBuilder.hpp>
-#include <fix/utils.hpp>
+#include <fix/core/MessageBuilder.hpp>
+#include <fix/core/utils.hpp>
 
 
 namespace Fix {

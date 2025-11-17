@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <sstream>
-#include <fix/definitions.hpp>
+#include <fix/core/definitions.hpp>
 #include <fix/log/LogContext.hpp>
 #include <fix/error/utility.hpp>
 

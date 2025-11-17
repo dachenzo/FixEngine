@@ -1,7 +1,7 @@
 #include <string>
 #include <cstring>
-#include <fix/Parser.hpp>
-#include <fix/Message.hpp>
+#include <fix/core/Parser.hpp>
+#include <fix/core/Message.hpp>
 
 namespace Fix {
     

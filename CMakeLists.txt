@@ -19,6 +19,3 @@ find_package(Boost REQUIRED)
 
 target_link_libraries(fix_engine PUBLIC Boost::boost)
 
-
-add_executable(fix_main src/main.cpp)
-target_link_libraries(fix_main PRIVATE fix_engine)
