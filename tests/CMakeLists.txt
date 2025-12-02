@@ -27,6 +27,10 @@ add_executable(test_multi
     test_multi.cpp
 )
 
+add_executable(test_repeating_group_validation
+    test_repeating_group_validation.cpp
+)
+
 
 
 
@@ -38,4 +42,5 @@ target_link_libraries(server PRIVATE fix_engine)
 target_link_libraries(test_parser PRIVATE fix_engine) 
 target_link_libraries(test_log_file_sinks PRIVATE fix_engine) 
 target_link_libraries(test_log_mpsc PRIVATE fix_engine) 
+target_link_libraries(test_repeating_group_validation PRIVATE fix_engine) 
 target_link_libraries(test_multi PRIVATE fix_engine) 
