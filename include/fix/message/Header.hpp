@@ -24,6 +24,8 @@ namespace Fix::Message
         {35,  FieldType::STRING, FieldPresence::REQUIRED}, // MsgType
         {49,  FieldType::STRING, FieldPresence::REQUIRED}, // SenderCompID
         {56,  FieldType::STRING, FieldPresence::REQUIRED}, // TargetCompID
+        {34,  FieldType::INT,    FieldPresence::REQUIRED}, // MsgSeqNum
+        {52,  FieldType::STRING, FieldPresence::REQUIRED}, // SendingTime
 
         {115, FieldType::STRING, FieldPresence::OPTIONAL}, // OnBehalfOfCompID
         {128, FieldType::STRING, FieldPresence::OPTIONAL}, // DeliverToCompID
@@ -31,7 +33,7 @@ namespace Fix::Message
         {90,  FieldType::INT,    FieldPresence::OPTIONAL}, // SecureDataLen
         {91,  FieldType::STRING, FieldPresence::OPTIONAL}, // SecureData
 
-        {34,  FieldType::INT,    FieldPresence::REQUIRED}, // MsgSeqNum
+        
 
         {50,  FieldType::STRING, FieldPresence::OPTIONAL}, // SenderSubID
         {142, FieldType::STRING, FieldPresence::OPTIONAL}, // SenderLocationID
@@ -48,7 +50,7 @@ namespace Fix::Message
         {43,  FieldType::STRING, FieldPresence::OPTIONAL}, // PossDupFlag
         {97,  FieldType::BOOLEAN, FieldPresence::OPTIONAL}, // PossResend
 
-        {52,  FieldType::STRING, FieldPresence::REQUIRED}, // SendingTime
+        
         {122, FieldType::STRING, FieldPresence::OPTIONAL}, // OrigSendingTime
 
         {212, FieldType::INT,    FieldPresence::OPTIONAL}, // XmlDataLen

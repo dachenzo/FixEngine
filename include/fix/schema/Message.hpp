@@ -16,7 +16,7 @@ namespace Fix::Message {
     };
 
     template<MessageBody Body>
-    struct Message {
+    struct MessageSchema {
         const std::string msg_type = Body::MsgType;
         const Fix::Schema::FieldSchema* header = StandardHeaderSchema.data();
         const std::size_t header_field_count = StandardHeaderSchema.size();
