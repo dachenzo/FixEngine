@@ -8,6 +8,7 @@ namespace Fix::Error {
         MissingField,
         MissingGroupEntry,
         MissingGroupEntryOrWrongOrder,
-        MissingGroupSchemaEntry
+        MissingGroupSchemaEntry,
+        UnsupportedGroupSize
     };
 }

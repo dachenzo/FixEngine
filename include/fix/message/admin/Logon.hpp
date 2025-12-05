@@ -32,6 +32,8 @@ namespace Fix::Message {
             {384, FieldType::GROUP, FieldPresence::OPTIONAL, &Group384Schema},
             {464, FieldType::BOOLEAN, FieldPresence::OPTIONAL}
     }};
+
+    
     struct Logon {
         inline static constexpr  const std::string MsgType = "A";
         inline static constexpr  const FieldSchema* Schema = LogonSchema.data();

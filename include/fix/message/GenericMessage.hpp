@@ -7,7 +7,7 @@
 namespace Fix::Message {
 
     struct GenericField {
-        std::size_t tag;
+        unsigned long tag;
         std::string value;
     };
 

@@ -5,7 +5,7 @@
 #include <fix/schema/Field.hpp>
 
 Fix::Message::GenericMessage group1 = {
-    {627, "2"},
+    {627, "3"},
     {628, "HOP1_COMP"},
     {629, "20251202-12:00:01.000"},
     {630, "1001"},
@@ -15,7 +15,7 @@ Fix::Message::GenericMessage group1 = {
 };
 
 Fix::Schema::FieldSchema raw_group_schema[] = { 
-    {628, Fix::Schema::FieldType::STRING, Fix::Schema::FieldPresence::OPTIONAL},
+    {628, Fix::Schema::FieldType::STRING, Fix::Schema::FieldPresence::REQUIRED},
     {629, Fix::Schema::FieldType::STRING, Fix::Schema::FieldPresence::OPTIONAL},
     {630, Fix::Schema::FieldType::INT,    Fix::Schema::FieldPresence::OPTIONAL}
 };
@@ -34,7 +34,7 @@ int main() {
     Fix::Validator v{};
 
     int curr_index = 1; // Start after the 627 field
-    auto results = v.validate_groups_(2, group1, &group_field, curr_index);
+    auto results = v.validate_groups_(3, group1, &group_field, curr_index);
 
     if (results.empty()) {
         std::cout << "Group validation succeeded.\n";

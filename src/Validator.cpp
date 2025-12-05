@@ -70,35 +70,83 @@ namespace Fix {
     ValidatorResult Validator::validate_groups_(const std::size_t groupcnt, const Message::GenericMessage& message, const 
     Schema::FieldSchema* groupfield, int& curr_index) {
         ValidatorResult results{};
-    
+        constexpr std::size_t kMaxGroupCount = 32;
 
         if (groupcnt == 0) return results;
         
+        if(!groupfield) {
+            results.emplace_back(Error::Validator::MissingGroupEntry, 0);
+            return results;
+        }
 
         if (!groupfield->group_schema) {
             results.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
             return results;
         };
 
-
-
         auto& gs = groupfield->group_schema;
-        
+        if (gs->field_count == 0 || gs->fields == nullptr) {
+            results.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
+            return results;
+        };
+
+
+        if (gs->field_count > kMaxGroupCount) {
+            results.emplace_back(Error::Validator::UnsupportedGroupSize, groupfield->tag);
+        }
+
+        struct FieldOcc {
+            unsigned long tag;
+            int cnt;
+        };
+
+        std::array<FieldOcc, kMaxGroupCount> count{};
+        for (int i = 0; i < gs->field_count; i++) {
+            count[i] = {gs->fields[i].tag, 0};
+        }
+
+        auto ingroup = [&gs, &count](unsigned int tag) {
+            for (int i = 0; i < gs->field_count; i++) {
+                if (tag == count[i].tag) return true;
+            }
+            return false;
+        };
+
+        auto has_occured = [&gs, &count](unsigned int tag) {
+            for (int i = 0; i < gs->field_count; i++) {
+                if (tag == count[i].tag && count[i].cnt > 0) return true;
+            }
+            return false;
+        };
+
+        auto increment_tag_count = [&gs, &count](unsigned int tag) {
+            for (int i = 0; i < gs->field_count; i++) {
+                if (tag == count[i].tag)  count[i].cnt++;
+            }
+        };
+ 
 
         for (std::size_t i = 0; i < groupcnt; i++) {
+            for (std::size_t i = 0; i < gs->field_count; ++i) count[i].cnt = 0;
             for (std::size_t j = 0; j < gs->field_count; j++) {
                 const auto& field_schema = gs->fields[j];
 
-                if (message.size() <= curr_index) {
+                if (curr_index >= message.size()) {
                     results.emplace_back(Error::Validator::MissingGroupEntry, field_schema.tag);
                     return results;
                 }
 
-                if (message[curr_index].tag != field_schema.tag) {
+                auto current_tag = message[curr_index].tag;
+
+
+                if (current_tag != field_schema.tag) {
                     if (field_schema.presence == Schema::FieldPresence::REQUIRED) {
-                        results.emplace_back(Error::Validator::MissingGroupEntryOrWrongOrder, field_schema.tag);
+                        results.emplace_back(Error::Validator::MissingGroupEntryOrWrongOrder, field_schema.tag); 
                         return results;
                     }
+                } else if (ingroup(current_tag) && has_occured(current_tag)) {
+                    //assume this is the next repeating group starting or your done with repeating groups
+                    break;
                 } else {
                     if (field_schema.type == Schema::FieldType::GROUP) {
                         curr_index++;
@@ -114,8 +162,18 @@ namespace Fix {
                         results.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
                         return results;
                     }
+                    increment_tag_count(current_tag);
                     curr_index++;
                 } 
+            }
+            bool atleast_one_occurence = false;
+            for (int i = 0; i < gs->field_count; i++) {
+                if (count[i].cnt > 0)  atleast_one_occurence = true;
+            } 
+
+            if (!atleast_one_occurence) {
+                results.emplace_back(Error::Validator::MissingGroupEntry, groupfield->tag);
+                return results;
             }
         } 
         
