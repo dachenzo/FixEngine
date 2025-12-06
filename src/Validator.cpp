@@ -7,30 +7,45 @@ namespace Fix {
     
     ValidatorResult Validator::validate_header_(const Message::GenericMessage& message, std::string& expected_message_type) {
         auto& schema = Message::StandardHeaderSchema;
+        ValidatorResult results{};
 
         if (message.size() < 3) {
             //automatically invalid 
+            results.emplace_back(Error::Validator::MissingField, 0);
+            return results;
         }
 
 
         if (!validate_type_(message[0].value, schema[0].type) || message[0].value != Fix::DEFAULT_FIX_VERSION) {
-            // wrong fix version
+            // wrong fix versio
+            results.emplace_back(Error::Validator::WrongFixVersion, 0);
+            return results;
         }
 
         if (!validate_type_(message[1].value, schema[1].type)) {
             // invalid body length
+            results.emplace_back(Error::Validator::WrongFieldType, schema[1].tag);
+            return results;
         }   
 
         if (!validate_type_(message[2].value, schema[2].type) || message[2].value != expected_message_type) {
             // invalid msg type
+            results.emplace_back(Error::Validator::WrongFieldType, schema[2].tag);
+            return results;
         }
 
 
-        auto results = validate_fields_(message, schema.data(), schema.size());
+        results = std::move(validate_fields_(message, schema.data(), schema.size()));
         return results;
 
     }
 
+    ValidatorResult Validator::validate_message_body_(const Message::GenericMessage& message, std::string& expected_message_type) {
+        // Placeholder implementation
+        ValidatorResult results{};
+        // Actual body validation logic would go here
+        return results;
+    }   
 
     ValidatorResult Validator::validate_fields_(const Message::GenericMessage& message, const Schema::FieldSchema* schema, std::size_t schema_size) {
         ValidatorResult results{};
@@ -42,7 +57,7 @@ namespace Fix {
             });
             if (it != message.end()) {
                 if (field_schema.type == Schema::FieldType::GROUP) {
-                    int start_idx = static_cast<int>(it - message.begin());
+                    int start_idx = static_cast<int>(it - message.begin())+1; //one to advance past the group count field
                     std::size_t group_count = 0;
                     if (!Fix::Utils::parse_int(it->value, group_count)) {
                         results.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
@@ -93,6 +108,7 @@ namespace Fix {
 
         if (gs->field_count > kMaxGroupCount) {
             results.emplace_back(Error::Validator::UnsupportedGroupSize, groupfield->tag);
+            return results;
         }
 
         struct FieldOcc {
@@ -105,12 +121,6 @@ namespace Fix {
             count[i] = {gs->fields[i].tag, 0};
         }
 
-        auto ingroup = [&gs, &count](unsigned int tag) {
-            for (int i = 0; i < gs->field_count; i++) {
-                if (tag == count[i].tag) return true;
-            }
-            return false;
-        };
 
         auto has_occured = [&gs, &count](unsigned int tag) {
             for (int i = 0; i < gs->field_count; i++) {
@@ -144,7 +154,7 @@ namespace Fix {
                         results.emplace_back(Error::Validator::MissingGroupEntryOrWrongOrder, field_schema.tag); 
                         return results;
                     }
-                } else if (ingroup(current_tag) && has_occured(current_tag)) {
+                } else if (has_occured(current_tag)) {
                     //assume this is the next repeating group starting or your done with repeating groups
                     break;
                 } else {
@@ -181,8 +191,6 @@ namespace Fix {
         
     };
 
-
-
     bool Validator::validate_type_(const std::string& value, Fix::Schema::FieldType type) {
         
         switch (type)
@@ -207,5 +215,17 @@ namespace Fix {
         };
         return false;
 
+    }
+
+    ValidatorResult Validator::validate_trailer_(const Message::GenericMessage& message) {
+        ValidatorResult results{};
+
+        if (message.size() > 0 && message.back().value.size() == 3)// type is implicityly validated in parser 
+        {
+            return results;
+        }
+
+        results.emplace_back(Error::Validator::MissingField, 10);
+        return results;
     }
 }

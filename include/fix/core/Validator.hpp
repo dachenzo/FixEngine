@@ -22,13 +22,14 @@ namespace Fix {
 
         // All functions will eventually return Validaro Result;
 
-        void validate();
+        void validate(const Message::GenericMessage& message);
 
+        private:
         ValidatorResult validate_header_(const Message::GenericMessage& message, std::string& expected_message_type);
 
-        void validate_trailer_();
+        ValidatorResult validate_trailer_(const Message::GenericMessage& message);
 
-        void validate_message_body_();
+        ValidatorResult validate_message_body_(const Message::GenericMessage& message, std::string& expected_message_type);
 
         ValidatorResult validate_fields_(const Message::GenericMessage& message, const Schema::FieldSchema* schema, std::size_t schema_size);
 

@@ -12,11 +12,6 @@ namespace Fix::Message
         {630, FieldType::INT,    FieldPresence::OPTIONAL}, // HopRefID
     }};
 
-    inline constexpr std::array<std::pair<int, std::size_t>, 3> Group627SchemaOccurrence {{
-        {628, 0}, 
-        {629, 0}, 
-        {630, 0}, 
-    }};
 
     inline constexpr GroupSchema Group627Schema {
         RawGroup627Schema.data(),
