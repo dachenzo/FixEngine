@@ -9,6 +9,7 @@ namespace Fix::Error {
         MissingGroupEntry,
         MissingGroupEntryOrWrongOrder,
         MissingGroupSchemaEntry,
-        UnsupportedGroupSize
+        UnsupportedGroupSize,
+        UnknownMessageType
     };
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include <string>
+#include <string_view>
 #include <fix/schema/Field.hpp>
 
 
@@ -35,9 +35,9 @@ namespace Fix::Message {
 
     
     struct Logon {
-        inline static constexpr  const std::string MsgType = "A";
+        inline static constexpr std::string_view MsgType = "A";
         inline static constexpr  const FieldSchema* Schema = LogonSchema.data();
-        inline static constexpr  std::size_t SchemaSize = LogonSchema.size();        
+        inline static constexpr  const std::size_t SchemaSize = LogonSchema.size();        
     }; 
 
 }
