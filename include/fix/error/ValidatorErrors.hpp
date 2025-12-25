@@ -10,6 +10,7 @@ namespace Fix::Error {
         MissingGroupEntryOrWrongOrder,
         MissingGroupSchemaEntry,
         UnsupportedGroupSize,
-        UnknownMessageType
+        UnknownMessageType,
+        UnrecognizedField
     };
 }

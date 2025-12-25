@@ -40,9 +40,11 @@ namespace Fix {
 
     }
 
-    ValidatorResult Validator::validate_message_body_(const Message::GenericMessage& message, std::string& expected_message_type) {
+    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, std::string& expected_message_type) {
         // Placeholder implementation
         ValidatorResult results{};
+        tagscratch_.ensure_bits(message.size());
+        tagscratch_.clear();
 
         auto schema = registry_.get(expected_message_type);
         if (!schema) {
@@ -53,6 +55,10 @@ namespace Fix {
         validate_fields_(message, schema->body, schema->body_field_count, results);
         validate_trailer_(message, results);
 
+        // Only flag extra fields when no prior errors were found
+        if (results.empty() && !tagscratch_.full(message.size())) {
+            results.push_back({Error::Validator::UnrecognizedField, 0});
+        }
 
         return results;
     }   
@@ -66,6 +72,7 @@ namespace Fix {
                 return field.tag == field_schema.tag;
             });
             if (it != message.end()) {
+                tagscratch_.set(it, message.begin());
                 if (field_schema.type == Schema::FieldType::GROUP) {
                     int start_idx = static_cast<int>(it - message.begin())+1; //one to advance past the group count field
                     std::size_t group_count = 0;
@@ -167,6 +174,7 @@ namespace Fix {
                     //assume this is the next repeating group starting or your done with repeating groups
                     break;
                 } else {
+                    tagscratch_.set(curr_index);
                     if (field_schema.type == Schema::FieldType::GROUP) {
                         curr_index++;
                         std::size_t group_count = 0;
@@ -227,8 +235,7 @@ namespace Fix {
     }
 
     void Validator::validate_trailer_(const Message::GenericMessage& message, ValidatorResult& results) {
-        ValidatorResult results{};
-
+        
         //This is done by the initial parser usually, so we skip it here
         return;
     }

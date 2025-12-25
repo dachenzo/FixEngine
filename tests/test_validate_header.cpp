@@ -114,7 +114,7 @@ int main() {
 
     Fix::Validator v{};
     std::string expected_msg_type1 = "D";
-    auto res1 = v.validate_header_(validheader1msg, expected_msg_type1);
+    v.validate_header_(validheader1msg, expected_msg_type1);
     if (res1.empty()) {
         std::cout << "validheader1 passed validation\n";
     } else {                
