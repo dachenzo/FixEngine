@@ -47,8 +47,9 @@ namespace Fix {
         }
 
         // Store field in the message
-        bool res = message_.add(Fix::Field{raw_field.tag, std::move(raw_field.value)});
-        if (!res && error_.sev == Error::Severity::NA) {
+        // bool res = message_.add(Fix::Field{raw_field.tag, std::move(raw_field.value)});
+        message_.push_back(Message::GenericField{static_cast<unsigned long>(raw_field.tag), std::move(raw_field.value)});
+        if (error_.sev == Error::Severity::NA) {
             //  ignore this if theres an error of higher severity
             error_.errs.push_back(Error::Parse::Duplicate_tag);
             error_.sev = Error::Severity::Moderate;
@@ -60,8 +61,8 @@ namespace Fix {
         return {!error_.errs.empty(), ready_};
     }
 
-    Fix::Message MessageBuilder::get()  {
-        Fix::Message result = std::move(message_);
+    Message::GenericMessage MessageBuilder::get()  {
+        Message::GenericMessage result = std::move(message_);
         reset_state();
         return result;
     }
@@ -73,7 +74,7 @@ namespace Fix {
     
 
     void MessageBuilder::reset_state() {
-        message_ = Fix::Message();
+        message_ = Message::GenericMessage();
         checksum_count_ = 0;
         body_length_count_ = 0;
         body_length_ = 0;

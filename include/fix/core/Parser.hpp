@@ -9,6 +9,7 @@
 #include <charconv>
 #include <vector>
 #include <fix/core/MessageBuilder.hpp>
+#include <fix/message/GenericMessage.hpp>
 #include <fix/error/ParserErrors.hpp>
 #include <fix/error/Severity.hpp>
 
@@ -22,7 +23,7 @@ namespace Fix {
 
     struct ParseResult {
         std::vector<Error::Parse> errs;
-        std::optional<Fix::Message> message; 
+        std::optional<Message::GenericMessage> message; 
         Error::Severity sev;
     };
     
