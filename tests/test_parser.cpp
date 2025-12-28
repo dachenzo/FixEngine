@@ -94,3 +94,51 @@ TEST(ParserTests, MalformedTag) {
 
     EXPECT_EQ(result.errs[0], Error::Parse::MalformedTag);
 }
+
+TEST(ParserTests, WrongBodyLength) {
+    Parser parser;
+    const std::string kFixLogon =
+        "8=FIX.4.4\x01"
+        "9=76\x01" // Incorrect body length
+        "35=A\x01"
+        "34=1\x01"
+        "49=CLIENT12\x01"
+        "52=20251007-15:42:39.255\x01"
+        "56=EXECUTOR\x01"
+        "98=0\x01"
+        "108=30\x01"
+        "141=Y\x01"
+        "10=198\x01";
+
+    std::string_view sv(kFixLogon);
+    
+    ParseResult result = parser.parse(sv);
+    ASSERT_FALSE(result.errs.empty());
+    EXPECT_FALSE(result.message.has_value());
+
+    EXPECT_EQ(result.errs[0], Error::Parse::Wrong_body_length);
+}
+
+TEST(ParserTests, FailedChecksum) {
+    Parser parser;
+    std::string raw_message = 
+        "8=FIX.4.4\x01"
+        "9=77\x01"
+        "35=A\x01"
+        "34=1\x01"
+        "49=CLIENT12\x01"
+        "52=20251007-15:42:39.255\x01"
+        "56=EXECUTOR\x01"
+        "98=0\x01"
+        "108=30\x01"
+        "141=Y\x01"
+        "10=000\x01";  // Incorrect checksum
+
+    std::string_view sv(raw_message);
+    
+    ParseResult result = parser.parse(sv);
+    ASSERT_FALSE(result.errs.empty());
+    EXPECT_FALSE(result.message.has_value());
+
+    EXPECT_EQ(result.errs[0], Error::Parse::Failed_checksum);
+}   
