@@ -36,12 +36,12 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Routing         | ❌      | ❌       | ❌          | ❌          | ❌        |
 
 ## 4. Schema & Metadata
-| Aspect                         | Exists | Correct | Integrated | Performant | Hardened |
-|--------------------------------|--------|---------|------------|------------|----------|
-| Message schemas                | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Field schemas                  | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Repeating groups               | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Versioning (FIX 4.2 / FIX 4.4. | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Aspect                        | Exists | Correct | Integrated | Performant | Hardened |
+|-------------------------------|--------|---------|------------|------------|----------|
+| Message schemas               | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Field schemas                 | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Repeating groups              | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Versioning FIX 4.2 / FIX 4.4. | ❌      | ❌       | ❌          | ❌          | ❌        |
 
 ## 5. Validation
 | Aspect            | Exists | Correct | Integrated | Performant | Hardened |
