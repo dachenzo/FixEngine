@@ -8,7 +8,7 @@
 namespace Fix {
 
     struct Serializer {
-        std::size_t serialize(Fix::Message& msg, std::string& buff);
+        std::size_t serialize(Fix::ValidMessage& msg, std::string& buff);
     };
 
 }

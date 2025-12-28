@@ -16,6 +16,7 @@
 #include <fix/core/Parser.hpp>
 #include <fix/log/LogCore.hpp>
 #include <fix/log/SessionLogger.hpp>
+#include <fix/message/GenericMessage.hpp>
 
 
 namespace Fix {
@@ -64,12 +65,12 @@ namespace Fix {
         // void onTimer(Fix::TimerType which);
 
         // // client/API
-        // void sendAppMessage(const Fix::Message&);
+        // void sendAppMessage(const Fix::ValidMessage&);
 
         private:
             // core dispatch
-            void dispatch(Fix::Message& msg) ;
-            // void checkInboundSeq(const Fix::Message&);
+            void dispatch(Message::GenericMessage& msg) ;
+            // void checkInboundSeq(const Fix::ValidMessage&);
 
             // // FIX admin sends
             void send_logon();
@@ -81,14 +82,14 @@ namespace Fix {
             // void resendBufferedMessages(std::size_t beginSeqNo, std::size_t endSeqNo);
 
             // FIX admin handlers
-            void handle_logon(const Fix::Message&);
-            void handle_logout(const Fix::Message&);
-            void handle_heartbeat(const Fix::Message&);
-            void handle_test_request(const Fix::Message&);
-            void handle_resend_request(const Fix::Message&);
-            void handle_sequence_reset(const Fix::Message&);
+            void handle_logon(const Fix::ValidMessage&);
+            void handle_logout(const Fix::ValidMessage&);
+            void handle_heartbeat(const Fix::ValidMessage&);
+            void handle_test_request(const Fix::ValidMessage&);
+            void handle_resend_request(const Fix::ValidMessage&);
+            void handle_sequence_reset(const Fix::ValidMessage&);
 
-            void send_message_(Fix::Message& msg);
+            void send_message_(Fix::ValidMessage& msg);
 
             void send_bytes_(std::string msg_wire);
 

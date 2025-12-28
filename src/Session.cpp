@@ -155,7 +155,7 @@ namespace Fix {
         return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
-    void Session::send_message_(Fix::Message& msg) {
+    void Session::send_message_(Fix::ValidMessage& msg) {
         std::string wire{};
         wire.reserve(wire_pre_alloc);
         std::size_t wire_len = serializer_.serialize(msg, wire);
@@ -297,35 +297,35 @@ namespace Fix {
     }
 
 
-    void Session::dispatch(Fix::Message& msg) {
+    void Session::dispatch(Message::GenericMessage& msg) {
        
-        auto seqnum_sv = msg.get(msg_seq_num_key);
-        if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
-        int seqnum;
-        auto [ptr, ec] = std::from_chars(seqnum_sv.value().data(), seqnum_sv.value().data() + seqnum_sv.value().size(), seqnum);
-        if (!(ec == std::errc())) {throw std::runtime_error("sequence number string couldnt be converted to integer");}
+        // auto seqnum_sv = msg.get(msg_seq_num_key);
+        // if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
+        // int seqnum;
+        // auto [ptr, ec] = std::from_chars(seqnum_sv.value().data(), seqnum_sv.value().data() + seqnum_sv.value().size(), seqnum);
+        // if (!(ec == std::errc())) {throw std::runtime_error("sequence number string couldnt be converted to integer");}
 
         
 
        
 
-        auto op_type = msg.get(35);
+        // auto op_type = msg.get(35);
     
         
-        if (!op_type.has_value()) {throw std::runtime_error("Message Must have a type");}
-        std::string_view type = op_type.value();
+        // if (!op_type.has_value()) {throw std::runtime_error("Message Must have a type");}
+        // std::string_view type = op_type.value();
      
         
 
-        if (type == "A") {handle_logon(msg);}
-        else if (type == "5") {handle_logout(msg);}
-        else if (type == "0") {handle_heartbeat(msg);}
-        else if (type == "1") {handle_test_request(msg);}
-        else if (type == "2") {handle_resend_request(msg);}
-        else if (type == "4") {handle_sequence_reset(msg);}
-        else {}
+        // if (type == "A") {handle_logon(msg);}
+        // else if (type == "5") {handle_logout(msg);}
+        // else if (type == "0") {handle_heartbeat(msg);}
+        // else if (type == "1") {handle_test_request(msg);}
+        // else if (type == "2") {handle_resend_request(msg);}
+        // else if (type == "4") {handle_sequence_reset(msg);}
+        // else {}
 
-        store_.store_inbound(seqnum, msg);
+        // store_.store_inbound(seqnum, msg);
 
     }
 
@@ -342,7 +342,7 @@ namespace Fix {
 
     }
 
-    void Session::handle_logon(const Fix::Message&) {
+    void Session::handle_logon(const Fix::ValidMessage&) {
         logger_.log(
             {Fix::Error::Layer::Fix, 
             Fix::Error::Category::Info, 
@@ -356,10 +356,10 @@ namespace Fix {
             state_ = Fix::SessionState::ACTIVE;
         }
     }
-    void Session::handle_logout(const Fix::Message&) {}
-    void Session::handle_heartbeat(const Fix::Message&) {}
-    void Session::handle_test_request(const Fix::Message&) {}
-    void Session::handle_resend_request(const Fix::Message&) {}
-    void Session::handle_sequence_reset(const Fix::Message&) {}
+    void Session::handle_logout(const Fix::ValidMessage&) {}
+    void Session::handle_heartbeat(const Fix::ValidMessage&) {}
+    void Session::handle_test_request(const Fix::ValidMessage&) {}
+    void Session::handle_resend_request(const Fix::ValidMessage&) {}
+    void Session::handle_sequence_reset(const Fix::ValidMessage&) {}
 
 }

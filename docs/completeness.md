@@ -25,12 +25,13 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Logon/Logout state     | ❌      | ❌       | ❌          | ❌          | ❌        |
 | ResendRequest handling | ❌      | ❌       | ❌          | ❌          | ❌        |
 | GapFill logic          | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Dispatch logic         | ✅      | ❌       | ✅          | ❌          | ❌        |
 
 ## 3. Message Processing
 | Aspect          | Exists | Correct | Integrated | Performant | Hardened |
 |-----------------|--------|---------|------------|------------|----------|
-| Parsing         | ✅      |         | ❌          | ❌          | ❌        |
-| Validation hook | ✅      | ✅       | ❌          | ❌          | ❌        |
+| Parsing         | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Validation hook | ✅      | ❌       | ❌          | ❌          | ❌        |
 | Generation      | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Normalisation   | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Routing         | ❌      | ❌       | ❌          | ❌          | ❌        |

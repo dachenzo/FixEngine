@@ -16,12 +16,12 @@ namespace Fix {
         inbound_.reset(expected_target);
     }
 
-    void MessageStore::store_inbound(int seq, Fix::Message& msg) {
-        inbound_.add(seq, std::make_unique<Fix::Message>(std::move(msg)));
+    void MessageStore::store_inbound(int seq, Fix::ValidMessage& msg) {
+        inbound_.add(seq, std::make_unique<Fix::ValidMessage>(std::move(msg)));
     }
 
-    void MessageStore::store_outbound(int seq, Fix::Message& msg) {
-        outbound_.add(seq, std::make_unique<Fix::Message>(std::move(msg)));
+    void MessageStore::store_outbound(int seq, Fix::ValidMessage& msg) {
+        outbound_.add(seq, std::make_unique<Fix::ValidMessage>(std::move(msg)));
     }
 
     int MessageStore::get_next_sender_seq() const {

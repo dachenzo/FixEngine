@@ -3,6 +3,7 @@
 #include <span>
 #include <fix/core/Message.hpp>
 #include <fix/error/ParserErrors.hpp>
+#include <fix/message/GenericMessage.hpp>
 #include <fix/error/Severity.hpp>
 #include <vector>
 
@@ -41,14 +42,14 @@ namespace Fix {
 
         void reset_state();
 
-        Fix::Message get();
+        Message::GenericMessage get();
 
         private:
         std::size_t body_length_ = 0;
         std::size_t body_length_count_ = 0;
         std::size_t checksum_count_ = 0;
         MessageError error_;
-        Fix::Message message_;
+        Message::GenericMessage message_;
         bool ready_{false};
 
         

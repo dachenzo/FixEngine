@@ -13,12 +13,12 @@ namespace Fix {
 
     auto FIX_VERSION = "";
 
-    Message::Message() {
+    ValidMessage::ValidMessage() {
         message_.reserve(32);
         lookup.reserve(32);
     }
     
-    std::optional<std::string_view> Message::get(int key) const  {
+    std::optional<std::string_view> ValidMessage::get(int key) const  {
         auto it = lookup.find(key);
         if (it == lookup.end()) {
             return  std::nullopt;
@@ -27,7 +27,7 @@ namespace Fix {
         }
     }
 
-    bool Message::set_tag(int tag, std::string value) {
+    bool ValidMessage::set_tag(int tag, std::string value) {
         auto it = lookup.find(tag);
         if (it == lookup.end()) {return false;}
 
@@ -36,7 +36,7 @@ namespace Fix {
     }
 
 
-    bool Message::add(Fix::Field field) {
+    bool ValidMessage::add(Fix::Field field) {
         auto it = lookup.insert({field.tag, message_.size()});
         if (!it.second) {
             return false;
@@ -48,11 +48,11 @@ namespace Fix {
 
     }   
 
-    std::span<const Fix::Field> Message::get_fields()const noexcept {
+    std::span<const Fix::Field> ValidMessage::get_fields()const noexcept {
         return std::span{message_.begin(), message_.end()};
     }
 
-    std::span<const Fix::Field> Message::get_fields_after(int tag)const {
+    std::span<const Fix::Field> ValidMessage::get_fields_after(int tag)const {
         auto it = lookup.find(tag);
         if (it == lookup.end()) {
             // empty span
