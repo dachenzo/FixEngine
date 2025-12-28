@@ -1,4 +1,5 @@
-Current Focus: Pasrsing -> Correct
+Current Focus: Validation hook -> Integrated
 
 Tasks:
-- switch Message builder and parser output from Fix::Message to Fix::Message::GenericMessage
+- integrate the validation class into session
+- include stub for validating seq number

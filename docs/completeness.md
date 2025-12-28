@@ -30,7 +30,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 ## 3. Message Processing
 | Aspect          | Exists | Correct | Integrated | Performant | Hardened |
 |-----------------|--------|---------|------------|------------|----------|
-| Parsing         | ✅      | ❌       | ❌          | ❌          | ❌        |
+| Parsing         | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Validation hook | ✅      | ❌       | ❌          | ❌          | ❌        |
 | Generation      | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Normalisation   | ❌      | ❌       | ❌          | ❌          | ❌        |
