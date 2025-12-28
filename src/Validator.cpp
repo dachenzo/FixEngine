@@ -5,7 +5,7 @@
 
 namespace Fix {
     
-    void Validator::validate_header_(const Message::GenericMessage& message, std::string& expected_message_type,  ValidatorResult& results) {
+    void Validator::validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type,  ValidatorResult& results) {
         auto& schema = Message::StandardHeaderSchema;
       
 
@@ -40,7 +40,7 @@ namespace Fix {
 
     }
 
-    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, std::string& expected_message_type) {
+    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, const std::string& expected_message_type) {
         // Placeholder implementation
         ValidatorResult results{};
         tagscratch_.ensure_bits(message.size());

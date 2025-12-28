@@ -72,9 +72,9 @@ namespace Fix {
     {
         // All functions will eventually return Validaro Result;
 
-        ValidatorResult validate_message(const Message::GenericMessage& message, std::string& expected_message_type);
+        ValidatorResult validate_message(const Message::GenericMessage& message, const std::string& expected_message_type);
 
-        void validate_header_(const Message::GenericMessage& message, std::string& expected_message_type, ValidatorResult& validres);
+        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres);
 
         void validate_trailer_(const Message::GenericMessage& message, ValidatorResult& validres);
 

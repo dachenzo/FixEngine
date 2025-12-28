@@ -3,5 +3,5 @@
         "internet": "cpp",
         "socket": "cpp"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    
 }
