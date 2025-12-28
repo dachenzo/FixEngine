@@ -8,7 +8,7 @@
 namespace Fix {
     struct OutboundMessaegStoreSlice {
         int seq_num;
-        std::unique_ptr<Fix::Message> msg;
+        std::unique_ptr<Fix::ValidMessage> msg;
     };
 #
     struct OutboundStore {
@@ -16,7 +16,7 @@ namespace Fix {
            
         }
 
-        void add (int seq_num, std::unique_ptr<Fix::Message> msg) {
+        void add (int seq_num, std::unique_ptr<Fix::ValidMessage> msg) {
             assert(seq_num == outbound_seq_ && "outbound seq mismatch");
             outbound_.emplace_back(seq_num, std::move(msg));
             outbound_seq_++;

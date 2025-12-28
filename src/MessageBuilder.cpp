@@ -49,12 +49,7 @@ namespace Fix {
         // Store field in the message
         // bool res = message_.add(Fix::Field{raw_field.tag, std::move(raw_field.value)});
         message_.push_back(Message::GenericField{static_cast<unsigned long>(raw_field.tag), std::move(raw_field.value)});
-        if (error_.sev == Error::Severity::NA) {
-            //  ignore this if theres an error of higher severity
-            error_.errs.push_back(Error::Parse::Duplicate_tag);
-            error_.sev = Error::Severity::Moderate;
-
-        } 
+        
     }
 
     BuildResult MessageBuilder::ready() const{

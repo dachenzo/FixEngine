@@ -1,12 +1,10 @@
+#include <gtest/gtest.h>
 #include <fix/core/Parser.hpp>
-#include <iostream>
-#include <vector>
-#include <string_view>
-#include <string>
 
-int main() {
-    Fix::Parser p{};
+using namespace Fix;
 
+TEST(ParserTests, ParseValidLogonMessage) {
+    Parser parser;
     const std::string kFixLogon =
         "8=FIX.4.4\x01"
         "9=77\x01"
@@ -20,29 +18,79 @@ int main() {
         "141=Y\x01"
         "10=199\x01";
 
-    // Feed in chunks: [start, end)
-    const std::vector<std::pair<size_t, size_t>> ranges{
-        {0, 14},
-        {14, 30},
-        {30, 33},
-        {33, 45},
-        {45, 70},
-        {70, 75},
-        {75, 85},
-        {85, 91},
-        {91, 99},
-        {99, kFixLogon.size()}
-    };
-
-    Fix::ParseResult res;
-    for (auto [lo, hi] : ranges) {
-        std::string_view sv{kFixLogon.data() + lo, hi - lo};
-        res = p.parse(sv);
-
-        if (res.errs.empty()) break;
-    }
-
-    if (res.errs.empty()) std::cout << "PARSE SUCCEEDED\n";
-    else     std::cout << "PARSE FAILED\n";
+    std::string_view sv(kFixLogon);
     
+    ParseResult result = parser.parse(sv);
+    EXPECT_TRUE(result.errs.empty());
+    EXPECT_TRUE(result.message.has_value());
+
+    Message::GenericMessage expected_message = {
+        {8, "FIX.4.4"},
+        {9, "77"},
+        {35, "A"},
+        {34, "1"},
+        {49, "CLIENT12"},
+        {52, "20251007-15:42:39.255"},
+        {56, "EXECUTOR"},
+        {98, "0"},
+        {108, "30"},
+        {141, "Y"},
+        {10, "199"}
+    };
+    if (result.message.has_value()) {
+        const auto& msg = result.message.value();
+        EXPECT_EQ(msg.size(), expected_message.size());
+        for (size_t i = 0; i < expected_message.size(); ++i) {
+            EXPECT_EQ(msg[i].tag, expected_message[i].tag);
+            EXPECT_EQ(msg[i].value, expected_message[i].value);
+        }
+    }
+}
+
+
+TEST(ParserTests, NoTag) {
+    Parser parser;
+    std::string raw_message = 
+    "=FIX.4.4" "\x01" "9=69" "\x01";
+    std::string_view sv(raw_message);
+    
+    ParseResult result = parser.parse(sv);
+    ASSERT_FALSE(result.errs.empty());
+    EXPECT_FALSE(result.message.has_value());
+
+    EXPECT_EQ(result.errs[0], Error::Parse::NoTag);
+}
+
+TEST(ParserTests, MissingEqualSign) {
+    Parser parser;
+    std::string raw_message = "8FIX.4.4" "\x01" "9=69" "\x01";
+    std::string_view sv(raw_message);
+    
+    ParseResult result = parser.parse(sv);
+    ASSERT_FALSE(result.errs.empty());
+    EXPECT_FALSE(result.message.has_value());
+
+    EXPECT_EQ(result.errs[0], Error::Parse::MalformedTag);
+}
+
+TEST(ParserTests, MissingValue) {
+    Parser parser;
+    std::string raw_message = "8=" "\x01" "9=69" "\x01";
+    std::string_view sv(raw_message);       
+    ParseResult result = parser.parse(sv);
+    ASSERT_FALSE(result.errs.empty());
+    EXPECT_FALSE(result.message.has_value());
+
+    EXPECT_EQ(result.errs[0], Error::Parse::MissingValue);
+}
+
+TEST(ParserTests, MalformedTag) {
+    Parser parser;
+    std::string raw_message = "8z=FIX.4.4" "\x01" "9=69" "\x01";
+    std::string_view sv(raw_message);       
+    ParseResult result = parser.parse(sv);
+    ASSERT_FALSE(result.errs.empty());
+    EXPECT_FALSE(result.message.has_value());
+
+    EXPECT_EQ(result.errs[0], Error::Parse::MalformedTag);
 }

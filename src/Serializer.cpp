@@ -12,7 +12,7 @@ namespace Fix {
         buff.append(tmp, static_cast<std::size_t>(p - tmp));
     }
 
-     std::size_t Serializer::serialize(Fix::Message& msg, std::string& buff) {
+     std::size_t Serializer::serialize(Fix::ValidMessage& msg, std::string& buff) {
         buff.clear();
         constexpr char SOH = '\x01';
         for (auto& field: msg.get_fields()) {

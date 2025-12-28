@@ -21,8 +21,8 @@ namespace Fix {
 
 
 
-    struct Message {
-        Message();
+    struct ValidMessage {
+        ValidMessage();
 
         std::optional<std::string_view> get(int key) const;
 

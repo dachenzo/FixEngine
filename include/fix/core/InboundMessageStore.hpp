@@ -8,7 +8,7 @@ namespace Fix {
     struct InboundMessageStoreSlice {
         bool is_present;
         int seq_num;
-        std::unique_ptr<Fix::Message> msg;
+        std::unique_ptr<Fix::ValidMessage> msg;
     }; 
     struct InboundStore {
 
@@ -16,7 +16,7 @@ namespace Fix {
             
         }
 
-        void add(int seq, std::unique_ptr<Fix::Message> msg) {
+        void add(int seq, std::unique_ptr<Fix::ValidMessage> msg) {
             
             if (seq > expected_seq_) {
                 for (int s = expected_seq_; s < seq; ++s)

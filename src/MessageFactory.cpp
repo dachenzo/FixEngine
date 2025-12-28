@@ -13,8 +13,8 @@ namespace Fix {
     }
 
 
-    Fix::Message MessageFactory::logon(int heartbeat_override, bool echo_reset) {
-        Fix::Message msg{};
+    Fix::ValidMessage MessageFactory::logon(int heartbeat_override, bool echo_reset) {
+        Fix::ValidMessage msg{};
         stamp_header_(msg, "A");
         msg.add({98, std::to_string(params_.encrypt_method)});
         msg.add({141, (echo_reset ? "Y" : "N")});
@@ -23,16 +23,16 @@ namespace Fix {
         return msg;
     }
 
-    Fix::Message MessageFactory::heart_beat(std::optional<std::string> test_req_id) {
-        Fix::Message msg{};
+    Fix::ValidMessage MessageFactory::heart_beat(std::optional<std::string> test_req_id) {
+        Fix::ValidMessage msg{};
         stamp_header_(msg, "0");
         if (test_req_id.has_value()) {msg.add({112, test_req_id.value()});}
         stamp_trailer_(msg);
         return msg;
     }
 
-    Fix::Message MessageFactory::test_request(std::string id) {
-        Fix::Message msg{};
+    Fix::ValidMessage MessageFactory::test_request(std::string id) {
+        Fix::ValidMessage msg{};
         stamp_header_(msg, "1");
         msg.add({112, id});
         stamp_trailer_(msg);
@@ -40,8 +40,8 @@ namespace Fix {
 
     }
 
-    Fix::Message MessageFactory::resend_request(int begin_seq_no, int end_seq_no) {
-        Fix::Message msg{};
+    Fix::ValidMessage MessageFactory::resend_request(int begin_seq_no, int end_seq_no) {
+        Fix::ValidMessage msg{};
         stamp_header_(msg, "2");
         msg.add({7, std::to_string(begin_seq_no)});
         msg.add({16, std::to_string(end_seq_no)});
@@ -49,8 +49,8 @@ namespace Fix {
         return msg;
     }
 
-    Fix::Message MessageFactory::sequence_reset(int newSeqNo, bool gap_fill) {
-        Fix::Message msg{};
+    Fix::ValidMessage MessageFactory::sequence_reset(int newSeqNo, bool gap_fill) {
+        Fix::ValidMessage msg{};
         stamp_header_(msg, "4");
         if (gap_fill) msg.add({123, "Y"});   // GapFillFlag
         msg.add({36, std::to_string(newSeqNo)}); // NewSeqNo
@@ -59,8 +59,8 @@ namespace Fix {
         return msg;
     }
 
-    Fix::Message MessageFactory::logout(std::string text) {
-        Fix::Message msg{};
+    Fix::ValidMessage MessageFactory::logout(std::string text) {
+        Fix::ValidMessage msg{};
         stamp_header_(msg, "5");
         msg.add({58, text});
         stamp_trailer_(msg);
@@ -68,7 +68,7 @@ namespace Fix {
     }
 
 
-    void MessageFactory::stamp_header_(Fix::Message& msg, std::string type) {
+    void MessageFactory::stamp_header_(Fix::ValidMessage& msg, std::string type) {
         msg.add({8, params_.fix_version});
         msg.add({9, ""}); // body count
         msg.add({35, type});
@@ -82,7 +82,7 @@ namespace Fix {
         }
     }
 
-    void MessageFactory::stamp_trailer_(Fix::Message& msg) {
+    void MessageFactory::stamp_trailer_(Fix::ValidMessage& msg) {
         auto body_len = compute_body_length_(msg);
         msg.set_tag(9, std::to_string(body_len));
         auto checksum = compute_check_sum_(msg);
@@ -95,7 +95,7 @@ namespace Fix {
         
     }
 
-    std::uint64_t MessageFactory::compute_body_length_(Fix::Message& msg) {
+    std::uint64_t MessageFactory::compute_body_length_(Fix::ValidMessage& msg) {
         std::uint64_t len = 0;
         for (const auto& f : msg.get_fields()) {
             if (f.tag == 8 || f.tag == 9 || f.tag == 10) continue;
@@ -124,7 +124,7 @@ namespace Fix {
 
 
 
-    std::uint8_t MessageFactory::compute_check_sum_(Fix::Message& msg) {
+    std::uint8_t MessageFactory::compute_check_sum_(Fix::ValidMessage& msg) {
         constexpr auto equals = static_cast<unsigned char>('=');
 
         uint64_t res = 0;

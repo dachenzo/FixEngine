@@ -128,7 +128,8 @@ namespace Fix {
             auto [ptr, ec] = std::from_chars(tag_sv.data(),
                                             tag_sv.data() + tag_sv.size(),
                                             tag);
-            if (ec != std::errc()) {
+            // FIX tags must be a full, base-10 integer with no trailing characters.
+            if (ec != std::errc() || ptr != (tag_sv.data() + tag_sv.size())) {
                 errs_.push_back(Error::Parse::MalformedTag);
             }
         }
