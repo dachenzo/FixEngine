@@ -4,7 +4,7 @@
 #include <fix/log/LogEntry.hpp>
 #include <fix/log/LogFileSink.hpp>
 #include <fix/log/MpscRing.hpp>
-#include <fix/definitions.hpp>
+#include <fix/core/definitions.hpp>
 
 namespace Fix::Log {
     

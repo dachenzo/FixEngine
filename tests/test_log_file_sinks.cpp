@@ -1,8 +1,8 @@
 #include <fix/log/LogFileSink.hpp>
 #include <fix/log/LogEntry.hpp>
-#include <fix/SessionManager.hpp>
+#include <fix/core/SessionManager.hpp>
 #include <vector>
-#include <fix/definitions.hpp>
+#include <fix/core/definitions.hpp>
 
 int main() {
 

@@ -1,7 +1,7 @@
 #include <chrono>
 #include <random>
 #include <memory>
-#include <fix/IConnection.hpp>
+#include <fix/core/IConnection.hpp>
 #include <fix/error/Network.hpp>
 
 using boost::asio::ip::tcp;

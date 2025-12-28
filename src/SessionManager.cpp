@@ -1,8 +1,8 @@
 #include <memory>
 #include <iostream>
 #include <boost/asio.hpp>
-#include <fix/SessionManager.hpp>
-#include <fix/utils.hpp>
+#include <fix/core/SessionManager.hpp>
+#include <fix/core/utils.hpp>
 
 
 

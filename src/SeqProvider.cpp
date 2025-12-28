@@ -1,4 +1,4 @@
-#include <fix/SeqProvider.hpp>
+#include <fix/core/SeqProvider.hpp>
 
 
 namespace Fix {

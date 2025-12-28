@@ -7,6 +7,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # set(CMAKE_BUILD_TYPE Debug)
 
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
 add_subdirectory(src)
 
 
@@ -19,6 +30,3 @@ find_package(Boost REQUIRED)
 
 target_link_libraries(fix_engine PUBLIC Boost::boost)
 
-
-add_executable(fix_main src/main.cpp)
-target_link_libraries(fix_main PRIVATE fix_engine)

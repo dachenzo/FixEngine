@@ -4,13 +4,13 @@
 #include <optional>
 #include <memory>
 #include <chrono>
-#include <fix/IConnection.hpp>
-#include <fix/ITimer.hpp>
-#include <fix/MessageStore.hpp>
-#include <fix/Application.hpp>
-#include <fix/Session.hpp>
-#include <fix/SessionPool.hpp>
-#include <fix/definitions.hpp>
+#include <fix/core/IConnection.hpp>
+#include <fix/core/ITimer.hpp>
+#include <fix/core/MessageStore.hpp>
+#include <fix/core/Application.hpp>
+#include <fix/core/Session.hpp>
+#include <fix/core/SessionPool.hpp>
+#include <fix/core/definitions.hpp>
 #include <fix/log/LogCore.hpp>
 
 namespace Fix {

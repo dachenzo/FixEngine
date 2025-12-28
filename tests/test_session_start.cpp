@@ -1,11 +1,11 @@
 #include <vector>
 #include <iostream>
-#include <fix/Reactor.hpp>
-#include <fix/definitions.hpp>
-#include <fix/SessionManager.hpp>
-#include <fix/IConnection.hpp>
-#include <fix/ITimer.hpp>
-#include <fix/Application.hpp>
+#include <fix/core/Reactor.hpp>
+#include <fix/core/definitions.hpp>
+#include <fix/core/SessionManager.hpp>
+#include <fix/core/IConnection.hpp>
+#include <fix/core/ITimer.hpp>
+#include <fix/core/Application.hpp>
 
 /// @brief  Tests that packets are sent between both Initiator and Acceptor configurations and that Fix::Parser is able to emmit a valid message when used
 /// @return int

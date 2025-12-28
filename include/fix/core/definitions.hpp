@@ -5,6 +5,8 @@
 #include <optional>
 
 namespace Fix {
+
+    const std::string DEFAULT_FIX_VERSION = "FIX.4.4";
     
     struct SessionID {
         std::size_t storage_index;

@@ -1,5 +1,5 @@
 #include <boost/asio.hpp>
-#include <fix/Reactor.hpp>
+#include <fix/core/Reactor.hpp>
 #include <iostream>
 
 
@@ -23,7 +23,7 @@ namespace Fix {
 
     void Reactor::run(std::size_t n_threads) {
         if (!workers_.empty()) return;
-        n_threads = std::max(static_cast<std::size_t>(1), n_threads);
+        n_threads = std::max(static_cast<std::size_t>(1), n_threads); // max out 4
         workers_.reserve(n_threads);
 
         for (std::size_t i = 0; i < n_threads; i++) {

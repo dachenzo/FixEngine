@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <filesystem>
-#include <fix/definitions.hpp>
+#include <fix/core/definitions.hpp>
 #include <fix/log/LogFile.hpp>
 #include <fix/log/LogEntry.hpp>
 

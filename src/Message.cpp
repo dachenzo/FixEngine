@@ -6,7 +6,7 @@
 #include <optional>
 #include <span>
 #include <unordered_map>
-#include <fix/Message.hpp>
+#include <fix/core/Message.hpp>
 
 
 namespace Fix {

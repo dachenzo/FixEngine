@@ -3,7 +3,7 @@
 #include <string_view>
 #include <charconv>
 
-#include <fix/definitions.hpp>
+#include <fix/core/definitions.hpp>
 
 
 namespace Fix::Utils {

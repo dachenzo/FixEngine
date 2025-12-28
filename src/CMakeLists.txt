@@ -20,6 +20,7 @@ add_library(fix_engine
     LogCore.cpp
     LogFileSink.cpp
     SessionLogger.cpp
+    Validator.cpp
 )
 
 

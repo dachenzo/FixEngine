@@ -3,7 +3,7 @@
 #include <cassert>
 #include <algorithm>
 #include <vector>
-#include <fix/Message.hpp>
+#include <fix/core/Message.hpp>
 
 namespace Fix {
     struct OutboundMessaegStoreSlice {

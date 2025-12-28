@@ -1,4 +1,4 @@
-#include <fix/IConnection.hpp>
+#include <fix/core/IConnection.hpp>
 
 namespace Fix {
     

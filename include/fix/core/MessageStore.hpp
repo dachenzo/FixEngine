@@ -1,8 +1,8 @@
 #pragma once
 #include <span>
-#include <fix/InboundMessageStore.hpp>
-#include <fix/OutboundMessageStore.hpp>
-#include <fix/Message.hpp>
+#include <fix/core/InboundMessageStore.hpp>
+#include <fix/core/OutboundMessageStore.hpp>
+#include <fix/core/Message.hpp>
 
 
 namespace Fix {

@@ -1,5 +1,5 @@
-#include <fix/MessageBuilder.hpp>
-#include <fix/utils.hpp>
+#include <fix/core/MessageBuilder.hpp>
+#include <fix/core/utils.hpp>
 
 
 namespace Fix {
@@ -53,7 +53,7 @@ namespace Fix {
             error_.errs.push_back(Error::Parse::Duplicate_tag);
             error_.sev = Error::Severity::Moderate;
 
-        }
+        } 
     }
 
     BuildResult MessageBuilder::ready() const{
