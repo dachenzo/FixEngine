@@ -5,7 +5,7 @@
 
 namespace Fix {
     
-    void Validator::validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type,  ValidatorResult& results) {
+    void Validator::validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type,  ValidatorResult& results, Fix::SessionParameters& params) {
         auto& schema = Message::StandardHeaderSchema;
       
 
@@ -42,19 +42,44 @@ namespace Fix {
                 return field.tag == 34; // MsgSeqNum tag
             }
         );
-
         if (msg_seq_num_it == message.end() || !validate_type_(msg_seq_num_it->value, Schema::FieldType::INT)) {
             results.errors.emplace_back(Error::Validator::WrongFieldType, 34);
             results.severity = Error::Severity::Fatal;
             return;
         }
 
+        auto sender_comp_id_it = std::find_if(
+            message.begin(),
+            message.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 49; // SenderCompID tag
+            }
+        );
+        if (sender_comp_id_it == message.end() || sender_comp_id_it->value != params.sender_comp_id) {
+            results.errors.emplace_back(Error::Validator::WrongFieldType, 49);
+            results.severity = Error::Severity::Fatal;
+            return;
+        }
+
+        auto target_comp_id_it = std::find_if(
+            message.begin(),
+            message.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 56; // TargetCompID tag
+            }
+        );
+        if (target_comp_id_it == message.end() || target_comp_id_it->value != params.target_comp_id) {
+            results.errors.emplace_back(Error::Validator::WrongFieldType, 56);
+            results.severity = Error::Severity::Fatal;
+            return;
+        }
+  
         validate_fields_(message, schema.data(), schema.size(), results);
         return;
 
     }
 
-    ValidatorResult Validator::validate_message(const Message::GenericMessage& message) {
+    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, Fix::SessionParameters& params) {
         // Placeholder implementation
         ValidatorResult results{};
         tagscratch_.ensure_bits(message.size());
@@ -76,7 +101,7 @@ namespace Fix {
             results.errors.push_back({Error::Validator::UnknownMessageType, 0});
             return results;
         }
-        validate_header_(message, expected_message_type, results);
+        validate_header_(message, expected_message_type, results, params);
         validate_fields_(message, schema->body, schema->body_field_count, results);
         validate_trailer_(message, results);
 
@@ -261,7 +286,7 @@ namespace Fix {
 
     void Validator::validate_trailer_(const Message::GenericMessage& message, ValidatorResult& results) {
         
-        //This is done by the initial parser usually, so we skip it here
+        validate_fields_(message, Message::TrailerSchema.data(), Message::TrailerSchema.size(), results);
         return;
     }
 }

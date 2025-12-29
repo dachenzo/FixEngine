@@ -217,10 +217,9 @@ namespace Fix {
                     auto msg = parse_res.message.value();
                     dispatch(msg);
                 } else if (!parse_res.errs.empty()) {
-                    // TODO: handle errors
-                } else {
-                    // incomplete message, continue reading
-                }
+                    send_logout("Parse error");
+                    stop();
+                } 
 
 
                 do_read();
@@ -300,9 +299,16 @@ namespace Fix {
 
     void Session::dispatch(Message::GenericMessage& msg) {
 
-        auto results = validator_.validate_message(msg);
+        auto results = validator_.validate_message(msg, params_);
+
+        if (results.severity == Error::Severity::Fatal) {
+            // Fatal error, must logout
+            send_logout("Fatal validation error");
+            stop();
+            return;
+        }
         
-        if (!results.empty()) {
+        if (!results.errors.empty()) {
             // Reject Message
             send_reject();
             return;
@@ -375,6 +381,10 @@ namespace Fix {
 
     void Session::send_reject() {
         std::cout << "Sending Reject message\n";
+    }
+
+    void Session::send_logout(const std::string& reason) {
+        std::cout << "Sending Logout message: " << reason << "\n";
     }
 
     void Session::handle_logon(const Fix::ValidMessage&) {

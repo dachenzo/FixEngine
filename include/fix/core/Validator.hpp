@@ -10,6 +10,7 @@
 #include <fix/core/definitions.hpp>
 #include <fix/schema/Registry.hpp>
 #include <fix/error/Severity.hpp>
+#include <fix/message/Trailer.hpp>
 
 
 namespace Fix {
@@ -76,9 +77,9 @@ namespace Fix {
     {
         // All functions will eventually return Validaro Result;
 
-        ValidatorResult validate_message(const Message::GenericMessage& message);
+        ValidatorResult validate_message(const Message::GenericMessage& message, Fix::SessionParameters& params);
 
-        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres);
+        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres, Fix::SessionParameters& params);
 
         void validate_trailer_(const Message::GenericMessage& message, ValidatorResult& validres);
 
