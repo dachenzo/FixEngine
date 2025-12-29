@@ -304,6 +304,7 @@ namespace Fix {
         
         if (!results.empty()) {
             // Reject Message
+            send_reject();
             return;
         }
 
@@ -370,6 +371,10 @@ namespace Fix {
         send_message_(msg);
         std::cout << "Message sent\n";
 
+    }
+
+    void Session::send_reject() {
+        std::cout << "Sending Reject message\n";
     }
 
     void Session::handle_logon(const Fix::ValidMessage&) {

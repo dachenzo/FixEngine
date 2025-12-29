@@ -1,5 +1,6 @@
 Current Focus: Validation hook -> Integrated
 
 Tasks:
-- integrate the validation class into session
+- Require validator to return an error severity
+- Implement Reject Messages
 - include stub for validating seq number

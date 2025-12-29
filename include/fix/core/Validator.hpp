@@ -9,10 +9,15 @@
 #include <fix/message/Header.hpp>
 #include <fix/core/definitions.hpp>
 #include <fix/schema/Registry.hpp>
+#include <fix/error/Severity.hpp>
 
 
 namespace Fix {
-    using ValidatorResult = std::vector<std::tuple<Error::Validator, std::size_t>>;
+    struct ValidatorResult {
+        Error::Severity severity{Error::Severity::Moderate};
+        std::vector<std::tuple<Error::Validator, std::size_t>> errors;
+    }; 
+    
 
     struct TagScratch {
         public:

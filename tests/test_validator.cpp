@@ -9,7 +9,7 @@ TEST(ValidatorTests, UnknownMessageType) {
     Message::GenericMessage logon_min = {
         {8,  "FIX.4.4"},
         {9,  "69"},
-        {35, "A"},                       // Logon
+        {35, "l"},                       // Logon
         {49, "CLIENT1"},
         {56, "SERVER1"},
         {34, "1"},
@@ -18,11 +18,11 @@ TEST(ValidatorTests, UnknownMessageType) {
         {108,"30"},                      // HeartBtInt
         {10, "235"}
     };
-    std::string expected_message_type = "Z";
-    ValidatorResult result = validator.validate_message(logon_min, expected_message_type);
+    
+    ValidatorResult result = validator.validate_message(logon_min);
 
-    EXPECT_EQ(result.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result[0]), Error::Validator::UnknownMessageType);
+    EXPECT_EQ(result.errors.size(), 1UL);
+    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::UnknownMessageType);
 }
 
 
@@ -41,10 +41,10 @@ TEST(ValidatorTest, WrongFixVersion) {
         {10, "235"}
     };
     std::string expected_message_type = "A";
-    ValidatorResult result = validator.validate_message(logon_bad_fix, expected_message_type);
+    ValidatorResult result = validator.validate_message(logon_bad_fix);
 
-    EXPECT_EQ(result.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result[0]), Error::Validator::WrongFixVersion);
+    EXPECT_EQ(result.errors.size(), 1UL);
+    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFixVersion);
 }
 
 TEST(ValidatorTest, WrongFieldType) {
@@ -61,11 +61,10 @@ TEST(ValidatorTest, WrongFieldType) {
         {108,"30"},                      // HeartBtInt
         {10, "235"}
     };
-    std::string expected_message_type = "A";
-    ValidatorResult result = validator.validate_message(logon_bad_field, expected_message_type);
+    ValidatorResult result = validator.validate_message(logon_bad_field);
 
-    EXPECT_EQ(result.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result[0]), Error::Validator::WrongFieldType);
+    EXPECT_EQ(result.errors.size(), 1UL);
+    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFieldType);
 }
 TEST(ValidatorTest, MissingField) {
     Validator validator;
@@ -81,11 +80,10 @@ TEST(ValidatorTest, MissingField) {
         {108,"30"},                      // HeartBtInt
         {10, "235"}
     };
-    std::string expected_message_type = "A";
-    ValidatorResult result = validator.validate_message(logon_missing_field, expected_message_type);
+    ValidatorResult result = validator.validate_message(logon_missing_field);
 
-    EXPECT_EQ(result.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result[0]), Error::Validator::MissingField);
+    EXPECT_EQ(result.errors.size(), 1UL);
+    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::MissingField);
 }
 
 
@@ -105,11 +103,11 @@ TEST(ValidatorTest, MissingGroupEntry) {
         // Missing group entries here
         {10, "235"}
     };
-    std::string expected_message_type = "A";
-    ValidatorResult result = validator.validate_message(message_missing_group_entry, expected_message_type);
+    
+    ValidatorResult result = validator.validate_message(message_missing_group_entry);
 
-    ASSERT_FALSE(result.empty());
-    EXPECT_EQ(std::get<0>(result[0]), Error::Validator::MissingGroupEntry);
+    ASSERT_FALSE(result.errors.empty());
+    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::MissingGroupEntry);
 }
 
 
@@ -131,9 +129,9 @@ TEST(ValidatorTest, UnrecognizedField) {
         {630, "1001"},                   // HopRefID , unrecognized field  because of wrong order
         {10, "235"}
     };
-    std::string expected_message_type = "A";
-    ValidatorResult result = validator.validate_message(message_missing_group_schema, expected_message_type);
+    
+    ValidatorResult result = validator.validate_message(message_missing_group_schema);
 
-    EXPECT_EQ(result.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result[0]), Error::Validator::UnrecognizedField);
+    EXPECT_EQ(result.errors.size(), 1UL);
+    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::UnrecognizedField);
 }

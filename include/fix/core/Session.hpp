@@ -75,6 +75,7 @@ namespace Fix {
 
             // // FIX admin sends
             void send_logon();
+            void send_reject();
             // void sendLogout(const std::string& reason);
             // void sendHeartbeat(const std::optional<std::string>& testReqId = {});
             // void sendTestRequest(const std::string& testReqId);
