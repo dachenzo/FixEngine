@@ -67,12 +67,11 @@ namespace Fix {
     };
     
 
-
     struct Validator
     {
         // All functions will eventually return Validaro Result;
 
-        ValidatorResult validate_message(const Message::GenericMessage& message, const std::string& expected_message_type);
+        ValidatorResult validate_message(const Message::GenericMessage& message);
 
         void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres);
 

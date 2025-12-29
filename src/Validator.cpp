@@ -40,11 +40,22 @@ namespace Fix {
 
     }
 
-    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, const std::string& expected_message_type) {
+    ValidatorResult Validator::validate_message(const Message::GenericMessage& message) {
         // Placeholder implementation
         ValidatorResult results{};
         tagscratch_.ensure_bits(message.size());
         tagscratch_.clear();
+
+        auto msg_type_it = std::find_if(message.begin(), message.end(), [](const Message::GenericField& field) {
+            return field.tag == 35; // MsgType tag
+        });
+
+        if (msg_type_it == message.end()) {
+            results.push_back({Error::Validator::MissingField, 35});
+            return results;
+        }
+
+        auto expected_message_type = msg_type_it->value;
 
         auto schema = registry_.get(expected_message_type);
         if (!schema) {

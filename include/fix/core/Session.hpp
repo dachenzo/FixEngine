@@ -13,6 +13,7 @@
 #include <fix/core/Application.hpp>
 #include <fix/core/ITimer.hpp>
 #include <fix/core/Codec.hpp>
+#include <fix/core/Validator.hpp>
 #include <fix/core/Parser.hpp>
 #include <fix/log/LogCore.hpp>
 #include <fix/log/SessionLogger.hpp>
@@ -128,9 +129,7 @@ namespace Fix {
             boost::asio::steady_timer logon_timer_;
             boost::asio::steady_timer inbound_timer_;
             boost::asio::steady_timer heartbeat_timer_;
-           
-
-
+            Fix::Validator validator_;
 
     };
 }

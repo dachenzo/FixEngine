@@ -37,7 +37,8 @@ namespace Fix {
                 logger_{id_, log_core},
                 logon_timer_{exec_},
                 inbound_timer_{exec_},
-                heartbeat_timer_{exec_}
+                heartbeat_timer_{exec_},
+                validator_{}
                 {
         buff_.resize(8192);
 
@@ -298,6 +299,35 @@ namespace Fix {
 
 
     void Session::dispatch(Message::GenericMessage& msg) {
+
+        auto results = validator_.validate_message(msg);
+        
+        if (!results.empty()) {
+            // Reject Message
+            return;
+        }
+
+        auto msg_type_it = std::find_if(
+            msg.begin(),
+            msg.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == msg_type_key;
+            }
+        );
+
+        auto seq_num_it = std::find_if(
+            msg.begin(),
+            msg.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == msg_seq_num_key;
+            }
+        );
+
+        // The iterators above should always find the fields since the validator would have caught their absence
+
+        auto& msg_type = msg_type_it->value;
+        auto& seq_num_str = seq_num_it->value;
+
        
         // auto seqnum_sv = msg.get(msg_seq_num_key);
         // if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
