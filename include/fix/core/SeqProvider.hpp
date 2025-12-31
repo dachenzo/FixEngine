@@ -2,16 +2,19 @@
 #include <fix/core/MessageStore.hpp>
 
 namespace Fix {
-    struct SeqProvider {
+    class SeqProvider {
+        std::size_t incoming_seq_number_{1};
+        std::size_t outgoing_seq_number_{1};
 
-        SeqProvider(Fix::MessageStore& store);
+        public:
 
-        int next_out() const noexcept;
+        std::size_t next_out() const noexcept {
+            return outgoing_seq_number_;
+        }
 
-        int last_in() const noexcept;
-
-        private:
-        Fix::MessageStore& store_;
+        std::size_t next_in() const noexcept {
+            return incoming_seq_number_;
+        }
     };
 
     

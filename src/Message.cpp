@@ -6,66 +6,49 @@
 #include <optional>
 #include <span>
 #include <unordered_map>
+#include <charconv>
 #include <fix/core/Message.hpp>
 
 
 namespace Fix {
-
-    auto FIX_VERSION = "";
-
-    ValidMessage::ValidMessage() {
-        message_.reserve(32);
-        lookup.reserve(32);
-    }
-    
-    std::optional<std::string_view> ValidMessage::get(int key) const  {
-        auto it = lookup.find(key);
-        if (it == lookup.end()) {
-            return  std::nullopt;
-        } else {
-            return std::string_view{message_[it->second].value};
+    ValidMessage make_valid_message(const Message::GenericMessage& msg) {
+        HeaderCache cache;
+        for (const auto& field : msg) {
+            switch (field.tag) {
+                case 35: // MsgType
+                    cache.slots[static_cast<size_t>(CacheSlot::MsgType)] = &field.value;
+                    break;
+                case 49: // SenderCompID
+                    cache.slots[static_cast<size_t>(CacheSlot::SenderCompID)] = &field.value;
+                    break;
+                case 56: // TargetCompID
+                    cache.slots[static_cast<size_t>(CacheSlot::TargetCompID)] = &field.value;
+                    break;
+                case 52: // SendingTime
+                    cache.slots[static_cast<size_t>(CacheSlot::SendingTime)] = &field.value;
+                    break;
+                case 43: // PossDupFlag
+                    cache.slots[static_cast<size_t>(CacheSlot::PossDupFlag)] = &field.value;
+                    break;
+                case 122: // OrigSendingTime
+                    cache.slots[static_cast<size_t>(CacheSlot::OrigSendingTime)] = &field.value;
+                    break;
+                case 112: // TestReqID
+                    cache.slots[static_cast<size_t>(CacheSlot::TestReqID)] = &field.value;
+                    break;
+                case 34: // MsgSeqNum
+                    {
+                        auto [ptr, ec] = std::from_chars(field.value.data(), field.value.data() + field.value.size(), cache.msg_seq_num);
+                        if (ec == std::errc() && ptr == field.value.data() + field.value.size()) {
+                            cache.has_msg_seq_num = true;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
+        return ValidMessage{msg, cache};
     }
-
-    bool ValidMessage::set_tag(int tag, std::string value) {
-        auto it = lookup.find(tag);
-        if (it == lookup.end()) {return false;}
-
-        message_[it->second].value = value;
-        return true;
-    }
-
-
-    bool ValidMessage::add(Fix::Field field) {
-        auto it = lookup.insert({field.tag, message_.size()});
-        if (!it.second) {
-            return false;
-        }
-        message_.push_back(field);
-        return true;
-       
-        
-
-    }   
-
-    std::span<const Fix::Field> ValidMessage::get_fields()const noexcept {
-        return std::span{message_.begin(), message_.end()};
-    }
-
-    std::span<const Fix::Field> ValidMessage::get_fields_after(int tag)const {
-        auto it = lookup.find(tag);
-        if (it == lookup.end()) {
-            // empty span
-            return std::span<const Fix::Field>{message_.data() + message_.size(), 0};
-        }
-        std::size_t idx = it->second + 1;       // start *after* the tag
-        if (idx > message_.size()) {
-            return std::span<const Fix::Field>{message_.data() + message_.size(), 0};
-        }
-        return std::span<const Fix::Field>{message_.data() + idx, message_.size() - idx};
-    }
-
-        
-
 };
 

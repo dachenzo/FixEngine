@@ -6,39 +6,37 @@
 #include <optional>
 #include <cstdlib>
 #include <unordered_map>
+#include <fix/message/GenericMessage.hpp>
 
 namespace Fix {
 
 
+    enum class CacheSlot: uint8_t {
+        MsgType,
+        SenderCompID,
+        TargetCompID,
+        SendingTime,
+        SendingTime,
+        PossDupFlag,
+        OrigSendingTime,
+        TestReqID,
+        COUNT
+    };
 
-
-    
-
-    struct Field {
-        int tag;
-        std::string value;
+    struct HeaderCache {
+        const std::string* slots[static_cast<size_t>(CacheSlot::COUNT)] = {nullptr};
+        uint64_t msg_seq_num = 0;
+        bool has_msg_seq_num = false;
     };
 
 
 
     struct ValidMessage {
-        ValidMessage();
-
-        std::optional<std::string_view> get(int key) const;
-
-        bool set_tag(int tag, std::string);
-
-        bool add(Fix::Field field);
-
-        std::span<const Fix::Field> get_fields() const noexcept;
-
-
-        std::span<const Fix::Field> get_fields_after(int tag) const;
-
-        private:
-        std::vector<Fix::Field> message_;
-        std::unordered_map<int, std::size_t> lookup;
+        const Message::GenericMessage message_;
+        const HeaderCache header_cache_;
     };
+
+    ValidMessage make_valid_message(const Message::GenericMessage& msg);
 
 
 

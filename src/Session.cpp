@@ -32,7 +32,7 @@ namespace Fix {
                 serializer_{},
                 params_{params},
                 clock_{},
-                seq_provider_{store_},
+                seq_provider_{},
                 msg_factory_{params_, seq_provider_, clock_},
                 logger_{id_, log_core},
                 logon_timer_{exec_},
