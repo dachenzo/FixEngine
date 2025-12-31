@@ -56,7 +56,7 @@ namespace Fix {
             }
         );
         if (sender_comp_id_it == message.end() || sender_comp_id_it->value != params.sender_comp_id) {
-            results.errors.emplace_back(Error::Validator::WrongFieldType, 49);
+            results.errors.emplace_back(Error::Validator::WrongSenderCompID, 49);
             results.severity = Error::Severity::Fatal;
             return;
         }
@@ -69,7 +69,7 @@ namespace Fix {
             }
         );
         if (target_comp_id_it == message.end() || target_comp_id_it->value != params.target_comp_id) {
-            results.errors.emplace_back(Error::Validator::WrongFieldType, 56);
+            results.errors.emplace_back(Error::Validator::WrongTargetCompID, 56);
             results.severity = Error::Severity::Fatal;
             return;
         }
