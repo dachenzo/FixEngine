@@ -5,7 +5,7 @@
 
 namespace Fix {
     
-    void Validator::validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type,  ValidatorResult& results, Fix::SessionParameters& params) {
+    void Validator::validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
         auto& schema = Message::StandardHeaderSchema;
       
 
@@ -55,7 +55,7 @@ namespace Fix {
                 return field.tag == 49; // SenderCompID tag
             }
         );
-        if (sender_comp_id_it == message.end() || sender_comp_id_it->value != params.sender_comp_id) {
+        if (sender_comp_id_it == message.end() || sender_comp_id_it->value != params.target_comp_id) {
             results.errors.emplace_back(Error::Validator::WrongSenderCompID, 49);
             results.severity = Error::Severity::Fatal;
             return;
@@ -68,7 +68,7 @@ namespace Fix {
                 return field.tag == 56; // TargetCompID tag
             }
         );
-        if (target_comp_id_it == message.end() || target_comp_id_it->value != params.target_comp_id) {
+        if (target_comp_id_it == message.end() || target_comp_id_it->value != params.sender_comp_id) {
             results.errors.emplace_back(Error::Validator::WrongTargetCompID, 56);
             results.severity = Error::Severity::Fatal;
             return;
@@ -79,7 +79,7 @@ namespace Fix {
 
     }
 
-    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, Fix::SessionParameters& params) {
+    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, const Fix::SessionParameters& params) {
         // Placeholder implementation
         ValidatorResult results{};
         tagscratch_.ensure_bits(message.size());

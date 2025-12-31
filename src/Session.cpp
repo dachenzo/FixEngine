@@ -331,6 +331,16 @@ namespace Fix {
         );
 
         // The iterators above should always find the fields since the validator would have caught their absence
+        if (msg_type_it == msg.end() || seq_num_it == msg.end()) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Error, 
+                Fix::Error::Severity::High},
+                "Validator passed but required fields missing"
+            );
+            send_reject();
+            return;
+        }
 
         auto& msg_type = msg_type_it->value;
         auto& seq_num_str = seq_num_it->value;

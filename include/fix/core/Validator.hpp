@@ -77,9 +77,9 @@ namespace Fix {
     {
         // All functions will eventually return Validaro Result;
 
-        ValidatorResult validate_message(const Message::GenericMessage& message, Fix::SessionParameters& params);
+        ValidatorResult validate_message(const Message::GenericMessage& message, const Fix::SessionParameters& params);
 
-        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres, Fix::SessionParameters& params);
+        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
         void validate_trailer_(const Message::GenericMessage& message, ValidatorResult& validres);
 

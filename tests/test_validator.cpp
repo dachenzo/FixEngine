@@ -6,13 +6,16 @@ using namespace Fix;
 
 TEST(ValidatorTests, UnknownMessageType) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     Message::GenericMessage logon_min = {
         {8,  "FIX.4.4"},
         {9,  "69"},
         {35, "l"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
@@ -27,15 +30,18 @@ TEST(ValidatorTests, UnknownMessageType) {
 }
 
 
-TEST(ValidatorTest, WrongFixVersion) {
+TEST(ValidatorTests, WrongFixVersion) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     Message::GenericMessage logon_bad_fix = {
         {8,  "FIX.4.2"},
         {9,  "69"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
@@ -49,15 +55,18 @@ TEST(ValidatorTest, WrongFixVersion) {
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFixVersion);
 }
 
-TEST(ValidatorTest, WrongFieldType) {
+TEST(ValidatorTests, WrongFieldType) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     Message::GenericMessage logon_bad_field = {
         {8,  "FIX.4.4"},
         {9,  "69"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         {98, "INVALID_INT"},             // EncryptMethod (0 = None)
@@ -69,15 +78,19 @@ TEST(ValidatorTest, WrongFieldType) {
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFieldType);
 }
-TEST(ValidatorTest, MissingField) {
+
+TEST(ValidatorTests, MissingField) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     Message::GenericMessage logon_missing_field = {
         {8,  "FIX.4.4"},
         {9,  "69"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         // Missing EncryptMethod (98)
@@ -91,15 +104,15 @@ TEST(ValidatorTest, MissingField) {
 }
 
 
-TEST(ValidatorTest, MissingGroupEntry) {
+TEST(ValidatorTests, MissingGroupEntry) {
     Validator validator;
   
     Message::GenericMessage message_missing_group_entry = {
         {8,  "FIX.4.4"},
         {9,  "100"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
@@ -109,7 +122,10 @@ TEST(ValidatorTest, MissingGroupEntry) {
         {10, "235"}
     };
     
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     ValidatorResult result = validator.validate_message(message_missing_group_entry, params);
 
     ASSERT_FALSE(result.errors.empty());
@@ -117,15 +133,18 @@ TEST(ValidatorTest, MissingGroupEntry) {
 }
 
 
-TEST(ValidatorTest, UnrecognizedField) {
+TEST(ValidatorTests, UnrecognizedField) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     Message::GenericMessage message_missing_group_schema = {
         {8,  "FIX.4.4"},
         {9,  "100"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
@@ -144,15 +163,18 @@ TEST(ValidatorTest, UnrecognizedField) {
 }
 
 
-TEST(ValidatorTest, MalformedTag34) {
+TEST(ValidatorTests, MalformedTag34) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     Message::GenericMessage logon_bad_seqnum = {
         {8,  "FIX.4.4"},
         {9,  "79"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "INVALID_INT"},             // MsgSeqNum
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
@@ -166,15 +188,18 @@ TEST(ValidatorTest, MalformedTag34) {
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFieldType);
 }
 
-TEST(ValidatorTest, MalformedTag8) {
+TEST(ValidatorTests, MalformedTag8) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };;
     Message::GenericMessage logon_bad_seqnum = {
         {8,  "88"},
         {9,  "70"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "test_target"},
+        {49, "them"},
+        {56, "me"},
         {34, "88"},             // MsgSeqNum
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
@@ -188,15 +213,18 @@ TEST(ValidatorTest, MalformedTag8) {
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFixVersion);
 }
 
-TEST(ValidatorTest, WrongSenderCompID) {
+TEST(ValidatorTests, WrongSenderCompID) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };
     Message::GenericMessage logon_bad_sender = {
         {8,  "FIX.4.4"},
         {9,  "78"},
         {35, "A"},                       // Logon
-        {49, "wrong_sender"},            // Wrong SenderCompID
-        {56, "test_target"},
+        {49, "not_target"},            // Wrong SenderCompID
+        {56, "me"},
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
@@ -210,15 +238,18 @@ TEST(ValidatorTest, WrongSenderCompID) {
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongSenderCompID);
 }
 
-TEST(ValidatorTest, WrongTargetCompID) {
+TEST(ValidatorTests, WrongTargetCompID) {
     Validator validator;
-    Fix::SessionParameters params;
+    Fix::SessionParameters params {
+        .sender_comp_id = "me",
+        .target_comp_id = "them"
+    };
     Message::GenericMessage logon_bad_target = {
         {8,  "FIX.4.4"},
         {9,  "78"},
         {35, "A"},                       // Logon
-        {49, "test_sender"},
-        {56, "wrong_target"},            // Wrong TargetCompID
+        {49, "them"},
+        {56, "not_me"},            // Wrong TargetCompID
         {34, "1"},
         {52, "20251224-09:30:00.000"},
         {98, "0"},                       // EncryptMethod (0 = None)
