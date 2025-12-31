@@ -11,6 +11,8 @@ namespace Fix::Error {
         MissingGroupSchemaEntry,
         UnsupportedGroupSize,
         UnknownMessageType,
-        UnrecognizedField
+        UnrecognizedField,
+        WrongSenderCompID,
+        WrongTargetCompID
     };
 }

@@ -9,10 +9,16 @@
 #include <fix/message/Header.hpp>
 #include <fix/core/definitions.hpp>
 #include <fix/schema/Registry.hpp>
+#include <fix/error/Severity.hpp>
+#include <fix/message/Trailer.hpp>
 
 
 namespace Fix {
-    using ValidatorResult = std::vector<std::tuple<Error::Validator, std::size_t>>;
+    struct ValidatorResult {
+        Error::Severity severity{Error::Severity::Moderate};
+        std::vector<std::tuple<Error::Validator, std::size_t>> errors;
+    }; 
+    
 
     struct TagScratch {
         public:
@@ -67,14 +73,13 @@ namespace Fix {
     };
     
 
-
     struct Validator
     {
         // All functions will eventually return Validaro Result;
 
-        ValidatorResult validate_message(const Message::GenericMessage& message, const std::string& expected_message_type);
+        ValidatorResult validate_message(const Message::GenericMessage& message, const Fix::SessionParameters& params);
 
-        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres);
+        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
         void validate_trailer_(const Message::GenericMessage& message, ValidatorResult& validres);
 

@@ -5,59 +5,109 @@
 
 namespace Fix {
     
-    void Validator::validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type,  ValidatorResult& results) {
+    void Validator::validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
         auto& schema = Message::StandardHeaderSchema;
       
 
         if (message.size() < 3) {
             //automatically invalid 
-            results.emplace_back(Error::Validator::MissingField, 0);
+            results.errors.emplace_back(Error::Validator::MissingField, 0);
             return;
         }
 
 
         if (!validate_type_(message[0].value, schema[0].type) || message[0].value != Fix::DEFAULT_FIX_VERSION) {
             // wrong fix versio
-            results.emplace_back(Error::Validator::WrongFixVersion, 0);
+            results.errors.emplace_back(Error::Validator::WrongFixVersion, 0);
+            results.severity = Error::Severity::Fatal;
             return;
         }
 
         if (!validate_type_(message[1].value, schema[1].type)) {
             // invalid body length
-            results.emplace_back(Error::Validator::WrongFieldType, schema[1].tag);
+            results.errors.emplace_back(Error::Validator::WrongFieldType, schema[1].tag);
             return;
         }   
 
         if (!validate_type_(message[2].value, schema[2].type) || message[2].value != expected_message_type) {
             // invalid msg type
-            results.emplace_back(Error::Validator::WrongFieldType, schema[2].tag);
+            results.errors.emplace_back(Error::Validator::WrongFieldType, schema[2].tag);
             return;
         }
 
+        auto msg_seq_num_it = std::find_if(
+            message.begin(),
+            message.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 34; // MsgSeqNum tag
+            }
+        );
+        if (msg_seq_num_it == message.end() || !validate_type_(msg_seq_num_it->value, Schema::FieldType::INT)) {
+            results.errors.emplace_back(Error::Validator::WrongFieldType, 34);
+            results.severity = Error::Severity::Fatal;
+            return;
+        }
 
+        auto sender_comp_id_it = std::find_if(
+            message.begin(),
+            message.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 49; // SenderCompID tag
+            }
+        );
+        if (sender_comp_id_it == message.end() || sender_comp_id_it->value != params.target_comp_id) {
+            results.errors.emplace_back(Error::Validator::WrongSenderCompID, 49);
+            results.severity = Error::Severity::Fatal;
+            return;
+        }
+
+        auto target_comp_id_it = std::find_if(
+            message.begin(),
+            message.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 56; // TargetCompID tag
+            }
+        );
+        if (target_comp_id_it == message.end() || target_comp_id_it->value != params.sender_comp_id) {
+            results.errors.emplace_back(Error::Validator::WrongTargetCompID, 56);
+            results.severity = Error::Severity::Fatal;
+            return;
+        }
+  
         validate_fields_(message, schema.data(), schema.size(), results);
         return;
 
     }
 
-    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, const std::string& expected_message_type) {
+    ValidatorResult Validator::validate_message(const Message::GenericMessage& message, const Fix::SessionParameters& params) {
         // Placeholder implementation
         ValidatorResult results{};
         tagscratch_.ensure_bits(message.size());
         tagscratch_.clear();
 
-        auto schema = registry_.get(expected_message_type);
-        if (!schema) {
-            results.push_back({Error::Validator::UnknownMessageType, 0});
+        auto msg_type_it = std::find_if(message.begin(), message.end(), [](const Message::GenericField& field) {
+            return field.tag == 35; // MsgType tag
+        });
+
+        if (msg_type_it == message.end()) {
+            results.errors.push_back({Error::Validator::MissingField, 35});
             return results;
         }
-        validate_header_(message, expected_message_type, results);
+
+        auto expected_message_type = msg_type_it->value;
+
+        auto schema = registry_.get(expected_message_type);
+        if (!schema) {
+            results.errors.push_back({Error::Validator::UnknownMessageType, 0});
+            return results;
+        }
+        validate_header_(message, expected_message_type, results, params);
         validate_fields_(message, schema->body, schema->body_field_count, results);
         validate_trailer_(message, results);
 
         // Only flag extra fields when no prior errors were found
-        if (results.empty() && !tagscratch_.full(message.size())) {
-            results.push_back({Error::Validator::UnrecognizedField, 0});
+        if (results.errors.empty() && !tagscratch_.full(message.size())) {
+            results.errors.push_back({Error::Validator::UnrecognizedField, 0});
         }
 
         return results;
@@ -77,18 +127,18 @@ namespace Fix {
                     int start_idx = static_cast<int>(it - message.begin())+1; //one to advance past the group count field
                     std::size_t group_count = 0;
                     if (!Fix::Utils::parse_int(it->value, group_count)) {
-                        results.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                        results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
                         return;
                     }
                     validate_groups_(group_count, message, &field_schema, start_idx, results);
 
                 } else if (!validate_type_(it->value, field_schema.type)) {
-                    results.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                    results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
                     return;
                 }
 
             } else if ( field_schema.presence == Schema::FieldPresence::REQUIRED) {
-                results.emplace_back(Error::Validator::MissingField, field_schema.tag);
+                results.errors.emplace_back(Error::Validator::MissingField, field_schema.tag);
                 return;
             }
             
@@ -106,24 +156,24 @@ namespace Fix {
         if (groupcnt == 0) return;
         
         if(!groupfield) {
-            results.emplace_back(Error::Validator::MissingGroupEntry, 0);
+            results.errors.emplace_back(Error::Validator::MissingGroupEntry, 0);
             return;
         }
 
         if (!groupfield->group_schema) {
-            results.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
+            results.errors.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
             return;
         };
 
         auto& gs = groupfield->group_schema;
         if (gs->field_count == 0 || gs->fields == nullptr) {
-            results.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
+            results.errors.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
             return;
         };
 
 
         if (gs->field_count > kMaxGroupCount) {
-            results.emplace_back(Error::Validator::UnsupportedGroupSize, groupfield->tag);
+            results.errors.emplace_back(Error::Validator::UnsupportedGroupSize, groupfield->tag);
             return;
         }
 
@@ -158,7 +208,7 @@ namespace Fix {
                 const auto& field_schema = gs->fields[j];
 
                 if (curr_index >= message.size()) {
-                    results.emplace_back(Error::Validator::MissingGroupEntry, field_schema.tag);
+                    results.errors.emplace_back(Error::Validator::MissingGroupEntry, field_schema.tag);
                     return;
                 }
 
@@ -167,7 +217,7 @@ namespace Fix {
 
                 if (current_tag != field_schema.tag) {
                     if (field_schema.presence == Schema::FieldPresence::REQUIRED) {
-                        results.emplace_back(Error::Validator::MissingGroupEntryOrWrongOrder, field_schema.tag); 
+                        results.errors.emplace_back(Error::Validator::MissingGroupEntryOrWrongOrder, field_schema.tag); 
                         return;
                     }
                 } else if (has_occured(current_tag)) {
@@ -179,14 +229,14 @@ namespace Fix {
                         curr_index++;
                         std::size_t group_count = 0;
                         if (!Fix::Utils::parse_int(message[curr_index-1].value, group_count)) {
-                            results.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                            results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
                             return;
                         }
                         validate_groups_(group_count, message, &field_schema, curr_index, results);
                         
 
                     } else if (!validate_type_(message[curr_index].value, field_schema.type)) {
-                        results.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                        results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
                         return;
                     }
                     increment_tag_count(current_tag);
@@ -199,7 +249,7 @@ namespace Fix {
             } 
 
             if (!atleast_one_occurence) {
-                results.emplace_back(Error::Validator::MissingGroupEntry, groupfield->tag);
+                results.errors.emplace_back(Error::Validator::MissingGroupEntry, groupfield->tag);
                 return;
             }
         } 
@@ -236,7 +286,7 @@ namespace Fix {
 
     void Validator::validate_trailer_(const Message::GenericMessage& message, ValidatorResult& results) {
         
-        //This is done by the initial parser usually, so we skip it here
+        validate_fields_(message, Message::TrailerSchema.data(), Message::TrailerSchema.size(), results);
         return;
     }
 }

@@ -37,7 +37,8 @@ namespace Fix {
                 logger_{id_, log_core},
                 logon_timer_{exec_},
                 inbound_timer_{exec_},
-                heartbeat_timer_{exec_}
+                heartbeat_timer_{exec_},
+                validator_{}
                 {
         buff_.resize(8192);
 
@@ -216,10 +217,9 @@ namespace Fix {
                     auto msg = parse_res.message.value();
                     dispatch(msg);
                 } else if (!parse_res.errs.empty()) {
-                    // TODO: handle errors
-                } else {
-                    // incomplete message, continue reading
-                }
+                    send_logout("Parse error");
+                    stop();
+                } 
 
 
                 do_read();
@@ -298,6 +298,53 @@ namespace Fix {
 
 
     void Session::dispatch(Message::GenericMessage& msg) {
+
+        auto results = validator_.validate_message(msg, params_);
+
+        if (results.severity == Error::Severity::Fatal) {
+            // Fatal error, must logout
+            send_logout("Fatal validation error");
+            stop();
+            return;
+        }
+        
+        if (!results.errors.empty()) {
+            // Reject Message
+            send_reject();
+            return;
+        }
+
+        auto msg_type_it = std::find_if(
+            msg.begin(),
+            msg.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == msg_type_key;
+            }
+        );
+
+        auto seq_num_it = std::find_if(
+            msg.begin(),
+            msg.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == msg_seq_num_key;
+            }
+        );
+
+        // The iterators above should always find the fields since the validator would have caught their absence
+        if (msg_type_it == msg.end() || seq_num_it == msg.end()) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Error, 
+                Fix::Error::Severity::High},
+                "Validator passed but required fields missing"
+            );
+            send_reject();
+            return;
+        }
+
+        auto& msg_type = msg_type_it->value;
+        auto& seq_num_str = seq_num_it->value;
+
        
         // auto seqnum_sv = msg.get(msg_seq_num_key);
         // if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
@@ -340,6 +387,14 @@ namespace Fix {
         send_message_(msg);
         std::cout << "Message sent\n";
 
+    }
+
+    void Session::send_reject() {
+        std::cout << "Sending Reject message\n";
+    }
+
+    void Session::send_logout(const std::string& reason) {
+        std::cout << "Sending Logout message: " << reason << "\n";
     }
 
     void Session::handle_logon(const Fix::ValidMessage&) {

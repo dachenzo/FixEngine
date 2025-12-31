@@ -13,6 +13,7 @@
 #include <fix/core/Application.hpp>
 #include <fix/core/ITimer.hpp>
 #include <fix/core/Codec.hpp>
+#include <fix/core/Validator.hpp>
 #include <fix/core/Parser.hpp>
 #include <fix/log/LogCore.hpp>
 #include <fix/log/SessionLogger.hpp>
@@ -74,7 +75,8 @@ namespace Fix {
 
             // // FIX admin sends
             void send_logon();
-            // void sendLogout(const std::string& reason);
+            void send_reject();
+            void send_logout(const std::string& reason);
             // void sendHeartbeat(const std::optional<std::string>& testReqId = {});
             // void sendTestRequest(const std::string& testReqId);
             // void sendResendRequest(std::size_t beginSeqNo, std::size_t endSeqNo);
@@ -128,9 +130,7 @@ namespace Fix {
             boost::asio::steady_timer logon_timer_;
             boost::asio::steady_timer inbound_timer_;
             boost::asio::steady_timer heartbeat_timer_;
-           
-
-
+            Fix::Validator validator_;
 
     };
 }

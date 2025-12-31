@@ -22,7 +22,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Aspect                 | Exists | Correct | Integrated | Performant | Hardened |
 |------------------------|--------|---------|------------|------------|----------|
 | SeqNum tracking        | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Logon/Logout state     | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Logon/Logout state     | ✅      | ❌       | ❌          | ❌          | ❌        |
 | ResendRequest handling | ❌      | ❌       | ❌          | ❌          | ❌        |
 | GapFill logic          | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Dispatch logic         | ✅      | ❌       | ✅          | ❌          | ❌        |
@@ -31,7 +31,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Aspect          | Exists | Correct | Integrated | Performant | Hardened |
 |-----------------|--------|---------|------------|------------|----------|
 | Parsing         | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Validation hook | ✅      | ❌       | ❌          | ❌          | ❌        |
+| Validation hook | ✅      | ❌       | ✅          | ❌          | ❌        |
 | Generation      | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Normalisation   | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Routing         | ❌      | ❌       | ❌          | ❌          | ❌        |
