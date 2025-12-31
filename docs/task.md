@@ -11,7 +11,9 @@ Tasks:
 
 Later:
 - Integrate seq provider with message store
+- Session::send_message_ is broken
 - handle gap fills and correctly update both message store and the seq provider
+- Message Factory is broken 
 
 
 BackLog:

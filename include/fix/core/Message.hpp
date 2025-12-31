@@ -5,18 +5,19 @@
 #include <span>
 #include <optional>
 #include <cstdlib>
+#include <cstdint>
 #include <unordered_map>
 #include <fix/message/GenericMessage.hpp>
 
 namespace Fix {
 
 
-    enum class CacheSlot: uint8_t {
+    enum class CacheSlot : uint8_t {
         MsgType,
         SenderCompID,
         TargetCompID,
         SendingTime,
-        SendingTime,
+        MsgSeqNum,
         PossDupFlag,
         OrigSendingTime,
         TestReqID,

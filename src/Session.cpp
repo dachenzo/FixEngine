@@ -160,8 +160,8 @@ namespace Fix {
         std::string wire{};
         wire.reserve(wire_pre_alloc);
         std::size_t wire_len = serializer_.serialize(msg, wire);
-        int seq = store_.get_next_sender_seq();
-        store_.store_outbound(seq, msg);
+        // int seq = store_.get_next_sender_seq();
+        // store_.store_outbound(seq, msg);
         send_bytes_(std::move(wire));
     }
 
@@ -297,7 +297,10 @@ namespace Fix {
     }
 
 
-    void Session::dispatch(Message::GenericMessage& msg) {
+    void Session::dispatch(Message::GenericMessage& message) {
+        Fix::ValidMessage msg = Fix::make_valid_message(message);
+
+
 
         auto results = validator_.validate_message(msg, params_);
 
@@ -314,24 +317,9 @@ namespace Fix {
             return;
         }
 
-        auto msg_type_it = std::find_if(
-            msg.begin(),
-            msg.end(),
-            [](const Message::GenericField& field) {
-                return field.tag == msg_type_key;
-            }
-        );
-
-        auto seq_num_it = std::find_if(
-            msg.begin(),
-            msg.end(),
-            [](const Message::GenericField& field) {
-                return field.tag == msg_seq_num_key;
-            }
-        );
-
+        
         // The iterators above should always find the fields since the validator would have caught their absence
-        if (msg_type_it == msg.end() || seq_num_it == msg.end()) {
+        if (msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)] == nullptr || msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgSeqNum)] == nullptr) {
             logger_.log(
                 {Fix::Error::Layer::Fix, 
                 Fix::Error::Category::Error, 
@@ -342,8 +330,8 @@ namespace Fix {
             return;
         }
 
-        auto& msg_type = msg_type_it->value;
-        auto& seq_num_str = seq_num_it->value;
+        auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
+        auto& seq_num_str = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgSeqNum)];
 
        
         // auto seqnum_sv = msg.get(msg_seq_num_key);

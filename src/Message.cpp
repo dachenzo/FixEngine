@@ -38,6 +38,7 @@ namespace Fix {
                     break;
                 case 34: // MsgSeqNum
                     {
+                        cache.slots[static_cast<size_t>(CacheSlot::MsgSeqNum)] = &field.value;
                         auto [ptr, ec] = std::from_chars(field.value.data(), field.value.data() + field.value.size(), cache.msg_seq_num);
                         if (ec == std::errc() && ptr == field.value.data() + field.value.size()) {
                             cache.has_msg_seq_num = true;
