@@ -319,7 +319,7 @@ namespace Fix {
 
         
         // The iterators above should always find the fields since the validator would have caught their absence
-        if (msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)] == nullptr || msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgSeqNum)] == nullptr) {
+        if (msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)] == nullptr || !msg.header_cache_.has_msg_seq_num) {
             logger_.log(
                 {Fix::Error::Layer::Fix, 
                 Fix::Error::Category::Error, 
@@ -331,7 +331,7 @@ namespace Fix {
         }
 
         auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
-        auto& seq_num_str = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgSeqNum)];
+        auto seq_num = msg.header_cache_.msg_seq_num;
 
        
         // auto seqnum_sv = msg.get(msg_seq_num_key);

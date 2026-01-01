@@ -2,8 +2,8 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Tasks:
-- generic message to parsed message
-- make validator take in the pasred message
+- Decide on storeage format for outound messages
+- functionality for efficiently resending messages
 - stub out core functionality for message store
 - implement the functionality
 - test make valid message
