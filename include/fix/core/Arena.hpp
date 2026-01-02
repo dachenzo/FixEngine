@@ -5,7 +5,7 @@
 #include <cstring>
 
 namespace Fix {
-
+    struct Arena;
     struct ArenaHandle {
         
         ArenaHandle(Arena* arena, std::uint32_t index) : arena(arena), index(index) {}
@@ -19,9 +19,7 @@ namespace Fix {
 
         std::byte* data() const;
 
-        std::uint32_t size() const {
-            return Arena::block_size;
-        }
+        std::uint32_t size();
 
         ~ArenaHandle();
 
@@ -35,6 +33,10 @@ namespace Fix {
     struct Arena {
         static constexpr const std::size_t block_size = 1024; // 16 KB
         static constexpr const std::size_t block_count = 16;    // 16 blocks
+        static constexpr const std::uint32_t end = UINT32_MAX;
+
+        static_assert(block_count < end, "block_count must be less than end sentinel value");
+
         
         Arena (); 
         
@@ -53,7 +55,6 @@ namespace Fix {
         friend struct ArenaHandle;
         std::byte* start;
         std::uint32_t free_index;
-        std::uint32_t end = UINT32_MAX;
 
         void release(uint32_t index); 
 

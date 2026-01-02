@@ -1,4 +1,5 @@
 add_library(fix_engine
+    Arena.cpp
     AsioConnection.cpp
     AsioConnectionFactory.cpp
     AsioTimer.cpp

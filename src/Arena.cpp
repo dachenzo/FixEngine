@@ -29,6 +29,13 @@ namespace Fix {
         return nullptr;
     }
 
+    std::uint32_t ArenaHandle::size() {
+        if (arena) {
+            return Arena::block_size;
+        }
+        return 0;
+    }
+
     ArenaHandle::~ArenaHandle() {
         if (arena) {
             arena->release(index);
@@ -72,13 +79,14 @@ namespace Fix {
 
     ArenaHandle Arena::allocate(std::size_t size) {
         if (size > block_size || free_index == end) {
-            // tempoary fall back
             return ArenaHandle{nullptr, UINT32_MAX};
         }
         std::uint32_t allocated_index = free_index;
         free_index = read_next(allocated_index);
         return ArenaHandle{this, allocated_index};
     }
+
+
 
 
      
