@@ -2,8 +2,10 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Tasks:
-- Decide on storeage format for outound messages
-- functionality for efficiently resending messages
+- implement fall back for arena
+- loop in session over resned stream
+- gapfill message generation
+- resend wire generation plus wire Arena
 - stub out core functionality for message store
 - implement the functionality
 - test make valid message

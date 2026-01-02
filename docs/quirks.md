@@ -1,0 +1,1 @@
+Fix::Arenahandle references Fix::Arena with a pointer so there will be lifetime issues if arena is destroyed before its handle. 

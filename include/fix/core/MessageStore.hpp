@@ -27,21 +27,23 @@ namespace Fix {
 
         ResendStream(std::span<const OutboundMessage> messages,
                      std::size_t begin_seq_no,
-                     std::size_t end_seq_no)
+                     std::size_t end_seq_no,
+                     std::unordered_set<std::size_t>& skipped_seq_nos)
             : messages_(messages),
               begin_seq_no_(begin_seq_no),
               current_index_(begin_seq_no),
-              end_seq_no_(end_seq_no)
+              end_seq_no_(end_seq_no),
+              skipped_seq_nos_(skipped_seq_nos)
         {
     
         }
 
 
-       ResendAction next() {
-            if (current_index_ > end_seq_no_) {
-                return end;
-            }
+        bool has_next() const {
+            return current_index_ <= end_seq_no_;
+        }
 
+        ResendAction next() {
             std::size_t start = current_index_;
             bool gap_fill = false;
             while (skipped_seq_nos_.count(current_index_) && current_index_ <= end_seq_no_) {
@@ -53,15 +55,14 @@ namespace Fix {
             if (!gap_fill) {
                 current_index_++;
             }
-
             return ResendAction{start, end, gap_fill};
-       }
+        }
 
 
 
         private:
         static const ResendAction end;
-        std::unordered_set<std::size_t> skipped_seq_nos_;
+        std::unordered_set<std::size_t>& skipped_seq_nos_;
         std::span<const OutboundMessage> messages_;
         std::size_t current_index_ = 0;
         std::size_t begin_seq_no_;
@@ -74,9 +75,7 @@ namespace Fix {
 
         void store_outbound_message(const ValidMessage& message, std::string& wire);
 
-        std::span<const OutboundMessage> get_resend_wires(std::size_t begin_seq_no, std::size_t end_seq_no);
-
-
+        ResendStream get_resend_stream(std::size_t begin_seq_no, std::size_t end_seq_no, std::unordered_set<std::size_t>& skipped_seq_nos) const;
 
         private:
 
