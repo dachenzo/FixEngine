@@ -61,7 +61,7 @@ namespace Fix {
         }
     }
 
-    explicit ArenaHandle::operator bool() const noexcept {
+    ArenaHandle::operator bool() const noexcept {
         return data_ptr_ != nullptr;
     }
 
@@ -107,18 +107,17 @@ namespace Fix {
         handle.arena_ = nullptr;
         handle.data_ptr_ = ptr;
         handle.cap_ = size;
-        handle.size_ = size;
+        handle.size_ = 0;
         handle.index = UINT32_MAX;
         handle.source_type_ = MemSourceType::Heap;
         return handle;
     }
 
     ArenaHandle Arena::allocate_arena() {
-        ArenaHandle handle;
-
         std::uint32_t allocated_index = free_index;
         free_index = read_next(allocated_index);
 
+        ArenaHandle handle;
         handle.arena_ = this;
         handle.data_ptr_ = block_pointer(allocated_index);
         handle.cap_ = block_size;

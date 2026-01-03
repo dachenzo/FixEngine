@@ -28,6 +28,10 @@ namespace Fix {
 
         std::size_t size() const noexcept;
 
+        MemSourceType source_type() const noexcept {
+            return source_type_;
+        }
+
         ~ArenaHandle();
 
         explicit operator bool() const noexcept;

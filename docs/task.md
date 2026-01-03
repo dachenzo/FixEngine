@@ -2,7 +2,7 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Tasks:
-- implement fall back for arena
+- write and reading from arena handle
 - loop in session over resned stream
 - gapfill message generation
 - resend wire generation plus wire Arena
