@@ -26,8 +26,6 @@ namespace Fix {
 
         std::size_t capacity() const noexcept;
 
-        std::size_t size() const noexcept;
-
         MemSourceType source_type() const noexcept {
             return source_type_;
         }
@@ -41,7 +39,6 @@ namespace Fix {
         Arena* arena_ = nullptr;
         std::byte* data_ptr_ = nullptr;
         std::size_t cap_ = 0;
-        std::size_t size_ = 0;
         std::uint32_t index;
         MemSourceType source_type_ = MemSourceType::None;
     };

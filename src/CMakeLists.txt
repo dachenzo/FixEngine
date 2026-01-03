@@ -22,6 +22,7 @@ add_library(fix_engine
     LogFileSink.cpp
     SessionLogger.cpp
     Validator.cpp
+    WireWriter.cpp
 )
 
 

@@ -7,15 +7,13 @@ TEST(ArenaTest, Allocate) {
     
     auto handle1 = arena.allocate(Fix::Arena::block_size);
     EXPECT_TRUE(handle1);
-    EXPECT_EQ(handle1.capacity(), Fix::Arena::block_size);
-    EXPECT_EQ(handle1.size(), 0);
+    EXPECT_EQ(handle1.capacity(), Fix::Arena::block_size);   
     EXPECT_NE(handle1.data(), nullptr);
     EXPECT_EQ(handle1.source_type(), Fix::MemSourceType::Arena);
 
     auto handle2 = arena.allocate(Fix::Arena::block_size+1); // Exceeds block size
     EXPECT_TRUE(handle2);
     EXPECT_EQ(handle2.capacity(), Fix::Arena::block_size+1);
-    EXPECT_EQ(handle2.size(), 0);
     EXPECT_EQ(handle2.data() != nullptr, true);
     EXPECT_EQ(handle2.source_type(), Fix::MemSourceType::Heap);
 

@@ -38,7 +38,7 @@ namespace Fix {
         other.data_ptr_ = nullptr;
         other.source_type_ = MemSourceType::None;
         other.cap_ = 0;
-        other.size_ = 0;
+ 
     }
 
     std::byte* ArenaHandle::data() const noexcept {
@@ -49,9 +49,6 @@ namespace Fix {
         return cap_;
     }
 
-    std::size_t ArenaHandle::size() const noexcept {
-        return size_;
-    }
 
     ArenaHandle::~ArenaHandle() {
         if (source_type_ == MemSourceType::Heap && data_ptr_) {
@@ -107,7 +104,6 @@ namespace Fix {
         handle.arena_ = nullptr;
         handle.data_ptr_ = ptr;
         handle.cap_ = size;
-        handle.size_ = 0;
         handle.index = UINT32_MAX;
         handle.source_type_ = MemSourceType::Heap;
         return handle;
@@ -121,7 +117,6 @@ namespace Fix {
         handle.arena_ = this;
         handle.data_ptr_ = block_pointer(allocated_index);
         handle.cap_ = block_size;
-        handle.size_ = 0;
         handle.index = allocated_index;
         handle.source_type_ = MemSourceType::Arena;
         return handle;
