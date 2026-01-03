@@ -6,10 +6,15 @@
 
 namespace Fix {
     struct Arena;
-    struct ArenaHandle {
-        
-        ArenaHandle(Arena* arena, std::uint32_t index) : arena(arena), index(index) {}
 
+    enum class MemSourceType : std::uint8_t {
+        Arena,
+        Heap,
+        None
+    };
+
+    struct ArenaHandle {
+        friend struct Arena;
         ArenaHandle& operator=(ArenaHandle&) = delete;
         ArenaHandle(ArenaHandle&) = delete;
 
@@ -17,17 +22,24 @@ namespace Fix {
 
         ArenaHandle& operator=(ArenaHandle&& other) noexcept;
 
-        std::byte* data() const;
+        std::byte* data() const noexcept;
 
-        std::uint32_t size();
+        std::size_t capacity() const noexcept;
+
+        std::size_t size() const noexcept;
 
         ~ArenaHandle();
 
-        explicit operator bool() const { return arena != nullptr; }
+        explicit operator bool() const noexcept;
 
         private:
-        Arena* arena;
+        ArenaHandle() = default;
+        Arena* arena_ = nullptr;
+        std::byte* data_ptr_ = nullptr;
+        std::size_t cap_ = 0;
+        std::size_t size_ = 0;
         std::uint32_t index;
+        MemSourceType source_type_ = MemSourceType::None;
     };
 
     struct Arena {
@@ -51,10 +63,18 @@ namespace Fix {
 
         std::byte* block_pointer(std::uint32_t index);
 
+        
+
+
+
         private:
         friend struct ArenaHandle;
         std::byte* start;
         std::uint32_t free_index;
+
+        ArenaHandle allocate_heap(std::size_t size);
+
+        ArenaHandle allocate_arena();
 
         void release(uint32_t index); 
 
