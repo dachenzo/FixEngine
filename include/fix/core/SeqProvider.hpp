@@ -8,6 +8,12 @@ namespace Fix {
 
         public:
 
+        void update_in(std::size_t seq_no) noexcept {
+            incoming_seq_number_ = seq_no;
+        };
+        void update_out(std::size_t seq_no) noexcept {
+            outgoing_seq_number_ = seq_no;
+        };
         std::size_t next_out() const noexcept {
             return outgoing_seq_number_;
         }

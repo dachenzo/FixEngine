@@ -1,8 +1,15 @@
 Current Focus: 
 SeqNumTracking -> Integrated
 
-Tasks:
-- Message Factory Scratch
+Specific: Integrate fatcory scratch with message factory
+- Add body lenght update to factory scratch
+- calculate body kenght and checksum in message factory
+- finishing logogn and the rest of the admin message generation in message factory
+
+BroadTasks:
+- Pin down when to update out seq num
+- Integrate fatcory scratch with message factory
+- Test 
 - test_wire_writer
 - loop in session over resend stream
 - gapfill message generation
@@ -19,9 +26,10 @@ Later:
 - Integrate seq provider with message store
 - Session::send_message_ is broken
 - handle gap fills and correctly update both message store and the seq provider
-- Message Factory is broken 
+ 
 
 
 BackLog:
+- Schematic message generation in message factory
 - Implement Reject Messages
 - Implement Logout Messages

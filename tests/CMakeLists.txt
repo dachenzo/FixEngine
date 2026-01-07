@@ -60,6 +60,7 @@ add_executable(fix_tests
     test_tagscratch.cpp
     test_parser.cpp
     test_arena.cpp
+    test_factoryscratch.cpp
 )
 
 

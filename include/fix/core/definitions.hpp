@@ -35,14 +35,17 @@ namespace Fix {
 
     struct SessionParameters {
         std::string fix_version = "FIX.4.4";
-        int heart_beat_int = 30;
-        int encrypt_method = 0;
-        bool reset_on_logon = true;
-        bool send_last_msg_prcessed_seq =true;
         std::string sender_comp_id = "test_sender";
         std::string target_comp_id = "test_target";
         std::optional<std::string> username;
         std::optional<std::string> password;
+        std::string encrypt_method_str = "0"; // none
+        std::string heart_beat_str = "30";
+        int heart_beat_int = 30;
+        int encrypt_method = 0;
+        bool reset_on_logon = true;
+        bool send_last_msg_prcessed_seq =true;
+        
     }; 
 
     struct SessionCreationConfig {

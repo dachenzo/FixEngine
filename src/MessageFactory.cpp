@@ -8,20 +8,41 @@ namespace Fix {
 
     MessageFactory::MessageFactory( SessionParameters& params, 
                                     SeqProvider& seq_provider, 
-                                    Clock& clock): seq_provider_{seq_provider}, clock_{clock}, params_{params} {
+                                    Clock& clock): scratch_{}, params_{params}, seq_provider_{seq_provider}, clock_{clock} {
         
     }
 
+    void MessageFactory::stamp_header_(std::string type) {
+        scratch_.reset();
+        scratch_.add_field(8, params_.fix_version);
+        scratch_.add_body_length_placeholder();
+        scratch_.add_field(35, type);
+        scratch_.add_field(34, std::to_string(seq_provider_.next_out()));
+        scratch_.add_field(49, params_.sender_comp_id);
+        scratch_.add_field(56, params_.target_comp_id);
+        scratch_.add_field(52, clock_.now_fix());
+    }
 
-    // Fix::ValidMessage MessageFactory::logon(int heartbeat_override, bool echo_reset) {
-    //     Fix::ValidMessage msg{};
-    //     stamp_header_(msg, "A");
-    //     msg.add({98, std::to_string(params_.encrypt_method)});
-    //     msg.add({141, (echo_reset ? "Y" : "N")});
-    //     msg.add({108, std::to_string(params_.heart_beat_int)});
-    //     stamp_trailer_(msg);
-    //     return msg;
-    // }
+
+    std::string_view MessageFactory::logon(int heartbeat_override, bool echo_reset) {
+        stamp_header_("A");
+        scratch_.add_field(98, params_.encrypt_method_str);
+        scratch_.add_field(141, (echo_reset ? "Y" : "N"));
+        scratch_.add_field(108, params_.heart_beat_str);
+        stamp_trailer_();
+        return scratch_.get_buffer_view();
+    }
+
+    void MessageFactory::stamp_trailer_() {
+        scratch_.insert_body_length();
+        scratch_.insert_checksum();
+    }
+
+
+
+
+
+    
 
     // Fix::ValidMessage MessageFactory::heart_beat(std::optional<std::string> test_req_id) {
     //     Fix::ValidMessage msg{};
@@ -68,19 +89,6 @@ namespace Fix {
     // }
 
 
-    // void MessageFactory::stamp_header_(Fix::ValidMessage& msg, std::string type) {
-    //     msg.add({8, params_.fix_version});
-    //     msg.add({9, ""}); // body count
-    //     msg.add({35, type});
-    //     msg.add({34, std::to_string(seq_provider_.next_out())});
-    //     msg.add({49, params_.sender_comp_id});
-    //     msg.add({56, params_.target_comp_id});
-    //     msg.add({52, clock_.now_fix()});
-
-    //     if (params_.send_last_msg_prcessed_seq && seq_provider_.last_in() > 0) {
-    //         msg.add({369, std::to_string(seq_provider_.last_in())});
-    //     }
-    // }
 
     // void MessageFactory::stamp_trailer_(Fix::ValidMessage& msg) {
     //     auto body_len = compute_body_length_(msg);

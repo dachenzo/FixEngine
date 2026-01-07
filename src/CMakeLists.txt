@@ -5,6 +5,7 @@ add_library(fix_engine
     AsioTimer.cpp
     Clock.cpp
     Config.cpp
+    FactoryScratch.cpp
     ## ConnectionAsio.cpp (discontinued implementation)
     Message.cpp
     MessageBuilder.cpp
