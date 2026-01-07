@@ -6,11 +6,11 @@
 
 namespace Fix {
 
-    // MessageFactory::MessageFactory( SessionParameters& params, 
-    //                                 SeqProvider& seq_provider, 
-    //                                 Clock& clock): seq_provider_{seq_provider}, clock_{clock}, params_{params} {
+    MessageFactory::MessageFactory( SessionParameters& params, 
+                                    SeqProvider& seq_provider, 
+                                    Clock& clock): seq_provider_{seq_provider}, clock_{clock}, params_{params} {
         
-    // }
+    }
 
 
     // Fix::ValidMessage MessageFactory::logon(int heartbeat_override, bool echo_reset) {

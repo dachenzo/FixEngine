@@ -60,8 +60,7 @@ namespace Fix {
 
 
 
-        private:
-        static const ResendAction end;
+        private: 
         std::unordered_set<std::size_t>& skipped_seq_nos_;
         std::span<const OutboundMessage> messages_;
         std::size_t current_index_ = 0;
@@ -78,9 +77,6 @@ namespace Fix {
         ResendStream get_resend_stream(std::size_t begin_seq_no, std::size_t end_seq_no, std::unordered_set<std::size_t>& skipped_seq_nos) const;
 
         private:
-
-        void create_new_wire_();
-
 
         std::vector<ValidMessage> inbound_buffer_;
         std::vector<OutboundMessage> outbound_buffer_;

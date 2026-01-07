@@ -10,6 +10,8 @@
 
 namespace Fix {
 
+    
+
     struct MessageFactory {
         MessageFactory(SessionParameters& params, SeqProvider& seq_provider, Clock& clock);
 

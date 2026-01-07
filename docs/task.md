@@ -2,13 +2,17 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Tasks:
-- write and reading from arena handle
-- loop in session over resned stream
+- Message Factory Scratch
+- test_wire_writer
+- loop in session over resend stream
 - gapfill message generation
-- resend wire generation plus wire Arena
+- resend wire generation 
 - stub out core functionality for message store
 - implement the functionality
 - test make valid message
+
+Bugs:
+- Resend stream currently confuses seq num for message type 
 
 
 Later:
