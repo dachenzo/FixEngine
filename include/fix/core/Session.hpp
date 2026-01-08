@@ -2,8 +2,10 @@
 #include <memory>
 #include <optional>
 #include <deque>
+#include <fix/core/Arena.hpp>
 #include <fix/core/SeqProvider.hpp>
 #include <fix/core/Clock.hpp>
+#include <fix/core/WireWriter.hpp>
 #include <fix/core/Serializer.hpp>
 #include <fix/core/IConnection.hpp>
 #include <fix/core/definitions.hpp>
@@ -14,6 +16,7 @@
 #include <fix/core/ITimer.hpp>
 #include <fix/core/Codec.hpp>
 #include <fix/core/Validator.hpp>
+#include <fix/core/WireWriter.hpp>
 #include <fix/core/Parser.hpp>
 #include <fix/log/LogCore.hpp>
 #include <fix/log/SessionLogger.hpp>
@@ -79,7 +82,7 @@ namespace Fix {
             void send_logout(const std::string& reason);
             // void sendHeartbeat(const std::optional<std::string>& testReqId = {});
             // void sendTestRequest(const std::string& testReqId);
-            // void sendResendRequest(std::size_t beginSeqNo, std::size_t endSeqNo);
+            void sendResendRequest(std::size_t beginSeqNo, std::size_t endSeqNo);
             // void sendSequenceResetGapFill(std::size_t newSeqNo);
             // void resendBufferedMessages(std::size_t beginSeqNo, std::size_t endSeqNo);
 
@@ -91,9 +94,9 @@ namespace Fix {
             void handle_resend_request(const Fix::ValidMessage&);
             void handle_sequence_reset(const Fix::ValidMessage&);
 
-            void send_message_(Fix::ValidMessage& msg);
+            void send_message_(std::string_view msg_wire);
 
-            void send_bytes_(std::string msg_wire);
+            void send_bytes_(Fix::WireWriter handle);
 
             void schedule_logon_timeout_(Fix::SessionState expected_state);
             
@@ -106,23 +109,22 @@ namespace Fix {
             void do_write();
 
 
-            struct PendingWrite { std::string data; std::size_t sent = 0; };
+            struct PendingWrite { 
+                Fix::WireWriter data; 
+                std::size_t sent = 0; 
+            };
 
+            Fix::Arena arena_;
+            Fix::SessionParameters params_;
             boost::asio::strand<boost::asio::any_io_executor> exec_{boost::asio::system_executor()};
             std::deque<PendingWrite> write_q_;
-            bool stopped_ = false;
-            bool write_inflight_ = false;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;
             Fix::Parser parser_;
             Fix::Serializer serializer_;
-            Fix::Role role_;
             Fix::SessionID id_;
-            Fix::Application& app_;
-            Fix::ITimerFactory& timers_;
             Fix::MessageStore store_;
             Fix::SessionState state_;
-            Fix::SessionParameters params_;
             Fix::SeqProvider seq_provider_;
             Fix::Clock clock_;
             Fix::MessageFactory<Fix::Clock> msg_factory_;
@@ -131,6 +133,12 @@ namespace Fix {
             boost::asio::steady_timer inbound_timer_;
             boost::asio::steady_timer heartbeat_timer_;
             Fix::Validator validator_;
+            Fix::Application& app_;
+            Fix::ITimerFactory& timers_;
+            bool stopped_ = false;
+            bool write_inflight_ = false;
+            Fix::Role role_;
+            
 
     };
 }

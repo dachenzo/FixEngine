@@ -3,8 +3,8 @@
 
 namespace Fix {
 
-    WireWriter::WireWriter(ArenaHandle& handle) 
-        :handle_(handle), size_(0) {
+    WireWriter::WireWriter(ArenaHandle&& handle) 
+        :handle_(std::move(handle)), size_(0) {
     }
 
     void WireWriter::append(std::string_view data) {
@@ -12,10 +12,7 @@ namespace Fix {
     }
 
     void WireWriter::append(const char* data, std::size_t size) {
-        if (size_ + size > handle_.capacity()) {
-            // should not happen if used correctly
-            throw std::runtime_error("WireWriter: Exceeding allocated capacity");
-        }
+        // if u segfault here, you didnt make sure the ArenaHandle has enough capacity
         std::memcpy(handle_.data() + size_, data, size);
         size_ += size;
     }

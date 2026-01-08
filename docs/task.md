@@ -1,13 +1,13 @@
 Current Focus: 
 SeqNumTracking -> Integrated
 
-Specific: Integrate fatcory scratch with message factory
-- finishing logogn and the rest of the admin message generation in message factory
+Specific:  Integrate Wirewriter and Arena with send stream in session
+-
+
 
 BroadTasks:
+- Integrate Wirewriter and Arena with send stream in session
 - Pin down when to update out seq num
-- Integrate fatcory scratch with message factory
-- Test 
 - test_wire_writer
 - loop in session over resend stream
 - gapfill message generation

@@ -22,6 +22,7 @@ namespace Fix {
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core
             ):  
+                arena_{},
                 parser_{},
                 app_{app},
                 timers_{timers},
@@ -156,20 +157,19 @@ namespace Fix {
         return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
-    void Session::send_message_(Fix::ValidMessage& msg) {
-        std::string wire{};
-        wire.reserve(wire_pre_alloc);
-        std::size_t wire_len = serializer_.serialize(msg, wire);
-        // int seq = store_.get_next_sender_seq();
-        // store_.store_outbound(seq, msg);
-        send_bytes_(std::move(wire));
+    void Session::send_message_(std::string_view msg_wire) {
+        
+        auto handle = arena_.allocate(msg_wire.size());
+        Fix::WireWriter writer(std::move(handle));
+        writer.append(msg_wire);
+        send_bytes_(std::move(handle));
     }
 
-    void Session::send_bytes_(std::string msg_wire) {
-        write_q_.push_back({std::move(msg_wire), 0});
+    void Session::send_bytes_(Fix::WireWriter handle) {
+        write_q_.push_back({std::move(handle), 0});
         if (write_inflight_) return;
         write_inflight_ = true;
-        do_write();
+        do_write(); 
 
     }
 
@@ -333,6 +333,18 @@ namespace Fix {
         auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
         auto seq_num = msg.header_cache_.msg_seq_num;
 
+        if (seq_num == seq_provider_.next_in()) {
+            seq_provider_.update_in(seq_num + 1);
+        } else if (seq_num > seq_provider_.next_in()) {
+            // Future seq num, need to resend
+            send_reject();
+
+            return;
+        } else {
+            // Old seq num, ignore for now
+            return;
+        }
+
        
         // auto seqnum_sv = msg.get(msg_seq_num_key);
         // if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
@@ -369,12 +381,7 @@ namespace Fix {
     }
 
     void Session::send_logon() {
-        logger_.log(
-            {Fix::Error::Layer::Fix, 
-            Fix::Error::Category::Info, 
-            Fix::Error::Severity::NA},
-            "Preparing to send Logon message"
-        );
+        
     }
 
     void Session::send_reject() {
