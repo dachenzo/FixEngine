@@ -125,7 +125,7 @@ namespace Fix {
             Fix::SessionParameters params_;
             Fix::SeqProvider seq_provider_;
             Fix::Clock clock_;
-            Fix::MessageFactory msg_factory_;
+            Fix::MessageFactory<Fix::Clock> msg_factory_;
             Fix::Log::SessionLogger logger_;
             boost::asio::steady_timer logon_timer_;
             boost::asio::steady_timer inbound_timer_;

@@ -29,5 +29,6 @@ Later:
 
 BackLog:
 - Schematic message generation in message factory
+- clock is still a dummy
 - Implement Reject Messages
 - Implement Logout Messages

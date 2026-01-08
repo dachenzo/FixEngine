@@ -68,11 +68,21 @@ namespace Fix {
  
     };
 
+    template<ClockLike TClock>
     struct MessageFactory {
-        MessageFactory(SessionParameters& params, SeqProvider& seq_provider, Clock& clock);
+        MessageFactory(SessionParameters& params, SeqProvider& seq_provider, Clock& clock): scratch_{}, params_{params}, seq_provider_{seq_provider}, clock_{clock} {
+        }
 
 
-        std::string_view logon(int heartbeat_override, bool echo_reset);
+
+        std::string_view logon(int heartbeat_override, bool echo_reset) {
+            stamp_header_("A");
+            scratch_.add_field(98, params_.encrypt_method_str);
+            scratch_.add_field(141, (echo_reset ? "Y" : "N"));
+            scratch_.add_field(108, params_.heart_beat_str);
+            stamp_trailer_();
+            return scratch_.get_buffer_view();
+        }
         Fix::ValidMessage heart_beat(std::optional<std::string> test_req_id = std::nullopt);
         Fix::ValidMessage test_request(std::string id);
         Fix::ValidMessage resend_request(int begin_seq_no, int end_seq_no);
@@ -85,19 +95,23 @@ namespace Fix {
         FactoryScratch scratch_;    
         SessionParameters& params_;
         SeqProvider& seq_provider_;
-        Clock& clock_;
+        TClock& clock_;
 
-        void stamp_header_(std::string type);
-        void stamp_trailer_();
-        std::uint64_t compute_body_length_(Fix::ValidMessage& msg);
-        inline std::uint32_t sum_bytes_(std::string_view v);
-        inline std::uint32_t sum_tag_ascii_(int tag);
-        std::uint8_t compute_check_sum_
-        (Fix::ValidMessage& msg);
-        constexpr int tag_count_(int tag) const noexcept;
-
+        void stamp_header_(std::string type) {
+            scratch_.reset();
+            scratch_.add_field(8, params_.fix_version);
+            scratch_.add_body_length_placeholder();
+            scratch_.add_field(35, type);
+            scratch_.add_field(34, std::to_string(seq_provider_.next_out()));
+            scratch_.add_field(49, params_.sender_comp_id);
+            scratch_.add_field(56, params_.target_comp_id);
+            scratch_.add_field(52, clock_.now_fix());
+        }
         
-
+        void stamp_trailer_()  {
+            scratch_.insert_body_length();
+            scratch_.insert_checksum();
+        }
     };
 
 }

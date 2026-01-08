@@ -6,37 +6,9 @@
 
 namespace Fix {
 
-    MessageFactory::MessageFactory( SessionParameters& params, 
-                                    SeqProvider& seq_provider, 
-                                    Clock& clock): scratch_{}, params_{params}, seq_provider_{seq_provider}, clock_{clock} {
-        
-    }
-
-    void MessageFactory::stamp_header_(std::string type) {
-        scratch_.reset();
-        scratch_.add_field(8, params_.fix_version);
-        scratch_.add_body_length_placeholder();
-        scratch_.add_field(35, type);
-        scratch_.add_field(34, std::to_string(seq_provider_.next_out()));
-        scratch_.add_field(49, params_.sender_comp_id);
-        scratch_.add_field(56, params_.target_comp_id);
-        scratch_.add_field(52, clock_.now_fix());
-    }
 
 
-    std::string_view MessageFactory::logon(int heartbeat_override, bool echo_reset) {
-        stamp_header_("A");
-        scratch_.add_field(98, params_.encrypt_method_str);
-        scratch_.add_field(141, (echo_reset ? "Y" : "N"));
-        scratch_.add_field(108, params_.heart_beat_str);
-        stamp_trailer_();
-        return scratch_.get_buffer_view();
-    }
-
-    void MessageFactory::stamp_trailer_() {
-        scratch_.insert_body_length();
-        scratch_.insert_checksum();
-    }
+ 
 
 
 
