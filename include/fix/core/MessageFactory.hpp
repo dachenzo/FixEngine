@@ -70,7 +70,7 @@ namespace Fix {
 
     template<ClockLike TClock>
     struct MessageFactory {
-        MessageFactory(SessionParameters& params, SeqProvider& seq_provider, Clock& clock): scratch_{}, params_{params}, seq_provider_{seq_provider}, clock_{clock} {
+        MessageFactory(SessionParameters& params, SeqProvider& seq_provider, TClock& clock): scratch_{}, params_{params}, seq_provider_{seq_provider}, clock_{clock} {
         }
 
 
@@ -107,7 +107,7 @@ namespace Fix {
             scratch_.add_field(56, params_.target_comp_id);
             scratch_.add_field(52, clock_.now_fix());
         }
-        
+
         void stamp_trailer_()  {
             scratch_.insert_body_length();
             scratch_.insert_checksum();
