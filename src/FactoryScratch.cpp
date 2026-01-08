@@ -1,3 +1,4 @@
+#include <iostream>
 #include <fix/core/MessageFactory.hpp>
 
 
@@ -14,7 +15,7 @@ namespace Fix {
     void FactoryScratch::reset() {
         body_length_offset = 0;
         position = 0;
-        body_length_digit_size = 32;
+        body_length_digit_size = 10;
         checksum_offset = 0;
     }
 
@@ -23,18 +24,24 @@ namespace Fix {
     }
 
     std::size_t FactoryScratch::compute_checksum() const noexcept {
+        // simple sum of all bytes up to checksum_offset modulo 256
+        // called when all fields except checksum have been added
+        
         uint64_t sum = 0;
-        for (std::size_t i = 0; i < position; ++i) {
+        for (std::size_t i = 0; i < checksum_offset; ++i) {
             sum += static_cast<unsigned char>(buffer[i]);
         }
         return sum % 256;
     }
 
     void FactoryScratch::insert_checksum() {
+        checksum_offset = position;
         auto checksum = compute_checksum();
         auto r = std::to_chars(int_buff, int_buff + sizeof(int_buff), checksum);
+        
         std::size_t len = static_cast<std::size_t>(r.ptr - int_buff);
-        add_char(10);
+
+        add_string("10");
         add_equal_sign();
         if (len < 3) {
             // zero-pad
@@ -42,6 +49,7 @@ namespace Fix {
                 add_char(static_cast<unsigned char>('0'));
             }
         }
+        
         add_string(std::string_view{int_buff, len});
         add_soh();
     }
@@ -75,7 +83,7 @@ namespace Fix {
     void FactoryScratch::add_string(std::string_view sv) {
         if (position + sv.size() > buffer_size) {
             auto extra = position + sv.size() - buffer_size;
-            grow(std::min(extra, min_grow_size));
+            grow(std::max(extra, min_grow_size));
         }
         std::memcpy(buffer + position, sv.data(), sv.size());
         position += sv.size();

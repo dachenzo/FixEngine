@@ -369,12 +369,12 @@ namespace Fix {
     }
 
     void Session::send_logon() {
-        std::cout << "Got to send logon\n";
-        auto msg = msg_factory_.logon(0, true);
-        std::cout << "Message created\n";
-        send_message_(msg);
-        std::cout << "Message sent\n";
-
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Preparing to send Logon message"
+        );
     }
 
     void Session::send_reject() {

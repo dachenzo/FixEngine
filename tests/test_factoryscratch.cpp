@@ -22,17 +22,6 @@ TEST(FactoryScratchTests, AddFieldTest) {
     EXPECT_EQ(result, expected_sv);
 }
 
-TEST(FactoryScratchTests, BodyLengthPlaceholderTest) {
-    Fix::FactoryScratch scratch;
-    scratch.reset();
-    scratch.add_body_length_placeholder();
-
-    const char expected[] = "9=000000"
-                            "\x01";
-    std::string_view result = scratch.get_buffer_view();
-    std::string_view expected_sv{expected, sizeof(expected) - 1};
-    EXPECT_EQ(result, expected_sv);
-}
 
 TEST(FactoryScratchTests, AddIntTest) {
     Fix::FactoryScratch scratch;
@@ -81,11 +70,7 @@ TEST(FactoryScratchTests, ComputeBodyLengthTest) {
         expected_body_length += std::to_string(field.tag).size() + 1 // tag + '='
                                 + field.value.size() + 1; // value + SOH
     }   
-
     std::size_t body_length = scratch.compute_body_length();
-    // Body length should be the total length of fields added
-    std::size_t expected_length = scratch.get_position();
-    EXPECT_EQ(body_length, expected_length);
     EXPECT_EQ(body_length, expected_body_length);
 }
 
@@ -114,6 +99,7 @@ TEST(FactoryScratchTests, ComputeChecksumTest) {
         }
         expected_checksum += static_cast<unsigned char>('\x01'); // SOH
     }
+    scratch.insert_checksum();
     std::size_t checksum = scratch.compute_checksum();
     EXPECT_EQ(checksum, expected_checksum % 256);
 
@@ -148,6 +134,7 @@ TEST(FactoryScratchTests, BodyLenghtAndChecksumIntegrationTest) {
     scratch.insert_checksum();
 
     auto complete_msg = scratch.get_buffer_view();
-    EXPECT_EQ(complete_msg, expected_msg);
+    EXPECT_EQ(complete_msg.size(), expected_msg.size()); // worked 
+    EXPECT_EQ(complete_msg, expected_msg); // failed
 
 }

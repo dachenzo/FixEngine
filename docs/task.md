@@ -2,8 +2,6 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Specific: Integrate fatcory scratch with message factory
-- Add body lenght update to factory scratch
-- calculate body kenght and checksum in message factory
 - finishing logogn and the rest of the admin message generation in message factory
 
 BroadTasks:

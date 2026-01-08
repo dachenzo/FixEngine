@@ -61,7 +61,7 @@ namespace Fix {
         std::size_t buffer_size = 64 * 1024;// 64 KB
         std::size_t position  = 0;
         std::size_t body_length_offset = 0;
-        std::size_t body_length_digit_size = 32;// realistically will not exceed this
+        std::size_t body_length_digit_size = 10;// realistically will not exceed this
         std::size_t checksum_offset = 0;
         char int_buff[22]; // enough for 64-bit int
 
