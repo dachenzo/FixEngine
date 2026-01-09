@@ -2,6 +2,7 @@
 #include <span>
 #include <vector>
 #include <string>
+#include <cstring>
 #include <unordered_set>
 #include <fix/core/InboundMessageStore.hpp>
 #include <fix/core/OutboundMessageStore.hpp>
@@ -28,14 +29,12 @@ namespace Fix {
         uint16_t len_122 = 0;   
         uint16_t len_52 = 0;
         std::array<char, 2> msg_type; 
-        bool is_lenghth_2 = false;
+        u_int8_t msg_size = 1;
 
-        uint8_t msg_size() const noexcept {
-            return is_lenghth_2 ? 2 : 1;
-        }
+        
 
         std::string_view get_msg_type() const noexcept {
-            return std::string_view(msg_type.data(), msg_size());
+            return std::string_view(msg_type.data(), msg_size);
         }
     };
 
@@ -52,10 +51,10 @@ namespace Fix {
     struct ResendStream {
 
         ResendStream(std::byte* blob_buffer,
-                     std::size_t blob_buffer_size,
-                     std::size_t begin_seq_no,
-                     std::size_t end_seq_no,
-                     std::vector<MsgIndex>& outbound_index
+                     std::uint32_t blob_buffer_size,
+                     std::uint32_t begin_seq_no,
+                     std::uint32_t end_seq_no,
+                     std::span<const MsgIndex> outbound_index
         )  :  outbound_index_(outbound_index),
               blob_buffer_(blob_buffer),
               blob_buffer_size_(blob_buffer_size),
@@ -91,13 +90,13 @@ namespace Fix {
         
 
         ResendAction next() {
+            // ResendAction range is inclusive: [begin_seq_no, end_seq_no]
             std::size_t start = current_index_;
             bool gap_fill = false;
-            auto& msg_index = outbound_index_[current_index_ - 1];
+            
 
-            while (no_resend(msg_index.get_msg_type()) && current_index_ <= end_seq_no_) {
+            while (current_index_ <= end_seq_no_ && no_resend(outbound_index_[current_index_ - 1].get_msg_type())) {
                 current_index_++;
-                auto& msg_index = outbound_index_[current_index_ - 1];
                 gap_fill = true;   
             }
 
@@ -111,12 +110,12 @@ namespace Fix {
 
 
         private: 
-        std::vector<MsgIndex>& outbound_index_;
+        std::span<const MsgIndex> outbound_index_;
         std::byte* blob_buffer_;
-        std::size_t blob_buffer_size_;
-        std::size_t current_index_ = 0;
-        std::size_t begin_seq_no_;
-        std::size_t end_seq_no_;
+        std::uint32_t blob_buffer_size_;
+        std::uint32_t current_index_ = 0;
+        std::uint32_t begin_seq_no_;
+        std::uint32_t end_seq_no_;
 
     };
 
@@ -140,7 +139,7 @@ namespace Fix {
 
         static MsgIndex create_message_index(std::string_view wire, uint32_t off); 
 
-        ResendStream get_resend_stream(std::size_t begin_seq_no, std::size_t end_seq_no) const;
+        ResendStream get_resend_stream(std::uint32_t begin_seq_no, std::uint32_t end_seq_no) const;
 
         
 
@@ -150,8 +149,8 @@ namespace Fix {
     
         std::vector<MsgIndex> outbound_index_;
         std::byte* blob_buffer_ = nullptr;
-        std::size_t blob_buffer_size_ = 0;
-        std::size_t blob_buffer_used_ = 0;
+        std::uint32_t blob_buffer_size_ = 0;
+        std::uint32_t blob_buffer_used_ = 0;
         
     };
 }
