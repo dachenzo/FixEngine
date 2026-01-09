@@ -141,6 +141,12 @@ namespace Fix {
 
         ResendStream get_resend_stream(std::uint32_t begin_seq_no, std::uint32_t end_seq_no) const;
 
+        std::uint32_t capacity() const noexcept;
+
+        std::uint32_t size() const noexcept;
+
+        std::string_view all_messages() const noexcept;
+
         
 
         private:

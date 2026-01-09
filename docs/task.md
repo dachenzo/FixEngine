@@ -9,10 +9,12 @@ Specific:  loop in session over resend stream
 
 
 
+
 BroadTasks:
 - Implement reject messages correctly
 - Pin down when to update out seq num
 - test_wire_writer
+- Fix Reject sends // they are commented out rn
 - loop in session over resend stream
 - gapfill message generation
 - resend wire generation 

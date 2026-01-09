@@ -313,7 +313,7 @@ namespace Fix {
         
         if (!results.errors.empty()) {
             // Reject Message
-            send_reject();
+            // send_reject();
             return;
         }
 
@@ -326,7 +326,7 @@ namespace Fix {
                 Fix::Error::Severity::High},
                 "Validator passed but required fields missing"
             );
-            send_reject();
+            // send_reject();
             return;
         }
 

@@ -62,6 +62,7 @@ add_executable(fix_tests
     test_arena.cpp
     test_factoryscratch.cpp
     test_message_factory.cpp
+    test_message_store.cpp
 )
 
 

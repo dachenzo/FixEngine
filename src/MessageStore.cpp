@@ -97,4 +97,16 @@ namespace Fix {
             outbound_index_
         );
     }
+
+    std::uint32_t MessageStore::capacity() const noexcept {
+        return blob_buffer_size_;
+    }
+
+    std::uint32_t MessageStore::size() const noexcept {
+        return blob_buffer_used_;
+    }
+
+    std::string_view MessageStore::all_messages() const noexcept {
+        return std::string_view{reinterpret_cast<const char*>(blob_buffer_), blob_buffer_used_};
+    }
 }

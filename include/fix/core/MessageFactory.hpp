@@ -132,7 +132,7 @@ namespace Fix {
             return scratch_.get_buffer_view();
         }
 
-        std::string_view reject(std::size_t ref_seq_num = 0, uint32_t reason, std::size_t tag = 0, std::string text = {}) {
+        std::string_view reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag, std::string text ) {
             scratch_.reset();
             stamp_header_("3");
             scratch_.add_field(45, std::to_string(ref_seq_num));
