@@ -33,6 +33,8 @@ namespace Fix {
         DISCONNECTED,
     };
 
+    
+
 
 
     struct Session: public std::enable_shared_from_this<Fix::Session> {
@@ -78,11 +80,11 @@ namespace Fix {
 
             // // FIX admin sends
             void send_logon();
-            void send_reject();
+            void send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag = 0, std::string text = {});
             void send_logout(const std::string& reason);
             // void sendHeartbeat(const std::optional<std::string>& testReqId = {});
             // void sendTestRequest(const std::string& testReqId);
-            void sendResendRequest(std::size_t beginSeqNo, std::size_t endSeqNo);
+            void send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo);
             // void sendSequenceResetGapFill(std::size_t newSeqNo);
             // void resendBufferedMessages(std::size_t beginSeqNo, std::size_t endSeqNo);
 

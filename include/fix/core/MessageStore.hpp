@@ -10,10 +10,36 @@
 
 namespace Fix {
 
-    struct OutboundMessage {
-        ValidMessage message_;
-        std::string wire_;
+        
+
+    struct MsgIndex {
+        uint32_t off;      // offset into blob buffer
+        uint32_t len;      // byte length
+        uint32_t seq;      // MsgSeqNum
+        
+
+        // patch points (offsets relative to off)
+        int32_t off_34 = -1;  
+        int32_t off_52 = -1;  
+        int32_t off_43 = -1;  
+        int32_t off_122 = -1;
+        uint16_t len_34 = 0; 
+        uint16_t len_43 = 0;  
+        uint16_t len_122 = 0;   
+        uint16_t len_52 = 0;
+        std::array<char, 2> msg_type; 
+        bool is_lenghth_2 = false;
+
+        uint8_t msg_size() const noexcept {
+            return is_lenghth_2 ? 2 : 1;
+        }
+
+        std::string_view get_msg_type() const noexcept {
+            return std::string_view(msg_type.data(), msg_size());
+        }
     };
+
+
 
     struct ResendAction {
         std::size_t begin_seq_no;
@@ -25,29 +51,53 @@ namespace Fix {
 
     struct ResendStream {
 
-        ResendStream(std::span<const OutboundMessage> messages,
+        ResendStream(std::byte* blob_buffer,
+                     std::size_t blob_buffer_size,
                      std::size_t begin_seq_no,
                      std::size_t end_seq_no,
-                     std::unordered_set<std::size_t>& skipped_seq_nos)
-            : messages_(messages),
+                     std::vector<MsgIndex>& outbound_index
+        )  :  outbound_index_(outbound_index),
+              blob_buffer_(blob_buffer),
+              blob_buffer_size_(blob_buffer_size),
               begin_seq_no_(begin_seq_no),
               current_index_(begin_seq_no),
-              end_seq_no_(end_seq_no),
-              skipped_seq_nos_(skipped_seq_nos)
+              end_seq_no_(end_seq_no)
         {
     
         }
 
+        static bool no_resend(std::string_view msg_type) {
+            if (msg_type.size() == 1) {
+                switch(msg_type[0]) {
+                    case '0': // Heartbeat
+                    case 'A': // Logon
+                    case '1': // Test Request
+                    case '3': // Reject
+                    case '4': // Sequence Reset
+                    case '5': // Logout
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+            return false;
+        }
 
-        bool has_next() const {
+
+        bool has_next() const noexcept {
             return current_index_ <= end_seq_no_;
         }
+
+        
 
         ResendAction next() {
             std::size_t start = current_index_;
             bool gap_fill = false;
-            while (skipped_seq_nos_.count(current_index_) && current_index_ <= end_seq_no_) {
+            auto& msg_index = outbound_index_[current_index_ - 1];
+
+            while (no_resend(msg_index.get_msg_type()) && current_index_ <= end_seq_no_) {
                 current_index_++;
+                auto& msg_index = outbound_index_[current_index_ - 1];
                 gap_fill = true;   
             }
 
@@ -61,8 +111,9 @@ namespace Fix {
 
 
         private: 
-        std::unordered_set<std::size_t>& skipped_seq_nos_;
-        std::span<const OutboundMessage> messages_;
+        std::vector<MsgIndex>& outbound_index_;
+        std::byte* blob_buffer_;
+        std::size_t blob_buffer_size_;
         std::size_t current_index_ = 0;
         std::size_t begin_seq_no_;
         std::size_t end_seq_no_;
@@ -71,14 +122,36 @@ namespace Fix {
 
    
     struct MessageStore {
+        static constexpr std::size_t blob_buffer_start_size = 8 * 1024 * 1024; // 8 MB
+        static constexpr std::size_t min_blob_buffer_grow_size = 4 * 1024 * 1024; // 4 MB
+        static constexpr std::size_t message_index_reserve_size = blob_buffer_start_size / 2048; // avg 2KB per message
 
-        void store_outbound_message(const ValidMessage& message, std::string& wire);
 
-        ResendStream get_resend_stream(std::size_t begin_seq_no, std::size_t end_seq_no, std::unordered_set<std::size_t>& skipped_seq_nos) const;
+        
+
+        MessageStore();
+        ~MessageStore();
+        MessageStore(const MessageStore&) = delete;
+        MessageStore& operator=(const MessageStore&) = delete;
+        MessageStore(MessageStore&&) = delete;
+        MessageStore& operator=(MessageStore&&) = delete;
+
+        void store_outbound_message(std::string_view wire);
+
+        static MsgIndex create_message_index(std::string_view wire, uint32_t off); 
+
+        ResendStream get_resend_stream(std::size_t begin_seq_no, std::size_t end_seq_no) const;
+
+        
 
         private:
-
-        std::vector<ValidMessage> inbound_buffer_;
-        std::vector<OutboundMessage> outbound_buffer_;
+        void grow_blob_buffer_(std::size_t min_additional_size);
+        void grow_blob_buffer_();
+    
+        std::vector<MsgIndex> outbound_index_;
+        std::byte* blob_buffer_ = nullptr;
+        std::size_t blob_buffer_size_ = 0;
+        std::size_t blob_buffer_used_ = 0;
+        
     };
 }

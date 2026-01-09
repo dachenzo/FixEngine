@@ -1,12 +1,16 @@
 Current Focus: 
 SeqNumTracking -> Integrated
 
-Specific:  Integrate Wirewriter and Arena with send stream in session
--
+Specific:  loop in session over resend stream
+- Fix the resend stream bug
+- Test resend stream
+- send the begining and end sequence number into the resend processeror
+- decide what to do when seq number < expected seq number
+
 
 
 BroadTasks:
-- Integrate Wirewriter and Arena with send stream in session
+- Implement reject messages correctly
 - Pin down when to update out seq num
 - test_wire_writer
 - loop in session over resend stream

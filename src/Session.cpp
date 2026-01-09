@@ -162,7 +162,7 @@ namespace Fix {
         auto handle = arena_.allocate(msg_wire.size());
         Fix::WireWriter writer(std::move(handle));
         writer.append(msg_wire);
-        send_bytes_(std::move(handle));
+        send_bytes_(std::move(writer));
     }
 
     void Session::send_bytes_(Fix::WireWriter handle) {
@@ -337,8 +337,8 @@ namespace Fix {
             seq_provider_.update_in(seq_num + 1);
         } else if (seq_num > seq_provider_.next_in()) {
             // Future seq num, need to resend
-            send_reject();
-
+            // RESEND STREAM LOGIC TO BE ADDED
+            send_resend_request(seq_provider_.next_in(), 0);
             return;
         } else {
             // Old seq num, ignore for now
@@ -381,15 +381,23 @@ namespace Fix {
     }
 
     void Session::send_logon() {
-        
+        auto wire = msg_factory_.logon(params_.heart_beat_int, params_.reset_on_logon);
+        send_message_(wire);
     }
 
-    void Session::send_reject() {
-        std::cout << "Sending Reject message\n";
+    void Session::send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag, std::string text) {
+        auto wire = msg_factory_.reject(ref_seq_num, reason, tag, text);
+        send_message_(wire);
     }
 
     void Session::send_logout(const std::string& reason) {
-        std::cout << "Sending Logout message: " << reason << "\n";
+        auto wire = msg_factory_.logout(reason);
+        send_message_(wire);
+    }
+
+    void Session::send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo) {
+        auto wire = msg_factory_.resend_request(beginSeqNo, endSeqNo);
+        send_message_(wire);
     }
 
     void Session::handle_logon(const Fix::ValidMessage&) {
