@@ -28,9 +28,9 @@ namespace Fix {
         std::size_t pos = 0;
         while (pos < wire.size()) {
             auto eq_pos = wire.find('=', pos);
-            if (eq_pos == std::string_view::npos) break; // shouldnt happen
+            assert(eq_pos != std::string_view::npos); // shouldnt happen
             auto soh_pos = wire.find('\x01', eq_pos+1);
-            if (soh_pos == std::string_view::npos) break; // shouldnt happen
+            assert(soh_pos != std::string_view::npos); // shouldnt happen
             auto tag = std::string_view{wire.data()+pos, eq_pos-pos};
             auto value = std::string_view{wire.data()+eq_pos+1, soh_pos - eq_pos -1};
 
@@ -39,8 +39,8 @@ namespace Fix {
                 idx.len_34 = static_cast<uint16_t>(value.size());
                 uint32_t seq{};
                 auto [p, ec] = std::from_chars(value.data(), value.data() + value.size(), seq);
-                if (ec == std::errc{}) idx.seq = seq;
-                else /* handle error */;
+                assert(ec == std::errc{}); // shouldnt happen
+                idx.seq = seq;
 
             } else if (tag == "52") {
                 idx.off_52 = static_cast<int32_t>(eq_pos + 1);
@@ -52,7 +52,7 @@ namespace Fix {
                 idx.off_122 = static_cast<int32_t>(eq_pos + 1);
                 idx.len_122 = static_cast<uint16_t>(value.size());
             } else if (tag == "35") {
-                idx.msg_size = static_cast<u_int8_t>(std::min(value.size(), static_cast<std::size_t>(2)));
+                idx.msg_size = static_cast<uint8_t>(std::min(value.size(), static_cast<std::size_t>(2)));
                 std::copy_n(value.data(), idx.msg_size, idx.msg_type.data());
             } else if (tag == "10") {
                 // done

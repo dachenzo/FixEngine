@@ -29,7 +29,7 @@ namespace Fix {
         uint16_t len_122 = 0;   
         uint16_t len_52 = 0;
         std::array<char, 2> msg_type; 
-        u_int8_t msg_size = 1;
+        uint8_t msg_size = 1;
 
         
 

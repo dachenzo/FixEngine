@@ -3,6 +3,13 @@
 
 namespace Fix {
 
+    WireWriter WireWriter::from_arena(Fix::Arena& arena, std::string_view msg_wire) {
+        auto handle = arena.allocate(msg_wire.size());
+        WireWriter writer(std::move(handle));
+        writer.append(msg_wire);
+        return writer;
+    }
+
     WireWriter::WireWriter(ArenaHandle&& handle) 
         :handle_(std::move(handle)), size_(0) {
     }
@@ -25,8 +32,20 @@ namespace Fix {
         append('=');
     }
 
+    void WireWriter::append_int(int64_t value) {
+        auto r = std::to_chars(int_buff_, int_buff_ + sizeof(int_buff_), value);
+        append(int_buff_, static_cast<std::size_t>(r.ptr - int_buff_));
+    }   
+
     void WireWriter::append_soh() {
         append('\x01');
+    }
+
+    std::byte* WireWriter::data() const noexcept {
+        return handle_.data();
+    }
+    std::size_t WireWriter::size() const noexcept {
+        return size_;
     }
 
     

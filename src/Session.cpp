@@ -11,7 +11,7 @@
 #include <fix/core/utils.hpp>
 
 namespace Fix {
-    constexpr const int wire_pre_alloc = 200;
+
     constexpr const int msg_type_key = 35;
     constexpr const int msg_seq_num_key = 34;
     Session::Session(
@@ -157,11 +157,8 @@ namespace Fix {
         return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
-    void Session::send_message_(std::string_view msg_wire) {
-        
-        auto handle = arena_.allocate(msg_wire.size());
-        Fix::WireWriter writer(std::move(handle));
-        writer.append(msg_wire);
+    void Session::send_message_(std::string_view msg_wire) {    
+        auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));
     }
 
@@ -297,7 +294,7 @@ namespace Fix {
     }
 
 
-    void Session::dispatch(Message::GenericMessage& message) {
+    void Session::dispatch(const Message::GenericMessage& message) {
         Fix::ValidMessage msg = Fix::make_valid_message(message);
 
 
@@ -394,6 +391,11 @@ namespace Fix {
         send_message_(wire);
     }
 
+    void Session::send_sequence_reset(std::size_t newSeqNo, bool gapfill) {
+        auto wire = msg_factory_.sequence_reset(newSeqNo, gapfill);
+        send_message_(wire);
+    }
+
     void Session::handle_logon(const Fix::ValidMessage&) {
         logger_.log(
             {Fix::Error::Layer::Fix, 
@@ -428,6 +430,8 @@ namespace Fix {
                 return field.tag == 16; // EndSeqNo
             }
         );
+        assert(start_seq_num_it != msg.message_.end());
+        assert(end_seq_num_it != msg.message_.end());
 
         // These fields are required and should have been validated already
         std::uint32_t begin_seq_no = 0;
@@ -446,7 +450,7 @@ namespace Fix {
         for (; stream.has_next(); ) {
             auto action = stream.next();
             if (action.gap_fill) {
-                send_resend_request(action.end_seq_no+1, true);
+                send_sequence_reset(action.end_seq_no + 1, true);
             } else {
                 auto& msg_index = store_.get_message_index(action.begin_seq_no);
                 auto new_wire = msg_factory_.regenerate_message(store_.get_message_wire(msg_index), msg_index);

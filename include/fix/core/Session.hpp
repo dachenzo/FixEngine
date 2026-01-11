@@ -76,7 +76,7 @@ namespace Fix {
 
         private:
             // core dispatch
-            void dispatch(Message::GenericMessage& msg) ;
+            void dispatch(const Message::GenericMessage& msg) ;
             // void checkInboundSeq(const Fix::ValidMessage&);
 
             // // FIX admin sends
@@ -86,6 +86,8 @@ namespace Fix {
             // void sendHeartbeat(const std::optional<std::string>& testReqId = {});
             // void sendTestRequest(const std::string& testReqId);
             void send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo);
+
+            void send_sequence_reset(std::size_t newSeqNo, bool gapfill);
             // void sendSequenceResetGapFill(std::size_t newSeqNo);
             // void resendBufferedMessages(std::size_t beginSeqNo, std::size_t endSeqNo);
 

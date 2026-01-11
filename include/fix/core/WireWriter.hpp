@@ -1,11 +1,13 @@
 #pragma once 
 #include <fix/core/Arena.hpp>
 #include <stdexcept>
+#include <charconv>
 #include <string_view>
 
 namespace Fix {
     
     struct WireWriter {
+        static WireWriter from_arena(Fix::Arena& arena, std::string_view msg_wire);
 
         WireWriter(ArenaHandle&& handle);
 
@@ -19,18 +21,15 @@ namespace Fix {
         void append(char c);
         void append_eq();
         void append_soh();
-        void append_int(long long value);
-        std::byte* data() const noexcept {
-            return handle_.data();
-        }
-        std::size_t size() const noexcept {
-            return size_;
-        }
+        void append_int(int64_t value);
+        std::byte* data() const noexcept;
+        std::size_t size() const noexcept;
 
         std::string_view view() const noexcept;
 
         private:
         Fix::ArenaHandle handle_;
+        char int_buff_[22]; // enough for int64_t
         std::size_t size_ = 0;
         
 
