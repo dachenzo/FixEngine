@@ -2,10 +2,10 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Specific:  loop in session over resend stream
-- Fix the resend stream bug
-- Test resend stream
+- Functionality ofr generating resent messages
 - send the begining and end sequence number into the resend processeror
 - decide what to do when seq number < expected seq number
+- test message fatory resend request 
 
 
 

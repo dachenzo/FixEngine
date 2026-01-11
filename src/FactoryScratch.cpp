@@ -137,6 +137,13 @@ namespace Fix {
         add_soh();
     }
 
+    void FactoryScratch::add_field(int64_t tag, int64_t value) {
+        add_int(tag);
+        add_equal_sign();
+        add_int(value);
+        add_soh();
+    }
+
     void FactoryScratch::grow(std::size_t extra) {
         std::size_t new_size = buffer_size + extra;
         std::byte* new_buffer = new std::byte[new_size];
