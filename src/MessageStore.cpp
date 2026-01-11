@@ -109,4 +109,16 @@ namespace Fix {
     std::string_view MessageStore::all_messages() const noexcept {
         return std::string_view{reinterpret_cast<const char*>(blob_buffer_), blob_buffer_used_};
     }
+
+    const MsgIndex& MessageStore::get_message_index(std::size_t seq_num) const noexcept {
+        assert(seq_num > 0 && seq_num <= outbound_index_.size());
+        return outbound_index_[seq_num - 1];
+    }
+
+    std::string_view MessageStore::get_message_wire(const MsgIndex& index) const noexcept {
+        return std::string_view{
+            reinterpret_cast<const char*>(blob_buffer_ + index.off),
+            index.len
+        };
+    }
 }

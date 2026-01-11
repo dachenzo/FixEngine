@@ -29,6 +29,7 @@ namespace Fix {
         AWAITING_LOGON,
         LOGON_RECEIVED,
         LOGON_SENT,
+        RECOVERING_RESEND,
         ACTIVE,
         DISCONNECTED,
     };
@@ -93,7 +94,7 @@ namespace Fix {
             void handle_logout(const Fix::ValidMessage&);
             void handle_heartbeat(const Fix::ValidMessage&);
             void handle_test_request(const Fix::ValidMessage&);
-            void handle_resend_request(const Fix::ValidMessage&);
+            void handle_resend_request(const Fix::ValidMessage& message);
             void handle_sequence_reset(const Fix::ValidMessage&);
 
             void send_message_(std::string_view msg_wire);

@@ -29,7 +29,7 @@ namespace Fix {
         
         uint64_t sum = 0;
         for (std::size_t i = 0; i < checksum_offset; ++i) {
-            sum += static_cast<unsigned char>(buffer[i]);
+            sum += std::to_integer<unsigned char>(buffer[i]);
         }
         return sum % 256;
     }
@@ -151,6 +151,12 @@ namespace Fix {
         delete[] buffer;
         buffer = new_buffer;
         buffer_size = new_size;
+    }
+
+    void FactoryScratch::edit_window(std::size_t offset, std::size_t length, std::string_view new_data) {
+        assert(new_data.size() == length);
+        assert(offset + length <= position);
+        std::memcpy(buffer + offset, new_data.data(), length);
     }
 
 }

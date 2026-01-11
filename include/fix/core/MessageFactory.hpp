@@ -90,6 +90,8 @@ namespace Fix {
             return scratch_.get_buffer_view();
         }
 
+        
+
         std::string_view heart_beat(std::optional<std::string> test_req_id = std::nullopt) {
             scratch_.reset();
             stamp_header_("0");
@@ -152,7 +154,7 @@ namespace Fix {
             return scratch_.get_buffer_view();
         }
 
-        std::string_view regenerate_message(std::string_view original_wire, MsgIndex& msg_index) {
+        std::string_view regenerate_message(std::string_view original_wire, const MsgIndex& msg_index) {
             scratch_.reset();
             scratch_.add_field(8, params_.fix_version);
             scratch_.add_body_length_placeholder();

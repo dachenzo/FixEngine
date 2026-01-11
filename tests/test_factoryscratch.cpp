@@ -138,3 +138,25 @@ TEST(FactoryScratchTests, BodyLenghtAndChecksumIntegrationTest) {
     EXPECT_EQ(complete_msg, expected_msg); // failed
 
 }
+
+TEST(FactoryScratchTests, EditWindowTest) {
+    Fix::FactoryScratch scratch;
+    scratch.reset();
+    scratch.add_field(35, "D");
+    scratch.add_field(49, "OLDSENDER");
+    scratch.add_field(56, "TARGET");
+
+    // Now edit the 49 field to "NEWSENDER"
+    std::string_view new_value = "NEWSENDER";
+    std::size_t offset_of_49_value =  scratch.get_position() - (std::string("56=TARGET\x01").size() + std::string("OLDSENDER\x01").size());
+    scratch.edit_window(offset_of_49_value, new_value.size(), new_value);
+
+    std::string_view expected_sv = "35=D"
+                            "\x01"
+                            "49=NEWSENDER"
+                            "\x01"
+                            "56=TARGET"
+                            "\x01";
+    std::string_view result = scratch.get_buffer_view();
+    EXPECT_EQ(result, expected_sv);
+}

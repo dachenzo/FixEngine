@@ -144,8 +144,13 @@ namespace Fix {
         std::uint32_t capacity() const noexcept;
 
         std::uint32_t size() const noexcept;
+        
+        std::string_view get_message_wire(const MsgIndex& index) const noexcept;
 
         std::string_view all_messages() const noexcept;
+
+        const MsgIndex& get_message_index(std::size_t seq_num) const noexcept; 
+
 
         
 

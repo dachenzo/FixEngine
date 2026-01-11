@@ -332,45 +332,39 @@ namespace Fix {
 
         auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
         auto seq_num = msg.header_cache_.msg_seq_num;
+         bool is_dup = msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] != nullptr &&
+                      *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] == "Y";
 
         if (seq_num == seq_provider_.next_in()) {
             seq_provider_.update_in(seq_num + 1);
         } else if (seq_num > seq_provider_.next_in()) {
             // Future seq num, need to resend
-            // RESEND STREAM LOGIC TO BE ADDED
             send_resend_request(seq_provider_.next_in(), 0);
             return;
+        } else if (seq_num < seq_provider_.next_in() && is_dup) {
+            // drop duplicate
+            return;
         } else {
-            // Old seq num, ignore for now
+            // old seq num, not marked as duplicate
+            send_logout("MsgSeqNum too low");
+            stop();
             return;
         }
 
-       
-        // auto seqnum_sv = msg.get(msg_seq_num_key);
-        // if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
-        // int seqnum;
-        // auto [ptr, ec] = std::from_chars(seqnum_sv.value().data(), seqnum_sv.value().data() + seqnum_sv.value().size(), seqnum);
-        // if (!(ec == std::errc())) {throw std::runtime_error("sequence number string couldnt be converted to integer");}
-
         
-
        
 
-        // auto op_type = msg.get(35);
-    
         
-        // if (!op_type.has_value()) {throw std::runtime_error("Message Must have a type");}
-        // std::string_view type = op_type.value();
      
         
 
-        // if (type == "A") {handle_logon(msg);}
-        // else if (type == "5") {handle_logout(msg);}
-        // else if (type == "0") {handle_heartbeat(msg);}
-        // else if (type == "1") {handle_test_request(msg);}
-        // else if (type == "2") {handle_resend_request(msg);}
-        // else if (type == "4") {handle_sequence_reset(msg);}
-        // else {}
+        if (msg_type == "A") {handle_logon(msg);}
+        else if (msg_type == "5") {handle_logout(msg);}
+        else if (msg_type == "0") {handle_heartbeat(msg);}
+        else if (msg_type == "1") {handle_test_request(msg);}
+        else if (msg_type == "2") {handle_resend_request(msg);}
+        else if (msg_type == "4") {handle_sequence_reset(msg);}
+        else {}
 
         // store_.store_inbound(seqnum, msg);
 
@@ -416,8 +410,51 @@ namespace Fix {
     }
     void Session::handle_logout(const Fix::ValidMessage&) {}
     void Session::handle_heartbeat(const Fix::ValidMessage&) {}
-    void Session::handle_test_request(const Fix::ValidMessage&) {}
-    void Session::handle_resend_request(const Fix::ValidMessage&) {}
+    void Session::handle_test_request(const Fix::ValidMessage&) {
+        
+    }
+    void Session::handle_resend_request(const Fix::ValidMessage& msg) {
+        auto start_seq_num_it = std::find_if(
+            msg.message_.begin(),
+            msg.message_.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 7; // BeginSeqNo
+            }
+        );
+        auto end_seq_num_it = std::find_if(
+            msg.message_.begin(),
+            msg.message_.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 16; // EndSeqNo
+            }
+        );
+
+        // These fields are required and should have been validated already
+        std::uint32_t begin_seq_no = 0;
+        std::uint32_t end_seq_no = 0;
+        std::from_chars(
+            start_seq_num_it->value.data(),
+            start_seq_num_it->value.data() + start_seq_num_it->value.size(),
+            begin_seq_no
+        );
+        std::from_chars(
+            end_seq_num_it->value.data(),
+            end_seq_num_it->value.data() + end_seq_num_it->value.size(),
+            end_seq_no
+        );
+        auto stream = store_.get_resend_stream(begin_seq_no, end_seq_no);
+        for (; stream.has_next(); ) {
+            auto action = stream.next();
+            if (action.gap_fill) {
+                send_resend_request(action.end_seq_no+1, true);
+            } else {
+                auto& msg_index = store_.get_message_index(action.begin_seq_no);
+                auto new_wire = msg_factory_.regenerate_message(store_.get_message_wire(msg_index), msg_index);
+                send_message_(new_wire);
+            }
+        }
+
+    }
     void Session::handle_sequence_reset(const Fix::ValidMessage&) {}
 
 }

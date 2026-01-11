@@ -2,10 +2,12 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Specific:  loop in session over resend stream
-- Functionality ofr generating resent messages
 - send the begining and end sequence number into the resend processeror
+- track "in recovery state"
+- Handle poss dup semantics
+- Buffer out_of_order msg
 - decide what to do when seq number < expected seq number
-- test message fatory resend request 
+- test message factory resend request 
 
 
 
