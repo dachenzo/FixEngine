@@ -11,6 +11,7 @@
 #include <fix/schema/Registry.hpp>
 #include <fix/error/Severity.hpp>
 #include <fix/message/Trailer.hpp>
+#include <fix/core/Message.hpp>
 
 
 namespace Fix {
@@ -77,16 +78,16 @@ namespace Fix {
     {
         // All functions will eventually return Validaro Result;
 
-        ValidatorResult validate_message(const Message::GenericMessage& message, const Fix::SessionParameters& params);
+        ValidatorResult validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
 
-        void validate_header_(const Message::GenericMessage& message, const std::string& expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
+        void validate_header_(const ValidMessage& message, const std::string& expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
-        void validate_trailer_(const Message::GenericMessage& message, ValidatorResult& validres);
+        void validate_trailer_(const ValidMessage& message, ValidatorResult& validres);
 
 
-        void validate_fields_(const Message::GenericMessage& message, const Schema::FieldSchema* schema, std::size_t schema_size, ValidatorResult& validres);
+        void validate_fields_(const ValidMessage& message, const Schema::FieldSchema* schema, std::size_t schema_size, ValidatorResult& validres);
 
-        void validate_groups_(const std::size_t groupcnt, const Message::GenericMessage& message, const Schema::FieldSchema* groupfield, int& curr_idx, ValidatorResult& validres);
+        void validate_groups_(const std::size_t groupcnt, const ValidMessage& message, const Schema::FieldSchema* groupfield, int& curr_idx, ValidatorResult& validres);
 
         bool validate_type_(const std::string& value, Fix::Schema::FieldType type);
 

@@ -11,7 +11,7 @@
 #include <fix/core/utils.hpp>
 
 namespace Fix {
-    constexpr const int wire_pre_alloc = 200;
+
     constexpr const int msg_type_key = 35;
     constexpr const int msg_seq_num_key = 34;
     Session::Session(
@@ -22,6 +22,7 @@ namespace Fix {
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core
             ):  
+                arena_{},
                 parser_{},
                 app_{app},
                 timers_{timers},
@@ -32,7 +33,7 @@ namespace Fix {
                 serializer_{},
                 params_{params},
                 clock_{},
-                seq_provider_{store_},
+                seq_provider_{},
                 msg_factory_{params_, seq_provider_, clock_},
                 logger_{id_, log_core},
                 logon_timer_{exec_},
@@ -156,20 +157,16 @@ namespace Fix {
         return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
-    void Session::send_message_(Fix::ValidMessage& msg) {
-        std::string wire{};
-        wire.reserve(wire_pre_alloc);
-        std::size_t wire_len = serializer_.serialize(msg, wire);
-        int seq = store_.get_next_sender_seq();
-        store_.store_outbound(seq, msg);
-        send_bytes_(std::move(wire));
+    void Session::send_message_(std::string_view msg_wire) {    
+        auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
+        send_bytes_(std::move(writer));
     }
 
-    void Session::send_bytes_(std::string msg_wire) {
-        write_q_.push_back({std::move(msg_wire), 0});
+    void Session::send_bytes_(Fix::WireWriter handle) {
+        write_q_.push_back({std::move(handle), 0});
         if (write_inflight_) return;
         write_inflight_ = true;
-        do_write();
+        do_write(); 
 
     }
 
@@ -297,7 +294,10 @@ namespace Fix {
     }
 
 
-    void Session::dispatch(Message::GenericMessage& msg) {
+    void Session::dispatch(const Message::GenericMessage& message) {
+        Fix::ValidMessage msg = Fix::make_valid_message(message);
+
+
 
         auto results = validator_.validate_message(msg, params_);
 
@@ -310,67 +310,58 @@ namespace Fix {
         
         if (!results.errors.empty()) {
             // Reject Message
-            send_reject();
+            // send_reject();
             return;
         }
 
-        auto msg_type_it = std::find_if(
-            msg.begin(),
-            msg.end(),
-            [](const Message::GenericField& field) {
-                return field.tag == msg_type_key;
-            }
-        );
-
-        auto seq_num_it = std::find_if(
-            msg.begin(),
-            msg.end(),
-            [](const Message::GenericField& field) {
-                return field.tag == msg_seq_num_key;
-            }
-        );
-
+        
         // The iterators above should always find the fields since the validator would have caught their absence
-        if (msg_type_it == msg.end() || seq_num_it == msg.end()) {
+        if (msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)] == nullptr || !msg.header_cache_.has_msg_seq_num) {
             logger_.log(
                 {Fix::Error::Layer::Fix, 
                 Fix::Error::Category::Error, 
                 Fix::Error::Severity::High},
                 "Validator passed but required fields missing"
             );
-            send_reject();
+            // send_reject();
             return;
         }
 
-        auto& msg_type = msg_type_it->value;
-        auto& seq_num_str = seq_num_it->value;
+        auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
+        auto seq_num = msg.header_cache_.msg_seq_num;
+         bool is_dup = msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] != nullptr &&
+                      *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] == "Y";
 
-       
-        // auto seqnum_sv = msg.get(msg_seq_num_key);
-        // if (!seqnum_sv.has_value()) {throw std::runtime_error("Every message should have a sequence number");}
-        // int seqnum;
-        // auto [ptr, ec] = std::from_chars(seqnum_sv.value().data(), seqnum_sv.value().data() + seqnum_sv.value().size(), seqnum);
-        // if (!(ec == std::errc())) {throw std::runtime_error("sequence number string couldnt be converted to integer");}
+        if (seq_num == seq_provider_.next_in()) {
+            seq_provider_.update_in(seq_num + 1);
+        } else if (seq_num > seq_provider_.next_in()) {
+            // Future seq num, need to resend
+            send_resend_request(seq_provider_.next_in(), 0);
+            return;
+        } else if (seq_num < seq_provider_.next_in() && is_dup) {
+            // drop duplicate
+            return;
+        } else {
+            // old seq num, not marked as duplicate
+            send_logout("MsgSeqNum too low");
+            stop();
+            return;
+        }
 
         
-
        
 
-        // auto op_type = msg.get(35);
-    
         
-        // if (!op_type.has_value()) {throw std::runtime_error("Message Must have a type");}
-        // std::string_view type = op_type.value();
      
         
 
-        // if (type == "A") {handle_logon(msg);}
-        // else if (type == "5") {handle_logout(msg);}
-        // else if (type == "0") {handle_heartbeat(msg);}
-        // else if (type == "1") {handle_test_request(msg);}
-        // else if (type == "2") {handle_resend_request(msg);}
-        // else if (type == "4") {handle_sequence_reset(msg);}
-        // else {}
+        if (msg_type == "A") {handle_logon(msg);}
+        else if (msg_type == "5") {handle_logout(msg);}
+        else if (msg_type == "0") {handle_heartbeat(msg);}
+        else if (msg_type == "1") {handle_test_request(msg);}
+        else if (msg_type == "2") {handle_resend_request(msg);}
+        else if (msg_type == "4") {handle_sequence_reset(msg);}
+        else {}
 
         // store_.store_inbound(seqnum, msg);
 
@@ -381,20 +372,28 @@ namespace Fix {
     }
 
     void Session::send_logon() {
-        std::cout << "Got to send logon\n";
-        auto msg = msg_factory_.logon(0, true);
-        std::cout << "Message created\n";
-        send_message_(msg);
-        std::cout << "Message sent\n";
-
+        auto wire = msg_factory_.logon(params_.heart_beat_int, params_.reset_on_logon);
+        send_message_(wire);
     }
 
-    void Session::send_reject() {
-        std::cout << "Sending Reject message\n";
+    void Session::send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag, std::string text) {
+        auto wire = msg_factory_.reject(ref_seq_num, reason, tag, text);
+        send_message_(wire);
     }
 
     void Session::send_logout(const std::string& reason) {
-        std::cout << "Sending Logout message: " << reason << "\n";
+        auto wire = msg_factory_.logout(reason);
+        send_message_(wire);
+    }
+
+    void Session::send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo) {
+        auto wire = msg_factory_.resend_request(beginSeqNo, endSeqNo);
+        send_message_(wire);
+    }
+
+    void Session::send_sequence_reset(std::size_t newSeqNo, bool gapfill) {
+        auto wire = msg_factory_.sequence_reset(newSeqNo, gapfill);
+        send_message_(wire);
     }
 
     void Session::handle_logon(const Fix::ValidMessage&) {
@@ -413,8 +412,53 @@ namespace Fix {
     }
     void Session::handle_logout(const Fix::ValidMessage&) {}
     void Session::handle_heartbeat(const Fix::ValidMessage&) {}
-    void Session::handle_test_request(const Fix::ValidMessage&) {}
-    void Session::handle_resend_request(const Fix::ValidMessage&) {}
+    void Session::handle_test_request(const Fix::ValidMessage&) {
+        
+    }
+    void Session::handle_resend_request(const Fix::ValidMessage& msg) {
+        auto start_seq_num_it = std::find_if(
+            msg.message_.begin(),
+            msg.message_.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 7; // BeginSeqNo
+            }
+        );
+        auto end_seq_num_it = std::find_if(
+            msg.message_.begin(),
+            msg.message_.end(),
+            [](const Message::GenericField& field) {
+                return field.tag == 16; // EndSeqNo
+            }
+        );
+        assert(start_seq_num_it != msg.message_.end());
+        assert(end_seq_num_it != msg.message_.end());
+
+        // These fields are required and should have been validated already
+        std::uint32_t begin_seq_no = 0;
+        std::uint32_t end_seq_no = 0;
+        std::from_chars(
+            start_seq_num_it->value.data(),
+            start_seq_num_it->value.data() + start_seq_num_it->value.size(),
+            begin_seq_no
+        );
+        std::from_chars(
+            end_seq_num_it->value.data(),
+            end_seq_num_it->value.data() + end_seq_num_it->value.size(),
+            end_seq_no
+        );
+        auto stream = store_.get_resend_stream(begin_seq_no, end_seq_no);
+        for (; stream.has_next(); ) {
+            auto action = stream.next();
+            if (action.gap_fill) {
+                send_sequence_reset(action.end_seq_no + 1, true);
+            } else {
+                auto& msg_index = store_.get_message_index(action.begin_seq_no);
+                auto new_wire = msg_factory_.regenerate_message(store_.get_message_wire(msg_index), msg_index);
+                send_message_(new_wire);
+            }
+        }
+
+    }
     void Session::handle_sequence_reset(const Fix::ValidMessage&) {}
 
 }

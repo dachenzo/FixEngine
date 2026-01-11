@@ -22,8 +22,10 @@ TEST(ValidatorTests, UnknownMessageType) {
         {108,"30"},                      // HeartBtInt
         {10, "235"}
     };
+
+    auto valid_logon = Fix::make_valid_message(logon_min);
     
-    ValidatorResult result = validator.validate_message(logon_min, params);
+    ValidatorResult result = validator.validate_message(valid_logon, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::UnknownMessageType);
@@ -48,8 +50,8 @@ TEST(ValidatorTests, WrongFixVersion) {
         {108,"30"},                      // HeartBtInt
         {10, "235"}
     };
-    std::string expected_message_type = "A";
-    ValidatorResult result = validator.validate_message(logon_bad_fix, params);
+    auto valid_logon_bad_fix = Fix::make_valid_message(logon_bad_fix);
+    ValidatorResult result = validator.validate_message(valid_logon_bad_fix, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFixVersion);
@@ -73,7 +75,8 @@ TEST(ValidatorTests, WrongFieldType) {
         {108,"30"},                      // HeartBtInt
         {10, "235"}
     };
-    ValidatorResult result = validator.validate_message(logon_bad_field, params);
+    auto valid_logon_bad_field = Fix::make_valid_message(logon_bad_field);
+    ValidatorResult result = validator.validate_message(valid_logon_bad_field, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFieldType);
@@ -97,7 +100,9 @@ TEST(ValidatorTests, MissingField) {
         {108,"30"},                      // HeartBtInt
         {10, "235"}
     };
-    ValidatorResult result = validator.validate_message(logon_missing_field, params);
+
+    auto valid_logon_missing_field = Fix::make_valid_message(logon_missing_field);
+    ValidatorResult result = validator.validate_message(valid_logon_missing_field, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::MissingField);
@@ -125,8 +130,10 @@ TEST(ValidatorTests, MissingGroupEntry) {
     Fix::SessionParameters params {
         .sender_comp_id = "me",
         .target_comp_id = "them"
-    };;
-    ValidatorResult result = validator.validate_message(message_missing_group_entry, params);
+    };
+
+    auto valid_message_missing_group_entry = Fix::make_valid_message(message_missing_group_entry);
+    ValidatorResult result = validator.validate_message(valid_message_missing_group_entry, params);
 
     ASSERT_FALSE(result.errors.empty());
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::MissingGroupEntry);
@@ -156,7 +163,8 @@ TEST(ValidatorTests, UnrecognizedField) {
         {10, "235"}
     };
     
-    ValidatorResult result = validator.validate_message(message_missing_group_schema, params);
+    auto valid_message_missing_group_schema = Fix::make_valid_message(message_missing_group_schema);
+    ValidatorResult result = validator.validate_message(valid_message_missing_group_schema, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::UnrecognizedField);
@@ -181,7 +189,8 @@ TEST(ValidatorTests, MalformedTag34) {
         {108,"30"},                      // HeartBtInt
         {10, "012"}
     };
-    ValidatorResult result = validator.validate_message(logon_bad_seqnum, params);
+    auto valid_logon_bad_seqnum = Fix::make_valid_message(logon_bad_seqnum);
+    ValidatorResult result = validator.validate_message(valid_logon_bad_seqnum, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);
@@ -206,7 +215,9 @@ TEST(ValidatorTests, MalformedTag8) {
         {108,"30"},                      // HeartBtInt
         {10, "231"}
     };
-    ValidatorResult result = validator.validate_message(logon_bad_seqnum, params);
+
+    auto valid_logon_bad_seqnum = Fix::make_valid_message(logon_bad_seqnum);
+    ValidatorResult result = validator.validate_message(valid_logon_bad_seqnum, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);
@@ -231,7 +242,8 @@ TEST(ValidatorTests, WrongSenderCompID) {
         {108,"30"},                      // HeartBtInt
         {10, "166"}
     };
-    ValidatorResult result = validator.validate_message(logon_bad_sender, params);
+    auto valid_logon_bad_sender = Fix::make_valid_message(logon_bad_sender);
+    ValidatorResult result = validator.validate_message(valid_logon_bad_sender, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);
@@ -256,7 +268,9 @@ TEST(ValidatorTests, WrongTargetCompID) {
         {108,"30"},                      // HeartBtInt
         {10, "166"}
     };
-    ValidatorResult result = validator.validate_message(logon_bad_target, params);
+
+    auto valid_logon_bad_target = Fix::make_valid_message(logon_bad_target);
+    ValidatorResult result = validator.validate_message(valid_logon_bad_target, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);

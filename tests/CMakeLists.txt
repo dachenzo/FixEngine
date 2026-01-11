@@ -59,6 +59,10 @@ add_executable(fix_tests
     test_validator.cpp
     test_tagscratch.cpp
     test_parser.cpp
+    test_arena.cpp
+    test_factoryscratch.cpp
+    test_message_factory.cpp
+    test_message_store.cpp
 )
 
 

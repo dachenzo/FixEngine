@@ -5,4 +5,8 @@ namespace Fix {
     std::string Clock::now_fix() {
         return "Now";
     }
+
+    std::uint64_t Clock::now() {
+        return 0;
+    }
 }

@@ -1,9 +1,11 @@
 add_library(fix_engine
+    Arena.cpp
     AsioConnection.cpp
     AsioConnectionFactory.cpp
     AsioTimer.cpp
     Clock.cpp
     Config.cpp
+    FactoryScratch.cpp
     ## ConnectionAsio.cpp (discontinued implementation)
     Message.cpp
     MessageBuilder.cpp
@@ -21,6 +23,7 @@ add_library(fix_engine
     LogFileSink.cpp
     SessionLogger.cpp
     Validator.cpp
+    WireWriter.cpp
 )
 
 

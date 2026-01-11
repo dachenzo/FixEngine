@@ -15,7 +15,7 @@ namespace Fix {
      std::size_t Serializer::serialize(Fix::ValidMessage& msg, std::string& buff) {
         buff.clear();
         constexpr char SOH = '\x01';
-        for (auto& field: msg.get_fields()) {
+        for (auto& field: msg.message_) {
             append_uint(field.tag, buff);
             buff.push_back('=');
             buff.append(field.value);
