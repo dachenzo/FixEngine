@@ -3,6 +3,7 @@ SeqNumTracking -> Integrated
 
 Specific:  loop in session over resend stream
 - Implement fixFramer
+- Replace session vector buffer with plain std::byte buffer
 - send the begining and end sequence number into the resend processeror
 - track "in recovery state"
 - Handle poss dup semantics

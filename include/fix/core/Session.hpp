@@ -5,6 +5,7 @@
 #include <fix/core/Arena.hpp>
 #include <fix/core/SeqProvider.hpp>
 #include <fix/core/Clock.hpp>
+#include <fix/core/Framer.hpp>
 #include <fix/core/WireWriter.hpp>
 #include <fix/core/Serializer.hpp>
 #include <fix/core/IConnection.hpp>
