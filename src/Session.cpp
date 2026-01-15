@@ -41,7 +41,7 @@ namespace Fix {
                 heartbeat_timer_{exec_},
                 validator_{}
                 {
-        buff_.resize(8192);
+        buff_.resize(Framer::start_size());
 
     }
 

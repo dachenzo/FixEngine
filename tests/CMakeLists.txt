@@ -63,6 +63,10 @@ add_executable(fix_tests
     test_factoryscratch.cpp
     test_message_factory.cpp
     test_message_store.cpp
+    test_linear_buffer.cpp
+    test_framer.cpp 
+    test_ring.cpp
+    
 )
 
 
