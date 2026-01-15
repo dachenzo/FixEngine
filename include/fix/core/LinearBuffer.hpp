@@ -102,56 +102,10 @@ namespace Fix {
                 // If empty, normalize to fully reset.
                 base_abs_ += static_cast<std::uint64_t>(head_);
                 head_ = tail_ = 0;
-                return;
+                return; 
             }
 
             std::memmove(data_, data_ + head_, live * sizeof(T));
-            base_abs_ += static_cast<std::uint64_t>(head_);
-            head_ = 0;
-            tail_ = live;
-        }
-
-    private:
-        void ensure_writable(std::size_t n) {
-            // Fast path
-            if (tail_ + n <= capacity_) return;
-
-            // Try compacting first if it would make space
-            const std::size_t live = tail_ - head_;
-            if (head_ > 0 && live + n <= capacity_) {
-                compact();
-                return;
-            }
-
-            grow(live + n);
-        }
-
-        void grow(std::size_t needed_total_live_plus_new) {
-            // needed_total_live_plus_new == (tail_-head_) + n
-            const std::size_t live = tail_ - head_;
-            const std::size_t min_needed_capacity = needed_total_live_plus_new;
-
-            std::size_t new_capacity = capacity_;
-            if (new_capacity < min_needed_capacity) {
-                // Grow by at least MinGrow, but ensure we hit the needed capacity.
-                const std::size_t deficit = min_needed_capacity - new_capacity;
-                new_capacity += std::max(deficit, MinGrow);
-            } else {
-                // Still no room at tail because head_==0 and tail_+n>capacity_:
-                // grow by MinGrow.
-                new_capacity += MinGrow;
-            }
-
-            T* new_data = new T[new_capacity];
-            if (live > 0) {
-                std::memcpy(new_data, data_ + head_, live * sizeof(T));
-            }
-
-            delete[] data_;
-            data_ = new_data;
-            capacity_ = new_capacity;
-
-            // We copied live bytes down to index 0, so advance base by head_.
             base_abs_ += static_cast<std::uint64_t>(head_);
             head_ = 0;
             tail_ = live;
@@ -163,6 +117,47 @@ namespace Fix {
         std::size_t head_;
         std::size_t tail_;
         std::uint64_t base_abs_;
+        
+        void ensure_writable(std::size_t n) {
+            // Already enough contiguous space at the end.
+            if (tail_ + n <= capacity_) return;
+
+            const std::size_t live = tail_ - head_;
+
+            // If compacting would create enough contiguous space, do that first.
+            if (head_ > 0 && live + n <= capacity_) {
+                compact();
+                return;
+            }
+
+            grow(n); // grow knows how much we need
+        }
+
+        void grow(std::size_t n) {
+            const std::size_t live = tail_ - head_;
+            const std::size_t required = live + n;
+
+            // Grow by at least max(n, MinGrow), but also guarantee >= required.
+            const std::size_t increase = std::max(n, MinGrow);
+            std::size_t new_capacity = capacity_ + increase;
+            if (new_capacity < required) new_capacity = required;
+
+            T* new_data = new T[new_capacity];
+            if (live > 0) {
+                std::memcpy(new_data, data_ + head_, live * sizeof(T));
+            }
+
+            delete[] data_;
+            data_ = new_data;
+            capacity_ = new_capacity;
+
+            // We copied alive bytes down to index 0, so shift base by head_.
+            base_abs_ += static_cast<std::uint64_t>(head_);
+            head_ = 0;
+            tail_ = live;
+        }
+
+        
     };
 
 } // namespace Fix
