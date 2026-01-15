@@ -31,8 +31,8 @@ namespace Fix {
 
         Ring(const Ring&) = delete;
         Ring& operator=(const Ring&) = delete;
-        Ring(Ring&&) = delete;
-        Ring& operator=(Ring&&) = delete;
+        Ring(Ring&&) = default;
+        Ring& operator=(Ring&&) = default;
 
         bool empty() const noexcept {
             return head_ == tail_;

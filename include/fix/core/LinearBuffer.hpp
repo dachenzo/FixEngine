@@ -10,8 +10,8 @@ namespace Fix {
 
     template <typename T>
     struct LinearBuffer {
-        static constexpr std::size_t Start_Capacity = 64 * 1024; // 64 KB
-        static constexpr std::size_t Min_Grow       = 16 * 1024; // 16 KB
+        static constexpr std::uint64_t Start_Capacity = 64 * 1024; // 64 KB
+        static constexpr std::uint64_t Min_Grow       = 16 * 1024; // 16 KB
         static_assert(Start_Capacity > 0);
 
         LinearBuffer()
@@ -29,13 +29,13 @@ namespace Fix {
         LinearBuffer& operator=(LinearBuffer&&) = delete;
 
         // ---- Basic geometry ----
-        std::size_t size() const noexcept { return tail_ - head_; }
+        std::uint64_t readable_size() const noexcept { return tail_ - head_; }
         bool empty() const noexcept { return tail_ == head_; }
 
         std::uint64_t base_abs() const noexcept { return base_abs_; }
-        std::size_t head_local() const noexcept { return head_; }
-        std::size_t tail_local() const noexcept { return tail_; }
-        std::size_t capacity() const noexcept { return capacity_; }
+        std::uint64_t head_local() const noexcept { return head_; }
+        std::uint64_t tail_local() const noexcept { return tail_; }
+        std::uint64_t capacity() const noexcept { return capacity_; }
 
         // ---- Views ----
         std::span<const T> readable() const noexcept {
@@ -47,23 +47,23 @@ namespace Fix {
         }
 
         // ---- Absolute <-> local (local = index from data_[0]) ----
-        std::uint64_t local_to_abs(std::size_t local) const noexcept {
+        std::uint64_t local_to_abs(std::uint64_t local) const noexcept {
             return base_abs_ + static_cast<std::uint64_t>(local);
         }
 
-        std::size_t abs_to_local(std::uint64_t abs) const noexcept {
+        std::uint64_t abs_to_local(std::uint64_t abs) const noexcept {
             assert(abs >= base_abs_);
-            return static_cast<std::size_t>(abs - base_abs_);
+            return static_cast<std::uint64_t>(abs - base_abs_);
         }
 
         // ---- Readable-relative convenience ----
         // readable-relative 0 == readable().data()[0] == data_[head_]
-        std::uint64_t readable_rel_to_abs(std::size_t rel) const noexcept {
+        std::uint64_t readable_rel_to_abs(std::uint64_t rel) const noexcept {
             return local_to_abs(head_ + rel);
         }
 
-        std::size_t abs_to_readable_rel(std::uint64_t abs) const noexcept {
-            std::size_t local = abs_to_local(abs);
+        std::uint64_t abs_to_readable_rel(std::uint64_t abs) const noexcept {
+            std::uint64_t local = abs_to_local(abs);
             assert(local >= head_);
             return local - head_;
         }
@@ -76,7 +76,7 @@ namespace Fix {
         }
 
         // Discard `count` bytes from the front of readable().
-        void discard_prefix(std::size_t count) noexcept {
+        void discard_prefix(std::uint64_t count) noexcept {
             assert(count <= (tail_ - head_));
             head_ += count;
 
@@ -97,7 +97,7 @@ namespace Fix {
 
         // Compact alive bytes [head_, tail_) -> [0, tail_-head_).
         void compact() noexcept {
-            const std::size_t live = tail_ - head_;
+            const std::uint64_t live = tail_ - head_;
             if (live == 0) {
                 // If empty, normalize to fully reset.
                 base_abs_ += static_cast<std::uint64_t>(head_);
@@ -112,17 +112,17 @@ namespace Fix {
         }
 
     private:
-        std::size_t capacity_;
+        std::uint64_t capacity_;
         T* data_;
-        std::size_t head_;
-        std::size_t tail_;
+        std::uint64_t head_;
+        std::uint64_t tail_;
         std::uint64_t base_abs_;
 
-        void ensure_writable(std::size_t n) {
+        void ensure_writable(std::uint64_t n) {
             // Already enough contiguous space at the end.
             if (tail_ + n <= capacity_) return;
 
-            const std::size_t live = tail_ - head_;
+            const std::uint64_t live = tail_ - head_;
 
             // If compacting would create enough contiguous space, do that first.
             if (head_ > 0 && live + n <= capacity_) {
@@ -133,13 +133,13 @@ namespace Fix {
             grow(n); // grow knows how much we need
         }
 
-        void grow(std::size_t n) {
-            const std::size_t live = tail_ - head_;
-            const std::size_t required = live + n;
+        void grow(std::uint64_t n) {
+            const std::uint64_t live = tail_ - head_;
+            const std::uint64_t required = live + n;
 
             // Grow by at least max(n, MinGrow), but also guarantee >= required.
-            const std::size_t increase = std::max(n, Min_Grow);
-            std::size_t new_capacity = capacity_ + increase;
+            const std::uint64_t increase = std::max(n, Min_Grow);
+            std::uint64_t new_capacity = capacity_ + increase;
             if (new_capacity < required) new_capacity = required;
 
             T* new_data = new T[new_capacity];

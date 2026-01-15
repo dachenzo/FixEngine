@@ -5,13 +5,21 @@
 #include <string_view>
 #include <charconv>
 #include <fix/core/LinearBuffer.hpp>
+#include <fix/core/Ring.hpp>
 
 namespace Fix {
+
+
 
     enum class FramerContextState: std::uint8_t {
         FindingBegin,
         ReadingBody,
         Complete
+    };
+
+    struct MessageWindow {
+        std::uint64_t begin = 0;
+        std::uint64_t end = 0;
     };
 
     struct FramerContext {
@@ -20,11 +28,17 @@ namespace Fix {
         std::uint64_t body_len = 0;
         FramerContextState state = FramerContextState::FindingBegin;
     };
+
+    inline MessageWindow make_message_window(const FramerContext& ctx) {
+        return MessageWindow{ctx.begin, ctx.end};
+    }
     
     
 
     struct Framer {
-        static constexpr auto Fix_First_Field = "8=FIX.4.4\x01";
+        static constexpr std::string_view Fix_First_Field = "8=FIX.4.4\x01";
+        static constexpr std::uint64_t MAX_MESSAGE_SIZE = 1024*1024; // 1 MB
+        static constexpr std::uint64_t MAX_BEGIN_TO_BODYLEN_FIELD_BYTES = 32; // should be enough to include TAG 8 AND 9
         
         static std::size_t start_size() {return Fix::LinearBuffer<unsigned char>::Start_Capacity;}
         Framer() = default;
@@ -35,22 +49,23 @@ namespace Fix {
         Framer& operator=(Framer&&) = delete;
 
 
-        bool has_message() const noexcept;
+        bool inline has_message() const noexcept;
 
         std::string_view get_message() const noexcept;
 
-        void consume_message()  noexcept;
+        void consume_message()  ;
 
         void append(std::string_view data);
 
         private:
         bool parse_buffer();
 
+        void discard_n_from_head(std::uint64_t count);
+
         FramerContext current_context_;
-        FramerContext cached_context_;
         LinearBuffer<unsigned char> buffer_;
-        
-        
+        Ring<MessageWindow, 1024, 0, RingPolicy::Reject> completed_messages_;
+        std::uint64_t scan_abs_ = 0;
         
     };
     
