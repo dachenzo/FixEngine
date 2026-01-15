@@ -17,6 +17,12 @@ namespace Fix {
         Complete
     };
 
+    enum class FramerParseResult: std::uint8_t {
+        QueuedMessage,   // pushed one message into completed_messages_
+        ProgressNoMsg,   // advanced scan/discarded/resynced; should continue looping
+        NeedMoreData     // cannot progress without more bytes
+    };
+
     struct MessageWindow {
         std::uint64_t begin = 0;
         std::uint64_t end = 0;
@@ -28,6 +34,8 @@ namespace Fix {
         std::uint64_t body_len = 0;
         FramerContextState state = FramerContextState::FindingBegin;
     };
+
+
 
     inline MessageWindow make_message_window(const FramerContext& ctx) {
         return MessageWindow{ctx.begin, ctx.end};
@@ -49,7 +57,9 @@ namespace Fix {
         Framer& operator=(Framer&&) = delete;
 
 
-        bool inline has_message() const noexcept;
+        bool inline has_message() const noexcept {
+            return completed_messages_.size() > 0;
+        }
 
         std::string_view get_message() const noexcept;
 
@@ -58,7 +68,7 @@ namespace Fix {
         void append(std::string_view data);
 
         private:
-        bool parse_buffer();
+        FramerParseResult parse_buffer();
 
         void discard_n_from_head(std::uint64_t count);
 
