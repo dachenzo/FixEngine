@@ -10,13 +10,13 @@ namespace Fix {
 
     template <typename T>
     struct LinearBuffer {
-        static constexpr std::size_t StartCapacity = 64 * 1024; // 64 KB
-        static constexpr std::size_t MinGrow       = 16 * 1024; // 16 KB
-        static_assert(StartCapacity > 0);
+        static constexpr std::size_t Start_Capacity = 64 * 1024; // 64 KB
+        static constexpr std::size_t Min_Grow       = 16 * 1024; // 16 KB
+        static_assert(Start_Capacity > 0);
 
         LinearBuffer()
-            : capacity_(StartCapacity),
-            data_(new T[StartCapacity]),
+            : capacity_(Start_Capacity),
+            data_(new T[Start_Capacity]),
             head_(0),
             tail_(0),
             base_abs_(0) {}
@@ -117,7 +117,7 @@ namespace Fix {
         std::size_t head_;
         std::size_t tail_;
         std::uint64_t base_abs_;
-        
+
         void ensure_writable(std::size_t n) {
             // Already enough contiguous space at the end.
             if (tail_ + n <= capacity_) return;
@@ -138,7 +138,7 @@ namespace Fix {
             const std::size_t required = live + n;
 
             // Grow by at least max(n, MinGrow), but also guarantee >= required.
-            const std::size_t increase = std::max(n, MinGrow);
+            const std::size_t increase = std::max(n, Min_Grow);
             std::size_t new_capacity = capacity_ + increase;
             if (new_capacity < required) new_capacity = required;
 

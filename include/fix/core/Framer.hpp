@@ -51,6 +51,7 @@ namespace Fix {
         LinearBuffer<unsigned char> buffer_;
         
         
+        
     };
     
 }
