@@ -57,14 +57,6 @@ namespace Fix {
                 return FramerParseResult::ProgressNoMsg;
             }
 
-            if (body_start == std::string_view::npos) {
-                return FramerParseResult::NeedMoreData;
-            } else if (body_start == std::string_view::npos && readable_view.size() - begin_pos > MAX_BEGIN_TO_BODYLEN_FIELD_BYTES) {
-                // Too far from begin to be valid
-                scan_abs_ = current_context_.begin + 1;  // begin is ABS
-                current_context_ = {};
-                return FramerParseResult::ProgressNoMsg;
-            }
 
             body_start += 2; // Move past "9="
             auto body_end_pos = readable_view.find('\x01', body_start);
