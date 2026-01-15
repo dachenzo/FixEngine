@@ -35,10 +35,8 @@ namespace Fix {
         Ring& operator=(Ring&&) = default;
 
         bool empty() const noexcept {
-            return head_ == tail_;
+            return size_ == 0;
         }
-
-        
 
         bool full() const noexcept {
             return size_ == capacity_;
@@ -63,7 +61,6 @@ namespace Fix {
                     --size_;
                 }
                 else if constexpr (Policy == RingPolicy::Reject) {
-                    --size_;
                     return false; // Do not add the new item
                 }
             }
