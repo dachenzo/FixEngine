@@ -1,8 +1,10 @@
 Current Focus: 
 SeqNumTracking -> Integrated
 
+Specific: Refactor Parser
+- Make parser purely functional: one frame -> parse res
+
 Specific:  loop in session over resend stream
-- Implement fixFramer
 - Replace session vector buffer with plain std::byte buffer
 - send the begining and end sequence number into the resend processeror
 - track "in recovery state"
@@ -15,6 +17,7 @@ Specific:  loop in session over resend stream
 
 
 BroadTasks:
+- Refactor Parser
 - Implement reject messages correctly
 - Pin down when to update out seq num
 - test_wire_writer

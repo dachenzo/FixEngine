@@ -1,16 +1,23 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <cstdint>
 #include <tuple>
 
 
-namespace Fix::Message {
+namespace Fix {
+    using Tag = std::uint32_t;
 
     struct GenericField {
-        unsigned long tag;
         std::string value;
+        Tag tag; 
     };
 
+    struct GenericFieldView {
+        std::string_view value;
+        Tag tag;
+    };
 
-    using GenericMessage = std::vector<GenericField>;
+    template<typename T>
+    using GenericMessage = std::vector<T>;
 }

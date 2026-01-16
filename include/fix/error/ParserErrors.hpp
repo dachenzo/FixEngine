@@ -3,10 +3,10 @@
 
 
 
-namespace Fix::Error {
+namespace Fix {
 
     
-    enum class Parse {
+    enum class ParseError {
         NoTag,
         MaxTagSize,
         MalformedTag,
@@ -22,14 +22,14 @@ namespace Fix::Error {
     
 
 
-    inline std::string to_string(Fix::Error::Parse err) {
+    inline std::string to_string(Fix::ParseError err) {
             switch (err)
             {
-            case Fix::Error::Parse::MaxTagSize: return "MaxTagSize";
-            case Fix::Error::Parse::NoTag: return "NoTag";
-            case Fix::Error::Parse::MalformedTag: return "MalformedTag";
-            case Fix::Error::Parse::MissingEqualSign: return "MissingEqualSign";
-            case Fix::Error::Parse::MissingValue: return "MissingValue";
+            case Fix::ParseError::MaxTagSize: return "MaxTagSize";
+            case Fix::ParseError::NoTag: return "NoTag";
+            case Fix::ParseError::MalformedTag: return "MalformedTag";
+            case Fix::ParseError::MissingEqualSign: return "MissingEqualSign";
+            case Fix::ParseError::MissingValue: return "MissingValue";
             default: return "Unknown Error";
                 
             }
