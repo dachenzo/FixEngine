@@ -3,6 +3,12 @@ SeqNumTracking -> Integrated
 
 Specific: Refactor Parser
 - Make parser purely functional: one frame -> parse res
+- Fix Session Genric message types
+- Fix make valid message
+- add session and message back to the compilation source files
+- add test_validator back to compilation source
+
+
 
 Specific:  loop in session over resend stream
 - Replace session vector buffer with plain std::byte buffer

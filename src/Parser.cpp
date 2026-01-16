@@ -61,7 +61,7 @@ namespace Fix {
             pos = equal_pos + 1;
             auto soh_pos = msg_frame.find('\x01', pos);
             if (soh_pos == std::string_view::npos) {
-                out_errs.push_back({tag, ParseError::MissingValue});
+                out_errs.push_back({tag, ParseError::Missing_soh});
                 return;
             }
 

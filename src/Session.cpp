@@ -207,16 +207,16 @@ namespace Fix {
                 }
                 auto sv = std::string_view{buff_.data(), n};
 
-                // need to run some timer here
-                auto parse_res = parser_.parse(sv);
+                // // need to run some timer here
+                // auto parse_res = parser_.parse(sv);
 
-                if (parse_res.errs.empty() && parse_res.message.has_value()) {
-                    auto msg = parse_res.message.value();
-                    dispatch(msg);
-                } else if (!parse_res.errs.empty()) {
-                    send_logout("Parse error");
-                    stop();
-                } 
+                // if (parse_res.errs.empty() && parse_res.message.has_value()) {
+                //     auto msg = parse_res.message.value();
+                //     dispatch(msg);
+                // } else if (!parse_res.errs.empty()) {
+                //     send_logout("Parse error");
+                //     stop();
+                // } 
 
 
                 do_read();

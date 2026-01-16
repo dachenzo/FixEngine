@@ -15,7 +15,9 @@ namespace Fix {
         Failed_checksum,
         Wrong_fix_version,
         Wrong_body_length,
-        Duplicate_tag
+        Duplicate_tag,
+        Missing_soh,
+
     };
 
         

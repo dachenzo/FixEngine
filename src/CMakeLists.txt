@@ -8,7 +8,7 @@ add_library(fix_engine
     FactoryScratch.cpp
     Framer.cpp
     ## ConnectionAsio.cpp (discontinued implementation)
-    Message.cpp
+    # Message.cpp
     MessageBuilder.cpp
     MessageFactory.cpp
     MessageStore.cpp
@@ -16,7 +16,7 @@ add_library(fix_engine
     Reactor.cpp
     SeqProvider.cpp
     Serializer.cpp
-    Session.cpp
+    # Session.cpp
     SessionManager.cpp
     SessionPool.cpp
     utils.cpp
