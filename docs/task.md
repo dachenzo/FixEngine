@@ -1,8 +1,11 @@
 Current Focus: 
 SeqNumTracking -> Integrated
 
-Specific: Refactor Parser
-- add session  back to the compilation source files
+Specific: Refactor Parser&Validator
+- refactor ValidMessage  to store a reference to the Generic Message View from parser context
+
+- refactor the rest of the tests (pick a few to start)
+- continue with the resend recovery mechanism starting with caching of interleaved new messages and state in session
 
 
 
