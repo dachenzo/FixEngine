@@ -66,6 +66,7 @@ add_executable(fix_tests
     test_linear_buffer.cpp
     test_framer.cpp 
     test_ring.cpp
+    test_parser.cpp
     
 )
 

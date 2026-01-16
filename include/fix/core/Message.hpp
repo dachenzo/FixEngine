@@ -33,11 +33,11 @@ namespace Fix {
 
 
     struct ValidMessage {
-        const Message::GenericMessage message_;
+        const GenericMessage<GenericFieldView> message_;
         const HeaderCache header_cache_;
     };
 
-    ValidMessage make_valid_message(const Message::GenericMessage& msg);
+    ValidMessage make_valid_message(const GenericMessage<GenericFieldView>& msg);
 
 
 
