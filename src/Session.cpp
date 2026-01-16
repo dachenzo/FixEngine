@@ -337,7 +337,7 @@ namespace Fix {
 
         auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
         auto seq_num = msg.header_cache_.msg_seq_num;
-         bool is_dup = msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] != nullptr &&
+        bool is_dup = msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] != nullptr &&
                       *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] == "Y";
 
         if (seq_num == seq_provider_.next_in()) {
