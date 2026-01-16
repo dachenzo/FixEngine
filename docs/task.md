@@ -1,16 +1,13 @@
 Current Focus: 
 SeqNumTracking -> Integrated
 
-Specific: Refactor Parser&Validator
-- refactor ValidMessage  to store a reference to the Generic Message View from parser context
 
-- refactor the rest of the tests (pick a few to start)
-- continue with the resend recovery mechanism starting with caching of interleaved new messages and state in session
 
 
 
 
 Specific:  loop in session over resend stream
+- continue with the resend recovery mechanism starting with caching of interleaved new messages and state in session
 - Replace session vector buffer with plain std::byte buffer
 - send the begining and end sequence number into the resend processeror
 - track "in recovery state"
@@ -23,7 +20,7 @@ Specific:  loop in session over resend stream
 
 
 BroadTasks:
-- Refactor Parser
+- Rrefactor the rest of the tests (pick a few to start)
 - Implement reject messages correctly
 - Pin down when to update out seq num
 - test_wire_writer
