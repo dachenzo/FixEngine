@@ -25,7 +25,7 @@ namespace Fix {
     };
 
     struct HeaderCache {
-        const std::string* slots[static_cast<size_t>(CacheSlot::COUNT)] = {nullptr};
+        const std::string_view* slots[static_cast<size_t>(CacheSlot::COUNT)] = {nullptr};
         uint64_t msg_seq_num = 0;
         bool has_msg_seq_num = false;
     };

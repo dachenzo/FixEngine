@@ -80,7 +80,7 @@ namespace Fix {
 
         ValidatorResult validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
 
-        void validate_header_(const ValidMessage& message, const std::string& expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
+        void validate_header_(const ValidMessage& message, const std::string_view expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
         void validate_trailer_(const ValidMessage& message, ValidatorResult& validres);
 

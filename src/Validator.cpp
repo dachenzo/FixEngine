@@ -5,7 +5,7 @@
 
 namespace Fix {
     
-    void Validator::validate_header_(const ValidMessage& message, const std::string& expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
+    void Validator::validate_header_(const ValidMessage& message, const std::string_view expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
         auto& schema = Message::StandardHeaderSchema;
         auto& msg_buffer = message.message_;
        

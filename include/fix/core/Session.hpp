@@ -126,6 +126,8 @@ namespace Fix {
             std::deque<PendingWrite> write_q_;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;
+            Fix::Framer framer_;
+            Fix::ParserContext parser_ctx_;
             Fix::Parser parser_;
             Fix::Serializer serializer_;
             Fix::SessionID id_;

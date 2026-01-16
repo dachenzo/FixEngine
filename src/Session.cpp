@@ -24,6 +24,8 @@ namespace Fix {
             ):  
                 arena_{},
                 parser_{},
+                framer_{},
+                parser_ctx_{},
                 app_{app},
                 timers_{timers},
                 id_{id},
@@ -206,19 +208,25 @@ namespace Fix {
                     return;
                 }
                 auto sv = std::string_view{buff_.data(), n};
+                framer_.append(sv);
+                // need to run some timer here
+                if (!framer_.has_message()) {
+                    do_read();
+                    return;
+                }
 
-                // // need to run some timer here
-                // auto parse_res = parser_.parse(sv);
+                auto msg_frame = framer_.get_message();
+                parser_.parse(msg_frame, parser_ctx_.out_msg, parser_ctx_.out_errs);
 
-                // if (parse_res.errs.empty() && parse_res.message.has_value()) {
-                //     auto msg = parse_res.message.value();
-                //     dispatch(msg);
-                // } else if (!parse_res.errs.empty()) {
-                //     send_logout("Parse error");
-                //     stop();
-                // } 
+                if (parser_ctx_.out_errs.empty()) {
+                    auto msg = parser_ctx_.out_msg;
+                    dispatch(msg);
+                } else {
+                    send_logout("Parse error");
+                    stop();
+                } 
 
-
+                framer_.consume_message();
                 do_read();
             }
         );
@@ -294,7 +302,7 @@ namespace Fix {
     }
 
 
-    void Session::dispatch(const Message::GenericMessage& message) {
+    void Session::dispatch(const GenericMessage<GenericFieldView>& message) {
         Fix::ValidMessage msg = Fix::make_valid_message(message);
 
 
@@ -419,14 +427,14 @@ namespace Fix {
         auto start_seq_num_it = std::find_if(
             msg.message_.begin(),
             msg.message_.end(),
-            [](const Message::GenericField& field) {
+            [](const GenericFieldView& field) {
                 return field.tag == 7; // BeginSeqNo
             }
         );
         auto end_seq_num_it = std::find_if(
             msg.message_.begin(),
             msg.message_.end(),
-            [](const Message::GenericField& field) {
+            [](const GenericFieldView& field) {
                 return field.tag == 16; // EndSeqNo
             }
         );

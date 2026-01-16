@@ -26,6 +26,17 @@ namespace Fix {
         ParseError code;
     };
 
+    struct ParserContext {
+        static constexpr const std::size_t MessageSizeReserve = 1024;
+        static constexpr const std::size_t MessageErrorReserve = 16;
+        GenericMessage<GenericFieldView> out_msg; std::vector<ParseErrorInfo> out_errs;
+
+        ParserContext() {
+            out_msg.reserve(MessageSizeReserve);
+            out_errs.reserve(MessageErrorReserve);
+        }   
+    };
+
 
 
 

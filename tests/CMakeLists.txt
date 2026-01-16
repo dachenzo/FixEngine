@@ -56,7 +56,7 @@
 # target_link_libraries(test_multi PRIVATE fix_engine) 
 
 add_executable(fix_tests
-    # test_validator.cpp
+    test_validator.cpp
     test_tagscratch.cpp
     test_parser.cpp
     test_arena.cpp

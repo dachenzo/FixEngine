@@ -2,11 +2,8 @@ Current Focus:
 SeqNumTracking -> Integrated
 
 Specific: Refactor Parser
-- Make parser purely functional: one frame -> parse res
-- Fix Session Genric message types
-- Fix make valid message
-- add session and message back to the compilation source files
-- add test_validator back to compilation source
+- add session  back to the compilation source files
+
 
 
 
