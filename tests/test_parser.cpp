@@ -1,144 +1,80 @@
 #include <gtest/gtest.h>
 #include <fix/core/Parser.hpp>
+#include <fix/message/GenericMessage.hpp>
 
-using namespace Fix;
 
-TEST(ParserTests, ParseValidLogonMessage) {
-    Parser parser;
-    const std::string kFixLogon =
-        "8=FIX.4.4\x01"
-        "9=77\x01"
-        "35=A\x01"
-        "34=1\x01"
-        "49=CLIENT12\x01"
-        "52=20251007-15:42:39.255\x01"
-        "56=EXECUTOR\x01"
-        "98=0\x01"
-        "108=30\x01"
-        "141=Y\x01"
-        "10=199\x01";
+TEST(ParserTests, BasicValidMessage) {
+    Fix::Parser parser;
+    Fix::GenericMessage<Fix::GenericFieldView> msg;
+    std::vector<Fix::ParseErrorInfo> errors;
 
-    std::string_view sv(kFixLogon);
-    
-    ParseResult result = parser.parse(sv);
-    EXPECT_TRUE(result.errs.empty());
-    EXPECT_TRUE(result.message.has_value());
+    std::string_view valid_msg = "8=FIX.4.4\x01""9=25\x01""35=A\x01""49=SENDER\x01""56=TARGET\x01""10=194\x01";
+    parser.parse(valid_msg, msg, errors);
 
-    Message::GenericMessage expected_message = {
-        {8, "FIX.4.4"},
-        {9, "77"},
-        {35, "A"},
-        {34, "1"},
-        {49, "CLIENT12"},
-        {52, "20251007-15:42:39.255"},
-        {56, "EXECUTOR"},
-        {98, "0"},
-        {108, "30"},
-        {141, "Y"},
-        {10, "199"}
-    };
-    if (result.message.has_value()) {
-        const auto& msg = result.message.value();
-        EXPECT_EQ(msg.size(), expected_message.size());
-        for (size_t i = 0; i < expected_message.size(); ++i) {
-            EXPECT_EQ(msg[i].tag, expected_message[i].tag);
-            EXPECT_EQ(msg[i].value, expected_message[i].value);
-        }
-    }
+    EXPECT_TRUE(errors.empty());
+    EXPECT_EQ(msg.size(), 6);
+    EXPECT_EQ(msg[0].tag, 8);
+    EXPECT_EQ(msg[0].value, "FIX.4.4");
+    EXPECT_EQ(msg[1].tag, 9);
+    EXPECT_EQ(msg[1].value, "25");
+    EXPECT_EQ(msg[2].tag, 35);
+    EXPECT_EQ(msg[2].value, "A");
+    EXPECT_EQ(msg[3].tag, 49);
+    EXPECT_EQ(msg[3].value, "SENDER");
+    EXPECT_EQ(msg[4].tag, 56);
+    EXPECT_EQ(msg[4].value, "TARGET");
+    EXPECT_EQ(msg[5].tag, 10);
+    EXPECT_EQ(msg[5].value, "194");
+
 }
 
 
-TEST(ParserTests, NoTag) {
-    Parser parser;
-    std::string raw_message = 
-    "=FIX.4.4" "\x01" "9=69" "\x01";
-    std::string_view sv(raw_message);
-    
-    ParseResult result = parser.parse(sv);
-    ASSERT_FALSE(result.errs.empty());
-    EXPECT_FALSE(result.message.has_value());
+TEST(ParserTests, InvalidChecksumWrongDigit) {
+    Fix::Parser parser;
+    Fix::GenericMessage<Fix::GenericFieldView> msg;
+    std::vector<Fix::ParseErrorInfo> errors;
 
-    EXPECT_EQ(result.errs[0], Error::Parse::NoTag);
+    std::string_view invalid_checksum_msg = "8=FIX.4.4\x01""9=25\x01""35=A\x01""49=SENDER\x01""56=TARGET\x01""10=000\x01";
+    parser.parse(invalid_checksum_msg, msg, errors);
+
+    EXPECT_FALSE(errors.empty());
+    EXPECT_EQ(errors.size(), 1);
+    EXPECT_EQ(errors[0].tag, 10);
+    EXPECT_EQ(errors[0].code, Fix::ParseError::Failed_checksum);
 }
 
-TEST(ParserTests, MissingEqualSign) {
-    Parser parser;
-    std::string raw_message = "8FIX.4.4" "\x01" "9=69" "\x01";
-    std::string_view sv(raw_message);
-    
-    ParseResult result = parser.parse(sv);
-    ASSERT_FALSE(result.errs.empty());
-    EXPECT_FALSE(result.message.has_value());
+TEST(ParserTests, MissingChecksum) {
+    Fix::Parser parser;
+    Fix::GenericMessage<Fix::GenericFieldView> msg;
+    std::vector<Fix::ParseErrorInfo> errors;
 
-    EXPECT_EQ(result.errs[0], Error::Parse::MalformedTag);
-}
+    std::string_view missing_checksum_msg = "8=FIX.4.4\x01""9=25\x01""35=A\x01""49=SENDER\x01""56=TARGET\x01";
+    parser.parse(missing_checksum_msg, msg, errors);
 
-TEST(ParserTests, MissingValue) {
-    Parser parser;
-    std::string raw_message = "8=" "\x01" "9=69" "\x01";
-    std::string_view sv(raw_message);       
-    ParseResult result = parser.parse(sv);
-    ASSERT_FALSE(result.errs.empty());
-    EXPECT_FALSE(result.message.has_value());
-
-    EXPECT_EQ(result.errs[0], Error::Parse::MissingValue);
+    EXPECT_FALSE(errors.empty());
+    EXPECT_EQ(errors.size(), 1);
+    EXPECT_EQ(errors[0].tag, 10);
+    EXPECT_EQ(errors[0].code, Fix::ParseError::Failed_checksum);
 }
 
 TEST(ParserTests, MalformedTag) {
-    Parser parser;
-    std::string raw_message = "8z=FIX.4.4" "\x01" "9=69" "\x01";
-    std::string_view sv(raw_message);       
-    ParseResult result = parser.parse(sv);
-    ASSERT_FALSE(result.errs.empty());
-    EXPECT_FALSE(result.message.has_value());
+    Fix::Parser parser;
+    Fix::GenericMessage<Fix::GenericFieldView> msg;
+    std::vector<Fix::ParseErrorInfo> errors;
 
-    EXPECT_EQ(result.errs[0], Error::Parse::MalformedTag);
+    std::string_view malformed_tag_msg = "8=FIX.4.4\x01"
+                                        "9=30\x01"
+                                        "35=A\x01"
+                                        "49=SENDER\x01"
+                                        "56=TARGET\x01"
+                                        "AB=1\x01"      // malformed tag (non-numeric)
+                                        "10=176\x01";
+
+    parser.parse(malformed_tag_msg, msg, errors);
+
+    EXPECT_FALSE(errors.empty());
+    EXPECT_EQ(errors.size(), 1);
+    EXPECT_EQ(errors[0].tag, Fix::Parser::undefined_tag);
+    EXPECT_EQ(errors[0].code, Fix::ParseError::MalformedTag);
 }
 
-TEST(ParserTests, WrongBodyLength) {
-    Parser parser;
-    const std::string kFixLogon =
-        "8=FIX.4.4\x01"
-        "9=76\x01" // Incorrect body length
-        "35=A\x01"
-        "34=1\x01"
-        "49=CLIENT12\x01"
-        "52=20251007-15:42:39.255\x01"
-        "56=EXECUTOR\x01"
-        "98=0\x01"
-        "108=30\x01"
-        "141=Y\x01"
-        "10=198\x01";
-
-    std::string_view sv(kFixLogon);
-    
-    ParseResult result = parser.parse(sv);
-    ASSERT_FALSE(result.errs.empty());
-    EXPECT_FALSE(result.message.has_value());
-
-    EXPECT_EQ(result.errs[0], Error::Parse::Wrong_body_length);
-}
-
-TEST(ParserTests, FailedChecksum) {
-    Parser parser;
-    std::string raw_message = 
-        "8=FIX.4.4\x01"
-        "9=77\x01"
-        "35=A\x01"
-        "34=1\x01"
-        "49=CLIENT12\x01"
-        "52=20251007-15:42:39.255\x01"
-        "56=EXECUTOR\x01"
-        "98=0\x01"
-        "108=30\x01"
-        "141=Y\x01"
-        "10=000\x01";  // Incorrect checksum
-
-    std::string_view sv(raw_message);
-    
-    ParseResult result = parser.parse(sv);
-    ASSERT_FALSE(result.errs.empty());
-    EXPECT_FALSE(result.message.has_value());
-
-    EXPECT_EQ(result.errs[0], Error::Parse::Failed_checksum);
-}   

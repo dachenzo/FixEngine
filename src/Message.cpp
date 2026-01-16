@@ -11,7 +11,7 @@
 
 
 namespace Fix {
-    ValidMessage make_valid_message(const Message::GenericMessage& msg) {
+    ValidMessage make_valid_message(const GenericMessage<GenericFieldView>& msg) {
         HeaderCache cache;
         for (const auto& field : msg) {
             switch (field.tag) {

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <fix/message/GenericMessage.hpp>
 #include <fix/core/Validator.hpp>
 
 
@@ -43,17 +44,17 @@ TEST(TagScratchTests, SetIterator) {
     Fix::TagScratch tagscratch;
     
 
-    Fix::Message::GenericMessage message = {
-        {8, "FIX.4.4"},
-        {9, "100"},
-        {35, "A"},
-        {49, "CLIENT1"},
-        {56, "SERVER1"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},
-        {108,"30"},
-        {10, "235"}
+    Fix::GenericMessage<Fix::GenericFieldView> message = {
+        {"FIX.4.4", 8},
+        {"100", 9},
+        {"A", 35},
+        {"CLIENT1", 49},
+        {"SERVER1", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},
+        {"30", 108},
+        {"235", 10}
     };
 
     tagscratch.ensure_bits(message.size());
@@ -92,7 +93,7 @@ TEST(TagScratchTests, EnsureBitsResizing) {
     EXPECT_FALSE(tagscratch.get(149));
 }
 
-TEST(TagScrtatchTests, FullCheckEdgeCases) {
+TEST(TagScratchTests, FullCheckEdgeCases) {
     Fix::TagScratch tagscratch;
 
     // Test with size exactly multiple of 64

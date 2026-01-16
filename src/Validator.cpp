@@ -5,7 +5,7 @@
 
 namespace Fix {
     
-    void Validator::validate_header_(const ValidMessage& message, const std::string& expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
+    void Validator::validate_header_(const ValidMessage& message, const std::string_view expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
         auto& schema = Message::StandardHeaderSchema;
         auto& msg_buffer = message.message_;
        
@@ -98,7 +98,7 @@ namespace Fix {
         for (std::size_t i = 0; i < schema_size; i++) {
             const auto& field_schema = schema[i];
 
-            auto it = std::find_if(message.message_.begin(), message.message_.end(), [&](const Message::GenericField& field) {
+            auto it = std::find_if(message.message_.begin(), message.message_.end(), [&](const GenericFieldView& field) {
                 return field.tag == field_schema.tag;
             });
             if (it != message.message_.end()) {
@@ -238,7 +238,7 @@ namespace Fix {
         
     };
 
-    bool Validator::validate_type_(const std::string& value, Fix::Schema::FieldType type) {
+    bool Validator::validate_type_(const std::string_view value, Fix::Schema::FieldType type) {
         
         switch (type)
         {

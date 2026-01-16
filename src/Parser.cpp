@@ -4,156 +4,71 @@
 #include <fix/core/Message.hpp>
 
 namespace Fix {
-    
 
-    Parser::Parser() {
-        buff_.reserve(DEFAULT_PARSER_BUFFER_SIZE);
-    }
-
-    
-    ParseResult Parser::parse(std::string_view& sv) {
-
-        errs_.clear();
-        add_new_messge_fragment_(sv);
-        while (has_complete_field_() && errs_.empty()) {
-            parse_field_();
+    bool Parser::parse_tag(std::string_view str, Tag& out_val) {
+        auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), out_val);
+        if (ec != std::errc{} || ptr != str.data() + str.size()) {
+            return false;
         }
-
-        if (!errs_.empty()) {
-            message_builder.reset_state(); // expecting a new message next time
-            return {errs_, std::nullopt, Error::Severity::Fatal};
-        }
-
-        maybe_compact_buffer_();
-
-        auto build_result = message_builder.ready();
-        if (!build_result.has_errors && build_result.ready) {
-            return {{}, message_builder.get(), Error::Severity::NA};
-        }
-        else if (build_result.has_errors) {
-            auto builder_errs = message_builder.get_error_state();
-            std::vector<Error::Parse> all(builder_errs.errs.begin(), builder_errs.errs.end());
-            if (builder_errs.sev == Error::Severity::Fatal) {
-                message_builder.reset_state(); // expecting a new message next time // unrecoverable
-            }
-            return {std::move(all), std::nullopt, builder_errs.sev};
-        }
-        else {
-            return {{}, std::nullopt, Error::Severity::NA};
-        }
+        return true;
     }   
 
-        
+    void Parser::parse(std::string_view msg_frame, GenericMessage<GenericFieldView>& out_msg, std::vector<ParseErrorInfo>& out_errs) {
+        out_msg.clear();
+        out_errs.clear();
 
-    std::string_view Parser::next_field_() {
-        size_t start = read_idx_;
-        // find SOH
-        while (read_idx_ < buff_.size() && buff_[read_idx_] != '\x01') {++read_idx_;}
-        if (read_idx_ == buff_.size()) {
-            // No SOH found — caller must ensure there's a complete field before calling
-            throw FixParseException{"Internal parser state: expected complete field but none found"};
-        }
-        // advance past SOH
-        size_t end = read_idx_++;
-        
-     
-        // now return [start..end)
-        return std::string_view{buff_.data() + start, end - start };
-    }
-
-    void Parser::add_new_messge_fragment_(std::string_view& sv) {
-        for (auto c: sv) {
-            buff_.push_back(c);
-            if (c == '\x01') {complete_field_count_++;}
-        }
-
-        
-    }
-
-    std::size_t Parser::unread_() const noexcept {
-        return buff_.size() - read_idx_;
-    }
-
-    void Parser::maybe_compact_buffer_() {
-        std::size_t unread = unread_();
-       
-        if (unread == 0) {
-            read_idx_ = 0;
-            buff_.clear();
+        // start with checksum validation
+        auto checksum_pos = msg_frame.rfind("10=");
+        if (checksum_pos == std::string_view::npos) {
+            out_errs.push_back({10, ParseError::Failed_checksum});
             return;
         }
-        
 
-        std::size_t sz = buff_.size();
-        
-        if (read_idx_ >= static_cast<std::size_t>(sz*compact_ratio_)) {
-             
-            std::memmove(buff_.data(), buff_.data()+read_idx_, unread);
-            buff_.resize(unread);
-            read_idx_ = 0;
-        }
-    }
-
-    
-    bool Parser::has_complete_field_() {
-        return complete_field_count_ > 0;
-    }
-
-    void Parser::parse_field_() {
-        
-        complete_field_count_ -= 1;
-
-        std::string_view sv = next_field_();   // "tag=value"
-
-        // 1) Find '='
-        auto eq_pos = sv.find('=');
-        if (eq_pos == std::string_view::npos) {
-            errs_.push_back(Error::Parse::MalformedTag);
-            errs_.push_back(Error::Parse::NoTag);   // if you want to use this one too
+        std::uint16_t checksum;
+        auto checksum_str = msg_frame.substr(checksum_pos + 3, 3);
+        auto [ptr, ec] = std::from_chars(checksum_str.data(), checksum_str.data() + checksum_str.size(), checksum);
+        if (ec != std::errc{} || ptr != checksum_str.data() + checksum_str.size()) {
+            out_errs.push_back({10, ParseError::Failed_checksum});
             return;
         }
- 
-        // 2) Tag part
-        auto tag_len = eq_pos;
-        if (tag_len == 0) {
-            errs_.push_back(Error::Parse::NoTag);
-        } else if (tag_len > MAX_TAG_SIZE) {
-            errs_.push_back(Error::Parse::MaxTagSize);
-            tag_len = MAX_TAG_SIZE; // truncate for parsing, still error out
+
+        std::uint64_t computed_checksum = 0;
+        for (std::size_t i = 0; i < checksum_pos; ++i) {
+            computed_checksum += static_cast<std::uint8_t>(msg_frame[i]);
+        }
+        computed_checksum %= 256;
+        if (computed_checksum != checksum) {
+            out_errs.push_back({10, ParseError::Failed_checksum});
+            return;
         }
 
-        int tag = 0;
-        if (tag_len > 0) {
-            std::string_view tag_sv = sv.substr(0, tag_len);
-            auto [ptr, ec] = std::from_chars(tag_sv.data(),
-                                            tag_sv.data() + tag_sv.size(),
-                                            tag);
-            // FIX tags must be a full, base-10 integer with no trailing characters.
-            if (ec != std::errc() || ptr != (tag_sv.data() + tag_sv.size())) {
-                errs_.push_back(Error::Parse::MalformedTag);
+        // parse fields
+        std::size_t pos = 0;
+        while (pos < checksum_pos) {
+            // assuming pos points to the start of a tag
+            auto equal_pos = msg_frame.find('=', pos);
+            if (equal_pos == std::string_view::npos || equal_pos - pos > MAX_TAG_SIZE) {
+                out_errs.push_back({Parser::undefined_tag, ParseError::MalformedTag});
+                return;
             }
-        }
 
-        // 3) Value part
-        std::string_view value_sv;
-        if (eq_pos + 1 <= sv.size()) {
-            value_sv = sv.substr(eq_pos + 1);
-        }
+            Tag tag;
+            if (!parse_tag(msg_frame.substr(pos, equal_pos - pos), tag)) {
+                out_errs.push_back({Parser::undefined_tag, ParseError::MalformedTag});
+                return;
+            }
 
-        if (value_sv.empty()) {
-            errs_.push_back(Error::Parse::MissingValue);
-        }
+            pos = equal_pos + 1;
+            auto soh_pos = msg_frame.find('\x01', pos);
+            if (soh_pos == std::string_view::npos) {
+                out_errs.push_back({tag, ParseError::Missing_soh});
+                return;
+            }
 
-        for (auto p: errs_) {
-            std::cout << Fix::Error::to_string(p) << '\n';
-        }
-
-        if (errs_.empty()) {
-            Fix::RawField field{tag, std::string{value_sv}, sv};
-            message_builder.add(field);
-        }
-    }
-
-    
-
+            std::string_view value = msg_frame.substr(pos, soh_pos - pos);
+            out_msg.push_back({value, tag});
+            pos = soh_pos + 1;
+        }   
+        out_msg.push_back({checksum_str, 10});
+    }   
 }

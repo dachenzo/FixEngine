@@ -21,41 +21,36 @@ namespace Fix {
         using std::runtime_error::runtime_error;
     };
 
-    struct ParseResult {
-        std::vector<Error::Parse> errs;
-        std::optional<Message::GenericMessage> message; 
-        Error::Severity sev;
+    struct ParseErrorInfo {
+        Tag tag;
+        ParseError code;
     };
-    
-    
-    constexpr const std::size_t DEFAULT_PARSER_BUFFER_SIZE = 1u << 12;
-    const size_t MAX_TAG_SIZE = 10;
+
+    struct ParserContext {
+        static constexpr const std::size_t MessageSizeReserve = 1024;
+        static constexpr const std::size_t MessageErrorReserve = 16;
+        GenericMessage<GenericFieldView> out_msg; std::vector<ParseErrorInfo> out_errs;
+
+        ParserContext() {
+            out_msg.reserve(MessageSizeReserve);
+            out_errs.reserve(MessageErrorReserve);
+        }   
+    };
+
+
+
 
     struct Parser {
-        Parser();
-    
-        ParseResult parse(std::string_view& sv);  
+        static constexpr const std::size_t MAX_TAG_SIZE = 7;
+        static constexpr const int32_t undefined_tag = 0;
+        void parse(std::string_view msg_frame, GenericMessage<GenericFieldView>& out_msg, std::vector<ParseErrorInfo>& out_errs);
 
-        
         private:
-        std::vector<char> buff_;
-        size_t complete_field_count_{0};
-        size_t read_idx_{0};
-        double compact_ratio_ = 0.25;
-        Fix::MessageBuilder message_builder;
-        std::vector<Fix::Error::Parse> errs_;
+
+        bool parse_tag(std::string_view str, Tag& out_val);
+
         
-        std::string_view next_field_();
-
-        void add_new_messge_fragment_(std::string_view& sv);
-
-        bool has_complete_field_();
-
-        void parse_field_();
-
-        void maybe_compact_buffer_();
-
-        std::size_t unread_() const noexcept;
-    };  
+    };
+        
 
 };

@@ -77,10 +77,10 @@ namespace Fix {
 
         private:
             // core dispatch
-            void dispatch(const Message::GenericMessage& msg) ;
+            void dispatch(const GenericMessage<GenericFieldView>& msg) ;
             // void checkInboundSeq(const Fix::ValidMessage&);
 
-            // // FIX admin sends
+            // // FIX admin sends 
             void send_logon();
             void send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag = 0, std::string text = {});
             void send_logout(const std::string& reason);
@@ -126,6 +126,8 @@ namespace Fix {
             std::deque<PendingWrite> write_q_;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;
+            Fix::Framer framer_;
+            Fix::ParserContext parser_ctx_;
             Fix::Parser parser_;
             Fix::Serializer serializer_;
             Fix::SessionID id_;

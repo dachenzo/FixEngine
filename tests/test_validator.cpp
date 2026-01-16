@@ -10,17 +10,17 @@ TEST(ValidatorTests, UnknownMessageType) {
         .sender_comp_id = "me",
         .target_comp_id = "them"
     };;
-    Message::GenericMessage logon_min = {
-        {8,  "FIX.4.4"},
-        {9,  "69"},
-        {35, "l"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {10, "235"}
+    GenericMessage<GenericFieldView> logon_min = {
+        {"FIX.4.4", 8},
+        {"69", 9},
+        {"l", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"235", 10}
     };
 
     auto valid_logon = Fix::make_valid_message(logon_min);
@@ -38,17 +38,17 @@ TEST(ValidatorTests, WrongFixVersion) {
         .sender_comp_id = "me",
         .target_comp_id = "them"
     };;
-    Message::GenericMessage logon_bad_fix = {
-        {8,  "FIX.4.2"},
-        {9,  "69"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {10, "235"}
+    GenericMessage<GenericFieldView> logon_bad_fix = {
+        {"FIX.4.2", 8},
+        {"69", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"235", 10}
     };
     auto valid_logon_bad_fix = Fix::make_valid_message(logon_bad_fix);
     ValidatorResult result = validator.validate_message(valid_logon_bad_fix, params);
@@ -62,18 +62,18 @@ TEST(ValidatorTests, WrongFieldType) {
     Fix::SessionParameters params {
         .sender_comp_id = "me",
         .target_comp_id = "them"
-    };;
-    Message::GenericMessage logon_bad_field = {
-        {8,  "FIX.4.4"},
-        {9,  "69"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "INVALID_INT"},             // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {10, "235"}
+    };
+    GenericMessage<GenericFieldView> logon_bad_field = {
+        {"FIX.4.4", 8},
+        {"69", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"INVALID_INT", 98},             // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"235", 10}
     };
     auto valid_logon_bad_field = Fix::make_valid_message(logon_bad_field);
     ValidatorResult result = validator.validate_message(valid_logon_bad_field, params);
@@ -87,18 +87,18 @@ TEST(ValidatorTests, MissingField) {
     Fix::SessionParameters params {
         .sender_comp_id = "me",
         .target_comp_id = "them"
-    };;
-    Message::GenericMessage logon_missing_field = {
-        {8,  "FIX.4.4"},
-        {9,  "69"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
+    };
+    GenericMessage<GenericFieldView> logon_missing_field = {
+        {"FIX.4.4", 8},
+        {"69", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
         // Missing EncryptMethod (98)
-        {108,"30"},                      // HeartBtInt
-        {10, "235"}
+        {"30", 108},                      // HeartBtInt
+        {"235", 10}
     };
 
     auto valid_logon_missing_field = Fix::make_valid_message(logon_missing_field);
@@ -112,19 +112,19 @@ TEST(ValidatorTests, MissingField) {
 TEST(ValidatorTests, MissingGroupEntry) {
     Validator validator;
   
-    Message::GenericMessage message_missing_group_entry = {
-        {8,  "FIX.4.4"},
-        {9,  "100"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {627, "2"},                      // NoHops
+    GenericMessage<GenericFieldView> message_missing_group_entry = {
+        {"FIX.4.4", 8},
+        {"100", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"2", 627},                      // NoHops
         // Missing group entries here
-        {10, "235"}
+        {"235", 10}
     };
     
     Fix::SessionParameters params {
@@ -145,22 +145,22 @@ TEST(ValidatorTests, UnrecognizedField) {
     Fix::SessionParameters params {
         .sender_comp_id = "me",
         .target_comp_id = "them"
-    };;
-    Message::GenericMessage message_missing_group_schema = {
-        {8,  "FIX.4.4"},
-        {9,  "100"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {627, "1"},                      // NoHops
-        {629, "20251202-12:00:01.000"},  // HopSendingTime (out of order)
-        {628, "HOP1_COMP"},              // HopCompID, unrecognized field because of wrong order
-        {630, "1001"},                   // HopRefID , unrecognized field  because of wrong order
-        {10, "235"}
+    };
+    GenericMessage<GenericFieldView> message_missing_group_schema = {
+        {"FIX.4.4", 8},
+        {"100", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"1", 627},                      // NoHops
+        {"20251202-12:00:01.000", 629},  // HopSendingTime (out of order)
+        {"HOP1_COMP", 628},              // HopCompID, unrecognized field because of wrong order
+        {"1001", 630},                   // HopRefID , unrecognized field  because of wrong order
+        {"235", 10}
     };
     
     auto valid_message_missing_group_schema = Fix::make_valid_message(message_missing_group_schema);
@@ -176,18 +176,18 @@ TEST(ValidatorTests, MalformedTag34) {
     Fix::SessionParameters params {
         .sender_comp_id = "me",
         .target_comp_id = "them"
-    };;
-    Message::GenericMessage logon_bad_seqnum = {
-        {8,  "FIX.4.4"},
-        {9,  "79"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "INVALID_INT"},             // MsgSeqNum
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {10, "012"}
+    };
+    GenericMessage<GenericFieldView> logon_bad_seqnum = {
+        {"FIX.4.4", 8},
+        {"79", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"INVALID_INT", 34},             // MsgSeqNum
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"012", 10}
     };
     auto valid_logon_bad_seqnum = Fix::make_valid_message(logon_bad_seqnum);
     ValidatorResult result = validator.validate_message(valid_logon_bad_seqnum, params);
@@ -202,18 +202,18 @@ TEST(ValidatorTests, MalformedTag8) {
     Fix::SessionParameters params {
         .sender_comp_id = "me",
         .target_comp_id = "them"
-    };;
-    Message::GenericMessage logon_bad_seqnum = {
-        {8,  "88"},
-        {9,  "70"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "me"},
-        {34, "88"},             // MsgSeqNum
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {10, "231"}
+    };
+    GenericMessage<GenericFieldView> logon_bad_seqnum = {
+        {"88", 8},
+        {"70", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"me", 56},
+        {"88", 34},             // MsgSeqNum
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"231", 10}
     };
 
     auto valid_logon_bad_seqnum = Fix::make_valid_message(logon_bad_seqnum);
@@ -230,17 +230,17 @@ TEST(ValidatorTests, WrongSenderCompID) {
         .sender_comp_id = "me",
         .target_comp_id = "them"
     };
-    Message::GenericMessage logon_bad_sender = {
-        {8,  "FIX.4.4"},
-        {9,  "78"},
-        {35, "A"},                       // Logon
-        {49, "not_target"},            // Wrong SenderCompID
-        {56, "me"},
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {10, "166"}
+    GenericMessage<GenericFieldView> logon_bad_sender = {
+        {"FIX.4.4", 8},
+        {"78", 9},
+        {"A", 35},                       // Logon
+        {"not_target", 49},            // Wrong SenderCompID
+        {"me", 56},
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"166", 10}
     };
     auto valid_logon_bad_sender = Fix::make_valid_message(logon_bad_sender);
     ValidatorResult result = validator.validate_message(valid_logon_bad_sender, params);
@@ -256,17 +256,17 @@ TEST(ValidatorTests, WrongTargetCompID) {
         .sender_comp_id = "me",
         .target_comp_id = "them"
     };
-    Message::GenericMessage logon_bad_target = {
-        {8,  "FIX.4.4"},
-        {9,  "78"},
-        {35, "A"},                       // Logon
-        {49, "them"},
-        {56, "not_me"},            // Wrong TargetCompID
-        {34, "1"},
-        {52, "20251224-09:30:00.000"},
-        {98, "0"},                       // EncryptMethod (0 = None)
-        {108,"30"},                      // HeartBtInt
-        {10, "166"}
+    GenericMessage<GenericFieldView> logon_bad_target = {
+        {"FIX.4.4", 8},
+        {"78", 9},
+        {"A", 35},                       // Logon
+        {"them", 49},
+        {"not_me", 56},            // Wrong TargetCompID
+        {"1", 34},
+        {"20251224-09:30:00.000", 52},
+        {"0", 98},                       // EncryptMethod (0 = None)
+        {"30", 108},                      // HeartBtInt
+        {"166", 10}
     };
 
     auto valid_logon_bad_target = Fix::make_valid_message(logon_bad_target);

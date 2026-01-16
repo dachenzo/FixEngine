@@ -60,7 +60,7 @@ namespace Fix {
             data_[index >> 6] |= (1UL << (index & 63));
         }
 
-        void set(Fix::Message::GenericMessage::const_iterator it, const Fix::Message::GenericMessage::const_iterator& begin) {
+        void set(Fix::GenericMessage<GenericFieldView>::const_iterator it, const Fix::GenericMessage<GenericFieldView>::const_iterator& begin) {
             std::size_t index = std::distance(begin, it);
             data_[index >> 6] |= (1UL << (index & 63));
         }
@@ -80,7 +80,7 @@ namespace Fix {
 
         ValidatorResult validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
 
-        void validate_header_(const ValidMessage& message, const std::string& expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
+        void validate_header_(const ValidMessage& message, const std::string_view expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
         void validate_trailer_(const ValidMessage& message, ValidatorResult& validres);
 
@@ -89,7 +89,7 @@ namespace Fix {
 
         void validate_groups_(const std::size_t groupcnt, const ValidMessage& message, const Schema::FieldSchema* groupfield, int& curr_idx, ValidatorResult& validres);
 
-        bool validate_type_(const std::string& value, Fix::Schema::FieldType type);
+        bool validate_type_(const std::string_view value, Fix::Schema::FieldType type);
 
         private:
         TagScratch tagscratch_;
