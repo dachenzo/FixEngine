@@ -6,7 +6,6 @@
 #include <limits>
 #include <algorithm>
 #include <array>
-#include <unordered_map> 
 #include <fix/core/Message.hpp>
 
 
@@ -59,6 +58,8 @@ namespace Fix {
 
         void insert(SeqNum seqnum, std::string_view msg_wire);
 
+        bool inline in_window(SeqNum seqnum) const noexcept;
+
         private:
         std::array<MessageBounds, window> slots_{};
         SeqNum base_offset_{0};
@@ -74,7 +75,7 @@ namespace Fix {
 
         void grow_buffer(std::uint64_t extra_capacity);
 
-        bool inline in_window(SeqNum seqnum) const noexcept;
+        
 
         std::uint16_t inline slot_index(SeqNum seqnum) const noexcept;
     }; 

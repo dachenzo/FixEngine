@@ -369,6 +369,11 @@ namespace Fix {
             seq_provider_.update_in(seq_num + 1);
         } else if (seq_num > seq_provider_.next_in() && state_ == Fix::SessionState::RECOVERING_RESEND) {
             // During recovery, cache out-of-order messages
+            if (recovery_cache_.in_window(seq_num) == false) {
+                send_logout("MsgSeqNum too high during recovery");
+                stop();
+                return;
+            }
             recovery_cache_.insert(seq_num, raw_msg);
             return;
         } else if (seq_num > seq_provider_.next_in()) {
