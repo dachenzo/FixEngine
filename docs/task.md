@@ -8,6 +8,7 @@ SeqNumTracking -> Integrated
 
 Specific:  loop in session over resend stream
 - continue with the resend recovery mechanism starting with caching of interleaved new messages and state in session
+- pin down when to update seq num
 - Replace session vector buffer with plain std::byte buffer
 - send the begining and end sequence number into the resend processeror
 - track "in recovery state"
