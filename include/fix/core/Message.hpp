@@ -24,9 +24,11 @@ namespace Fix {
         COUNT
     };
 
+    using SeqNum = uint64_t;
+
     struct HeaderCache {
         const std::string_view* slots[static_cast<size_t>(CacheSlot::COUNT)] = {nullptr};
-        uint64_t msg_seq_num = 0;
+        SeqNum msg_seq_num = 0;
         bool has_msg_seq_num = false;
     };
 
