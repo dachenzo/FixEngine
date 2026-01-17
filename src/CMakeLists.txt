@@ -9,11 +9,11 @@ add_library(fix_engine
     Framer.cpp
     ## ConnectionAsio.cpp (discontinued implementation)
     Message.cpp
-    MessageBuilder.cpp
     MessageFactory.cpp
     MessageStore.cpp
     Parser.cpp
     Reactor.cpp
+    RecoveryCache.cpp
     SeqProvider.cpp
     Serializer.cpp
     Session.cpp

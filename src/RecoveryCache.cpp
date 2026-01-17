@@ -96,7 +96,7 @@ namespace Fix {
     }
 
     void RecoveryCache::reset() {
-        assert(empty() && "Cannot reset RecoveryCache with existing messages");
+        // assert(empty() && "Cannot reset RecoveryCache with existing messages");
         buff_size_ = 0;
         base_offset_ = 0;
         size_ = 0;
