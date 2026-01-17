@@ -23,6 +23,7 @@ namespace Fix {
                 Fix::Log::LogCore& log_core
             ):  
                 arena_{},
+                recovery_cache_{},
                 parser_{},
                 framer_{},
                 parser_ctx_{},
@@ -210,23 +211,11 @@ namespace Fix {
                 auto sv = std::string_view{buff_.data(), n};
                 framer_.append(sv);
                 // need to run some timer here
-                if (!framer_.has_message()) {
-                    do_read();
-                    return;
+                while (framer_.has_message()) {
+                    auto msg = framer_.get_message();
+                    process_wire_message_(msg);
+                    framer_.consume_message();
                 }
-
-                auto msg_frame = framer_.get_message();
-                parser_.parse(msg_frame, parser_ctx_.out_msg, parser_ctx_.out_errs);
-
-                if (parser_ctx_.out_errs.empty()) {
-                    auto msg = parser_ctx_.out_msg;
-                    dispatch(msg);
-                } else {
-                    send_logout("Parse error");
-                    stop();
-                } 
-
-                framer_.consume_message();
                 do_read();
             }
         );
@@ -301,11 +290,48 @@ namespace Fix {
         heartbeat_timer_ = boost::asio::steady_timer(exec_);
     }
 
+    void Session::drain_recovery_cache_() {
+        if (recovery_cache_.empty() || state_ != Fix::SessionState::RECOVERING_RESEND) return;
 
-    void Session::dispatch(const GenericMessage<GenericFieldView>& message) {
+        auto expected = seq_provider_.next_in();
+        while (recovery_cache_.contains(expected)) {
+
+            auto raw_msg = recovery_cache_.get(expected);
+            parser_.parse(raw_msg, parser_ctx_.out_msg, parser_ctx_.out_errs);
+            if (parser_ctx_.out_errs.empty()) {
+                auto msg = parser_ctx_.out_msg;
+                dispatch(msg, raw_msg);
+            } else {
+                send_logout("Parse error during recovery");
+                stop();
+                return;
+            }
+            recovery_cache_.consume(expected);
+            expected = seq_provider_.next_in();
+        }
+
+        if (recovery_cache_.empty()) {
+            state_ = Fix::SessionState::ACTIVE;
+        }
+    }
+
+    void Session::process_wire_message_(std::string_view msg_wire) {
+        parser_.parse(msg_wire, parser_ctx_.out_msg, parser_ctx_.out_errs);
+
+        if (parser_ctx_.out_errs.empty()) {
+            auto msg = parser_ctx_.out_msg;
+            dispatch(msg, msg_wire);
+        } else {
+            send_logout("Parse error");
+            stop();
+        } 
+
+        drain_recovery_cache_();
+    }
+
+
+    void Session::dispatch(const GenericMessage<GenericFieldView>& message, std::string_view raw_msg)  {
         Fix::ValidMessage msg = Fix::make_valid_message(message);
-
-
 
         auto results = validator_.validate_message(msg, params_);
 
@@ -337,15 +363,29 @@ namespace Fix {
 
         auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
         auto seq_num = msg.header_cache_.msg_seq_num;
-        bool is_dup = msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] != nullptr &&
-                      *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] == "Y";
+        bool is_dup = msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] != nullptr && *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::PossDupFlag)] == "Y";
 
         if (seq_num == seq_provider_.next_in()) {
             seq_provider_.update_in(seq_num + 1);
+        } else if (seq_num > seq_provider_.next_in() && state_ == Fix::SessionState::RECOVERING_RESEND) {
+            // During recovery, cache out-of-order messages
+            if (recovery_cache_.in_window(seq_num) == false) {
+                send_logout("MsgSeqNum too high during recovery");
+                stop();
+                return;
+            }
+            recovery_cache_.insert(seq_num, raw_msg);
+            return;
         } else if (seq_num > seq_provider_.next_in()) {
             // Future seq num, need to resend
-            send_resend_request(seq_provider_.next_in(), 0);
+            auto expected = seq_provider_.next_in();
+            send_resend_request(expected, 0);
+            state_ = Fix::SessionState::RECOVERING_RESEND;
+
+            recovery_cache_.start(expected);        // base offset = expected
+            recovery_cache_.insert(seq_num, raw_msg);
             return;
+
         } else if (seq_num < seq_provider_.next_in() && is_dup) {
             // drop duplicate
             return;

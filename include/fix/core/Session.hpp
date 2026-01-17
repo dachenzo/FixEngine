@@ -12,6 +12,7 @@
 #include <fix/core/definitions.hpp>
 #include <fix/core/MessageStore.hpp>
 #include <fix/core/Message.hpp>
+#include <fix/core/RecoveryCache.hpp>
 #include <fix/core/MessageFactory.hpp>
 #include <fix/core/Application.hpp>
 #include <fix/core/ITimer.hpp>
@@ -57,9 +58,6 @@ namespace Fix {
         void start();                       // open/logon loop
         void stop();                        // send logout + cleanup
 
-        // // I/O callbacks (called by your event loop / Connection)
-        // void onBytes(std::string_view chunk);
-        // void onWritable();
 
         Fix::SessionID get_session_id()const noexcept;
 
@@ -77,7 +75,11 @@ namespace Fix {
 
         private:
             // core dispatch
-            void dispatch(const GenericMessage<GenericFieldView>& msg) ;
+            void dispatch(const GenericMessage<GenericFieldView>& msg, std::string_view raw_msg);
+            void process_wire_message_(std::string_view msg_wire);
+            void drain_recovery_cache_();
+
+            
             // void checkInboundSeq(const Fix::ValidMessage&);
 
             // // FIX admin sends 
@@ -120,7 +122,9 @@ namespace Fix {
                 std::size_t sent = 0; 
             };
 
+
             Fix::Arena arena_;
+            Fix::RecoveryCache recovery_cache_;
             Fix::SessionParameters params_;
             boost::asio::strand<boost::asio::any_io_executor> exec_{boost::asio::system_executor()};
             std::deque<PendingWrite> write_q_;
