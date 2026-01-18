@@ -21,10 +21,10 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 ## 2. Session Layer
 | Aspect                 | Exists | Correct | Integrated | Performant | Hardened |
 |------------------------|--------|---------|------------|------------|----------|
-| SeqNum tracking        | ❌      | ❌       | ❌          | ❌          | ❌        |
+| SeqNum tracking        | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Logon/Logout state     | ✅      | ❌       | ❌          | ❌          | ❌        |
-| ResendRequest handling | ❌      | ❌       | ❌          | ❌          | ❌        |
-| GapFill logic          | ❌      | ❌       | ❌          | ❌          | ❌        |
+| ResendRequest handling | ✅      | ✅       | ✅          | ❌          | ❌        |
+| GapFill logic          | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Dispatch logic         | ✅      | ❌       | ✅          | ❌          | ❌        |
 
 ## 3. Message Processing
@@ -32,7 +32,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 |-----------------|--------|---------|------------|------------|----------|
 | Parsing         | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Validation hook | ✅      | ❌       | ✅          | ❌          | ❌        |
-| Generation      | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Generation      | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Normalisation   | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Routing         | ❌      | ❌       | ❌          | ❌          | ❌        |
 
@@ -56,8 +56,8 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 ## 6. Persistence
 | Aspect              | Exists | Correct | Integrated | Performant | Hardened |
 |---------------------|--------|---------|------------|------------|----------|
-| Message store       | ❌      | ❌       | ❌          | ❌          | ❌        |
-| SeqNum store        | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Message store       | ✅      | ✅       | ✅          | ❌          | ❌        |
+| SeqNum store        | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Recovery on restart | ❌      | ❌       | ❌          | ❌          | ❌        |
 
 ## 7. Concurrency Model

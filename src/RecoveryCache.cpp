@@ -17,29 +17,12 @@ namespace Fix {
         delete[] data_;
     }
 
-    bool inline RecoveryCache::in_window(SeqNum seqnum) const noexcept {
-        if (seqnum < base_offset_) return false;
-        return static_cast<std::uint64_t>(seqnum - base_offset_) < window;
-    }   
-
-
-    std::uint16_t inline RecoveryCache::slot_index(SeqNum seqnum) const noexcept {
-        assert(in_window(seqnum) && "SeqNum out of window");
-        return static_cast<std::uint16_t>(seqnum - base_offset_);
-    }
-
-    bool inline RecoveryCache::empty() const noexcept {
-        return size_ == 0;
-    }
 
     void RecoveryCache::start(SeqNum seqnum) {
         reset();
         base_offset_ = seqnum;
     }
 
-    bool inline RecoveryCache::contains(SeqNum seqnum) const noexcept {
-        return in_window(seqnum) && slots_[slot_index(seqnum)] != KEmpty;
-    }
 
     void RecoveryCache::insert(SeqNum seqnum, std::string_view msg_wire) {
         // Insert message into cache

@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+#include <string_view>
+#include <iostream>
 #include <fix/core/MessageFactory.hpp>
 
 
@@ -153,3 +155,83 @@ TEST(MessageFactoryTests, PresentFieldsMessageRegenTest) {
 
     EXPECT_EQ(regen_msg, expected_sv);
 }
+
+TEST(MessageFactoryTests, SequenceResetMessageTest) {
+    Fix::SessionParameters params{};
+    params.fix_version = "FIX.4.4";
+    params.sender_comp_id = "SENDER";
+    params.target_comp_id = "TARGET";
+
+    Fix::SeqProvider seq_provider{};
+    struct ClockMock {
+        std::string now_fix() {
+            return "20240606-12:00:00.000";
+        }
+        std::uint64_t now() {
+            return 0;
+        }
+        
+    };
+    ClockMock clock{};
+    Fix::MessageFactory<ClockMock> factory{params, seq_provider, clock};
+    std::string_view seq_reset_msg = factory.sequence_reset(10, true);
+
+    const char expected[] = 
+        "8=FIX.4.4\x01"
+        "9=67\x01"
+        "35=4\x01"
+        "34=1\x01"
+        "49=SENDER\x01"
+        "56=TARGET\x01"
+        "52=20240606-12:00:00.000\x01"
+        "123=Y\x01"
+        "36=10\x01"
+        "10=129\x01"; 
+
+    
+
+    std::string_view expected_sv{expected, sizeof(expected) - 1};
+    EXPECT_EQ(seq_reset_msg, expected_sv);
+}
+
+TEST(MessageFactoryTests, RejectMessageTest) {
+    Fix::SessionParameters params{};
+    params.fix_version = "FIX.4.4";
+    params.sender_comp_id = "SENDER";
+    params.target_comp_id = "TARGET";
+
+    Fix::SeqProvider seq_provider{};
+    struct ClockMock {
+        std::string now_fix() {
+            return "20240606-12:00:00.000";
+        }
+        std::uint64_t now() {
+            return 0;
+        }
+        
+    };
+    ClockMock clock{};
+    Fix::MessageFactory<ClockMock> factory{params, seq_provider, clock};
+    std::string_view reject_msg = factory.reject(5, 2, 45, "Invalid MsgSeqNum");
+
+    const char expected[] = 
+        "8=FIX.4.4\x01"
+        "9=94\x01"
+        "35=3\x01"
+        "34=1\x01"
+        "49=SENDER\x01"
+        "56=TARGET\x01"
+        "52=20240606-12:00:00.000\x01"
+        "45=5\x01"
+        "371=45\x01"
+        "373=2\x01"
+        "58=Invalid MsgSeqNum\x01"
+        "10=136\x01"; 
+
+    
+
+    std::string_view expected_sv{expected, sizeof(expected) - 1};
+    EXPECT_EQ(reject_msg, expected_sv);
+}   
+
+// Additional tests can be added for other message types as needed.

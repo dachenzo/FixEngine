@@ -95,14 +95,14 @@ namespace Fix {
             // void resendBufferedMessages(std::size_t beginSeqNo, std::size_t endSeqNo);
 
             // FIX admin handlers
-            void handle_logon(const Fix::ValidMessage&);
-            void handle_logout(const Fix::ValidMessage&);
-            void handle_heartbeat(const Fix::ValidMessage&);
-            void handle_test_request(const Fix::ValidMessage&);
+            void handle_logon(const Fix::ValidMessage& message);
+            void handle_logout(const Fix::ValidMessage& message);
+            void handle_heartbeat(const Fix::ValidMessage& message);
+            void handle_test_request(const Fix::ValidMessage& message);
             void handle_resend_request(const Fix::ValidMessage& message);
-            void handle_sequence_reset(const Fix::ValidMessage&);
+            void handle_sequence_reset(const Fix::ValidMessage& message);
 
-            void send_message_(std::string_view msg_wire);
+            void send_message_(std::string_view msg_wire, bool is_resend = false);
 
             void send_bytes_(Fix::WireWriter handle);
 

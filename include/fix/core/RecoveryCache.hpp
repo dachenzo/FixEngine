@@ -46,9 +46,13 @@ namespace Fix {
         RecoveryCache(RecoveryCache&&) = delete;
         RecoveryCache& operator=(RecoveryCache&&) = delete;
 
-        bool inline empty() const noexcept;
+        bool inline empty() const noexcept {
+            return size_ == 0;
+        }
 
-        bool inline contains(SeqNum seqnum) const noexcept;
+        bool inline contains(SeqNum seqnum) const noexcept {
+            return in_window(seqnum) && slots_[slot_index(seqnum)] != KEmpty;
+        }
 
         std::string_view get(SeqNum seqnum);
 
@@ -58,7 +62,10 @@ namespace Fix {
 
         void insert(SeqNum seqnum, std::string_view msg_wire);
 
-        bool inline in_window(SeqNum seqnum) const noexcept;
+        bool inline in_window(SeqNum seqnum) const noexcept {
+            if (seqnum < base_offset_) return false;
+            return static_cast<std::uint64_t>(seqnum - base_offset_) < window;
+        }
 
         private:
         std::array<MessageBounds, window> slots_{};
@@ -77,6 +84,10 @@ namespace Fix {
 
         
 
-        std::uint16_t inline slot_index(SeqNum seqnum) const noexcept;
+        std::uint16_t inline slot_index(SeqNum seqnum) const noexcept {
+            assert(in_window(seqnum) && "SeqNum out of window");
+            return static_cast<std::uint16_t>(seqnum - base_offset_);
+        }
+
     }; 
 }
