@@ -200,6 +200,7 @@ namespace Fix {
             scratch_.add_field(49, params_.sender_comp_id);
             scratch_.add_field(56, params_.target_comp_id);
             scratch_.add_field(52, clock_.now_fix());
+            seq_provider_.update_out( seq_provider_.next_out() + 1);
         }
 
         void stamp_trailer_()  {

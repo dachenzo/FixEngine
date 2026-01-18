@@ -411,7 +411,7 @@ namespace Fix {
         else if (msg_type == "4") {handle_sequence_reset(msg);}
         else {}
 
-        // store_.store_inbound(seqnum, msg);
+       
 
     }
 
@@ -507,6 +507,39 @@ namespace Fix {
         }
 
     }
-    void Session::handle_sequence_reset(const Fix::ValidMessage&) {}
+    void Session::handle_sequence_reset(const Fix::ValidMessage& msg) {
+        auto new_seq_no_it = std::find_if(
+            msg.message_.begin(),
+            msg.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 36; // NewSeqNo
+            }
+        );
+        auto gap_fill_it = std::find_if(
+            msg.message_.begin(),
+            msg.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 123; // GapFillFlag
+            }
+        );
+        assert(new_seq_no_it != msg.message_.end());
+        assert(gap_fill_it != msg.message_.end());
+        SeqNum new_seq_no = 0;
+        std::from_chars(
+            new_seq_no_it->value.data(),
+            new_seq_no_it->value.data() + new_seq_no_it->value.size(),
+            new_seq_no
+        );
+        bool gap_fill = gap_fill_it->value == "Y";
+
+
+        if (new_seq_no < seq_provider_.next_in()) {
+            send_logout("NewSeqNo less than expected");
+            stop();
+            return;
+        }
+
+        seq_provider_.update_in(new_seq_no);
+    }
 
 }
