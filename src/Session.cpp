@@ -526,17 +526,20 @@ namespace Fix {
             }
         );
         assert(new_seq_no_it != msg.message_.end());
-        assert(gap_fill_it != msg.message_.end());
+        bool gap_fill = false;
+        if (gap_fill_it != msg.message_.end() && gap_fill_it->value == "Y") {
+            gap_fill = true;
+        }
         SeqNum new_seq_no = 0;
         std::from_chars(
             new_seq_no_it->value.data(),
             new_seq_no_it->value.data() + new_seq_no_it->value.size(),
             new_seq_no
         );
-        bool gap_fill = gap_fill_it->value == "Y";
+        
 
 
-        if (new_seq_no < seq_provider_.next_in()) {
+        if (new_seq_no < seq_provider_.next_in() && !gap_fill) {
             send_logout("NewSeqNo less than expected");
             stop();
             return;
