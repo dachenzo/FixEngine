@@ -102,7 +102,7 @@ namespace Fix {
             void handle_resend_request(const Fix::ValidMessage& message);
             void handle_sequence_reset(const Fix::ValidMessage& message);
 
-            void send_message_(std::string_view msg_wire);
+            void send_message_(std::string_view msg_wire, bool is_resend = false);
 
             void send_bytes_(Fix::WireWriter handle);
 

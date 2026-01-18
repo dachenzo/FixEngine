@@ -160,9 +160,12 @@ namespace Fix {
         return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
-    void Session::send_message_(std::string_view msg_wire) {    
+    void Session::send_message_(std::string_view msg_wire, bool is_resend) {    
         auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));
+        if (!is_resend) {
+            store_.store_outbound_message(msg_wire);
+        }
     }
 
     void Session::send_bytes_(Fix::WireWriter handle) {
@@ -379,7 +382,7 @@ namespace Fix {
         } else if (seq_num > seq_provider_.next_in()) {
             // Future seq num, need to resend
             auto expected = seq_provider_.next_in();
-            send_resend_request(expected, 0);
+            send_resend_request(expected, seq_num - 1);
             state_ = Fix::SessionState::RECOVERING_RESEND;
 
             recovery_cache_.start(expected);        // base offset = expected
@@ -458,9 +461,9 @@ namespace Fix {
             state_ = Fix::SessionState::ACTIVE;
         }
     }
-    void Session::handle_logout(const Fix::ValidMessage&) {}
-    void Session::handle_heartbeat(const Fix::ValidMessage&) {}
-    void Session::handle_test_request(const Fix::ValidMessage&) {
+    void Session::handle_logout(const Fix::ValidMessage& message) {}
+    void Session::handle_heartbeat(const Fix::ValidMessage& message) {}
+    void Session::handle_test_request(const Fix::ValidMessage& message) {
         
     }
     void Session::handle_resend_request(const Fix::ValidMessage& msg) {
@@ -502,7 +505,7 @@ namespace Fix {
             } else {
                 auto& msg_index = store_.get_message_index(action.begin_seq_no);
                 auto new_wire = msg_factory_.regenerate_message(store_.get_message_wire(msg_index), msg_index);
-                send_message_(new_wire);
+                send_message_(new_wire, true);
             }
         }
 
