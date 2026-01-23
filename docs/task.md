@@ -7,7 +7,7 @@ Heartbeats -> Integrated
 
 
 Specific: seq reset
-- reset message store aswell
+- reset message store aswell as recovery_cache
 
 
 

@@ -27,6 +27,11 @@ namespace Fix {
             outgoing_seq_number_ = 1;
         }
 
+        void initiator_reset() noexcept {
+            incoming_seq_number_ = 1;
+            outgoing_seq_number_ = 1;
+        }
+
         void acceptor_reset() noexcept {
             incoming_seq_number_ = 2;
             outgoing_seq_number_ = 1;

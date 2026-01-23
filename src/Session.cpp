@@ -135,7 +135,7 @@ namespace Fix {
                 if (ec) {
                     self->logger_.log(
                         {Fix::Error::Layer::Fix, 
-                        Fix::Error::Category::Error, 
+                          Fix::Error::Category::Error, 
                         Fix::Error::Severity::High},
                         "Couldnt start logon timer"
                     );
