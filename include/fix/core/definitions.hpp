@@ -45,7 +45,8 @@ namespace Fix {
         std::string heart_beat_str = "30";
         std::uint32_t heart_beat_int = 30;
         int encrypt_method = 0;
-        bool reset_on_logon = false;
+        bool initiator_reset_on_logon = false;
+        bool acceptor_reset_on_logon = true;
         bool send_last_msg_prcessed_seq =true;
         
     }; 

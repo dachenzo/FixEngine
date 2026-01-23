@@ -6,9 +6,8 @@ Heartbeats -> Integrated
 
 
 
-Specific: Fix inbound timer
-
-- Implement handle test request
+Specific: seq reset
+- reset message store aswell
 
 
 

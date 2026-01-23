@@ -1,4 +1,5 @@
 #include <boost/asio.hpp>
+#include <boost/asio/dispatch.hpp>
 #include <string_view>
 #include <string>
 #include <charconv>
@@ -89,30 +90,32 @@ namespace Fix {
     void Session::stop_with_logout(const std::string& reason) {
         if (stopped_) return;
         
-        send_logout(reason);
-        auto self = shared_from_this();
-        auto handler  = [self](boost::system::error_code ec) {
-            if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
-            if (ec) {
+        boost::asio::dispatch(exec_, [self = shared_from_this(), reason] {
+            self->send_logout(reason);
+            
+            auto handler  = [self](boost::system::error_code ec) {
+                if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
+                if (ec) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Couldnt start logout timer"
+                    );
+                    return;
+                };
                 self->logger_.log(
                     {Fix::Error::Layer::Fix, 
-                    Fix::Error::Category::Error, 
-                    Fix::Error::Severity::High},
-                    "Couldnt start logout timer"
+                    Fix::Error::Category::Info, 
+                    Fix::Error::Severity::NA},
+                    "Logout timer expired, stopping session"
                 );
-                return;
+                self->stop();
             };
-            self->logger_.log(
-                {Fix::Error::Layer::Fix, 
-                Fix::Error::Category::Info, 
-                Fix::Error::Severity::NA},
-                "Logout timer expired, stopping session"
-            );
-            self->stop();
-        };
-        logout_timer_.expires_after(std::chrono::seconds(logout_response_timeout));
-        logout_timer_.async_wait(handler);
-        state_ = SessionState::AWAITING_LOGOUT;
+            self->logout_timer_.expires_after(std::chrono::seconds(logout_response_timeout));
+            self->logout_timer_.async_wait(handler);
+            self->state_ = SessionState::AWAITING_LOGOUT;
+        });
         
     }
 
@@ -169,7 +172,10 @@ namespace Fix {
         do_read(); 
 
         if (role_ == Fix::Role::INITIATOR) {
-            send_logon(params_.reset_on_logon);     
+            if (params_.initiator_reset_on_logon) {
+                seq_provider_.reset();
+            }
+            send_logon(params_.initiator_reset_on_logon);     
             
             logger_.log(
                 {Fix::Error::Layer::Fix, 
@@ -578,31 +584,41 @@ namespace Fix {
             "Logon received"
         );
 
-        if (role_ == Fix::Role::ACCEPTOR) {
-            state_ = Fix::SessionState::LOGON_RECEIVED; // will move to ACTIVE after sending logon response
-            bool reset_seq_nums = false;
-
-            auto heart_bt_int_it = std::find_if(
+        auto heart_bt_int_it = std::find_if(
                 message.message_.begin(),
                 message.message_.end(),
                 [](const GenericFieldView& field) {
                     return field.tag == 108; // HeartBtInt
                 }
             );
-            assert(heart_bt_int_it != message.message_.end());
-            validate_heartbeat_int(heart_bt_int_it->value);
+        assert(heart_bt_int_it != message.message_.end());
+        validate_heartbeat_int(heart_bt_int_it->value, role_ == Fix::Role::INITIATOR);
 
-            auto reset_it = std::find_if(
-                message.message_.begin(),
-                message.message_.end(),
-                [](const GenericFieldView& field) {
-                    return field.tag == 141; // ResetSeqNumFlag
-                }
-            );
-            if (reset_it != message.message_.end() && reset_it->value == "Y") {
-                reset_seq_nums = true;
-                seq_provider_.reset();
+        bool reset_seq_nums = false;
+        auto reset_it = std::find_if(
+            message.message_.begin(),
+            message.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 141; // ResetSeqNumFlag
             }
+        );
+        if (reset_it != message.message_.end() && reset_it->value == "Y") {
+            reset_seq_nums = true;
+        }
+
+
+
+        if (role_ == Fix::Role::ACCEPTOR) {
+            state_ = Fix::SessionState::LOGON_RECEIVED; // will move to ACTIVE after sending logon response
+            if (reset_seq_nums) {
+                if (params_.acceptor_reset_on_logon) {
+                    seq_provider_.acceptor_reset();
+                } else {
+                    stop_with_logout("ResetSeqNumFlag=Y not allowed by configuration");
+                    return;
+                }
+            }
+            
             send_logon(reset_seq_nums);
             logger_.log(
                 {Fix::Error::Layer::Fix, 
@@ -610,6 +626,13 @@ namespace Fix {
                 Fix::Error::Severity::NA},
                 "Logon response sent"
             );   
+        }  else {
+            if (reset_seq_nums) {
+                if (!params_.initiator_reset_on_logon) {
+                    stop_with_logout("ResetSeqNumFlag=Y not allowed by configuration");
+                    return;
+                }
+            }
         } 
         logon_timer_.cancel(); // cancels automatically on session becoming active, but safe to call here
         state_ = Fix::SessionState::ACTIVE;
@@ -630,7 +653,7 @@ namespace Fix {
             return;
         } else {
             // we reply with logout and stop
-            send_logout("Received logout");
+            send_logout("Logout acknowledged");
             stop();
             return;
         }
@@ -733,13 +756,17 @@ namespace Fix {
     }
 
 
-    void Session::validate_heartbeat_int(std::string_view incoming_value) {
+    void Session::validate_heartbeat_int(std::string_view incoming_value, bool is_initiator) {
         uint32_t incoming_hb_int = 0;
         std::from_chars(
             incoming_value.data(),
             incoming_value.data() + incoming_value.size(),
             incoming_hb_int
         );
+        if (is_initiator && incoming_hb_int != params_.heart_beat_int) {
+            stop_with_logout("HeartBtInt does not match configured value");
+            return;
+        }
         if (incoming_hb_int < 10 || incoming_hb_int > 120) {
             stop_with_logout("HeartBtInt out of range");
             return;

@@ -115,7 +115,7 @@ namespace Fix {
 
 
             //validation
-            void validate_heartbeat_int(std::string_view incoming_value);
+            void validate_heartbeat_int(std::string_view incoming_value, bool is_initiator);
             bool is_app_message_type_(std::string_view msg_type) const noexcept;
 
 
