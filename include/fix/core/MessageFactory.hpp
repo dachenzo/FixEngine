@@ -1,11 +1,9 @@
 #pragma once
-#include <optional>
+
 #include <string>
 #include <cstdint>
-#include <charconv>
 #include <cstring>
 #include <string_view>
-#include <algorithm>
 #include <fix/core/definitions.hpp>
 #include <fix/core/Clock.hpp>
 #include <fix/core/SeqProvider.hpp>
@@ -92,11 +90,11 @@ namespace Fix {
 
         
 
-        std::string_view heart_beat(std::optional<std::string> test_req_id = std::nullopt) {
+        std::string_view heart_beat(std::string_view test_req_id = {}) {
             scratch_.reset();
             stamp_header_("0");
-            if (test_req_id.has_value()) {
-                scratch_.add_field(112, test_req_id.value());
+            if (!test_req_id.empty()) {
+                scratch_.add_field(112, test_req_id);
             }
             stamp_trailer_();
             return scratch_.get_buffer_view();

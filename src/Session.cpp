@@ -1,9 +1,7 @@
 #include <boost/asio.hpp>
 #include <string_view>
 #include <string>
-#include <iostream>
 #include <charconv>
-#include <optional>
 #include <fix/log/LogEntry.hpp>
 #include <fix/error/Network.hpp>
 #include <fix/core/Session.hpp>
@@ -96,7 +94,9 @@ namespace Fix {
 
 
     void Session::schedule_logon_timeout_(Fix::SessionState expected_state) {
-        auto handler  = [self = shared_from_this(), expected_state](std::error_code ec) {
+        auto handler  = [self = shared_from_this(), expected_state](boost::system::error_code ec) {
+
+                if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
                 if (ec) {
                     self->logger_.log(
                         {Fix::Error::Layer::Fix, 
@@ -160,11 +160,82 @@ namespace Fix {
         return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
     }
 
+    void Session::schedule_heartbeat_() {
+        heartbeat_timer_.cancel();
+        auto self = shared_from_this();
+        heartbeat_timer_.expires_after(std::chrono::seconds(params_.heart_beat_int));
+        heartbeat_timer_.async_wait(
+            [self](const boost::system::error_code& ec) {
+                if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
+                if (ec) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Couldnt start heartbeat timer"
+                    );
+                    return;
+                }
+                self->send_heartbeat();
+                self->schedule_heartbeat_();
+            }
+        );
+       
+    }
+
+    void Session::schedule_test_request_timeout_() {
+        inbound_timer_.cancel();
+        auto self = shared_from_this();
+        inbound_timer_.expires_after(std::chrono::seconds(params_.heart_beat_int));
+        inbound_timer_.async_wait(
+            [self](const boost::system::error_code& ec) {
+                if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
+                if (ec) {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "Couldnt start inbound timer"
+                    );
+                    return;
+                }
+                
+                
+                
+                if (!self->awaiting_test_request_response_) {   
+                    self->awaiting_test_request_response_ = true;
+                    std::string testReqId = "TESTREQ_" + std::to_string(self->test_req_id_++);
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Warn, 
+                        Fix::Error::Severity::Moderate},
+                        "Inbound timeout expired, sent Test Request with ID: " + testReqId
+                    );
+                    self->send_test_request(testReqId);
+                    self->schedule_test_request_timeout_();
+                } else {
+                    self->logger_.log(
+                        {Fix::Error::Layer::Fix, 
+                        Fix::Error::Category::Error, 
+                        Fix::Error::Severity::High},
+                        "No response to Test Request, stopping session"
+                    );
+                    self->send_logout("No response to Test Request");
+                    self->stop();
+                }
+                    
+            }
+        );
+    }
+
     void Session::send_message_(std::string_view msg_wire, bool is_resend) {    
         auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));
         if (!is_resend) {
             store_.store_outbound_message(msg_wire);
+        }
+        if (state_ == SessionState::ACTIVE || state_ == SessionState::RECOVERING_RESEND) {
+            schedule_heartbeat_();
         }
     }
 
@@ -363,6 +434,10 @@ namespace Fix {
             // send_reject();
             return;
         }
+          
+        if (state_ == SessionState::ACTIVE || state_ == SessionState::RECOVERING_RESEND) {
+            schedule_test_request_timeout_();
+        }
 
         auto& msg_type = *msg.header_cache_.slots[static_cast<std::size_t>(CacheSlot::MsgType)];
         auto seq_num = msg.header_cache_.msg_seq_num;
@@ -437,6 +512,16 @@ namespace Fix {
         send_message_(wire);
     }
 
+    void Session::send_heartbeat(const std::string_view testReqId) {
+        auto wire = msg_factory_.heart_beat(testReqId);
+        send_message_(wire);
+    }
+
+    void Session::send_test_request(const std::string& testReqId) {
+        auto wire = msg_factory_.test_request(testReqId);
+        send_message_(wire);
+    }
+
     void Session::send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo) {
         auto wire = msg_factory_.resend_request(beginSeqNo, endSeqNo);
         send_message_(wire);
@@ -457,14 +542,32 @@ namespace Fix {
 
         if (role_ == Fix::Role::ACCEPTOR) {
             state_ = Fix::SessionState::LOGON_RECEIVED; // will move to ACTIVE after sending logon response
-        } else {
-            state_ = Fix::SessionState::ACTIVE;
-        }
+            send_logon();
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Logon response sent"
+            );   
+        } 
+        state_ = Fix::SessionState::ACTIVE;
+        schedule_heartbeat_();  
+        schedule_test_request_timeout_();
     }
     void Session::handle_logout(const Fix::ValidMessage& message) {}
-    void Session::handle_heartbeat(const Fix::ValidMessage& message) {}
+    void Session::handle_heartbeat(const Fix::ValidMessage& message) {
+        awaiting_test_request_response_ = false;
+    }
     void Session::handle_test_request(const Fix::ValidMessage& message) {
-        
+        auto test_req_id_it = std::find_if(
+            message.message_.begin(),
+            message.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 112; // TestReqID
+            }
+        );
+        assert(test_req_id_it != message.message_.end());
+        send_heartbeat(test_req_id_it->value);
     }
     void Session::handle_resend_request(const Fix::ValidMessage& msg) {
         auto start_seq_num_it = std::find_if(

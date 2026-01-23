@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <optional>
 #include <deque>
 #include <fix/core/Arena.hpp>
 #include <fix/core/SeqProvider.hpp>
@@ -23,6 +22,7 @@
 #include <fix/log/LogCore.hpp>
 #include <fix/log/SessionLogger.hpp>
 #include <fix/message/GenericMessage.hpp>
+#include <string_view>
 
 
 namespace Fix {
@@ -80,14 +80,17 @@ namespace Fix {
             void drain_recovery_cache_();
 
             
-            // void checkInboundSeq(const Fix::ValidMessage&);
+            // core state
+            void schedule_heartbeat_();
+            void schedule_logon_timeout_(Fix::SessionState expected_state);
+            void schedule_test_request_timeout_();
 
             // // FIX admin sends 
             void send_logon();
             void send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag = 0, std::string text = {});
             void send_logout(const std::string& reason);
-            // void sendHeartbeat(const std::optional<std::string>& testReqId = {});
-            // void sendTestRequest(const std::string& testReqId);
+            void send_heartbeat(const std::string_view testReqId = {});
+            void send_test_request(const std::string& testReqId);
             void send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo);
 
             void send_sequence_reset(std::size_t newSeqNo, bool gapfill);
@@ -106,7 +109,7 @@ namespace Fix {
 
             void send_bytes_(Fix::WireWriter handle);
 
-            void schedule_logon_timeout_(Fix::SessionState expected_state);
+            
             
             void do_read();
 
@@ -147,8 +150,10 @@ namespace Fix {
             Fix::Validator validator_;
             Fix::Application& app_;
             Fix::ITimerFactory& timers_;
+            std::uint64_t test_req_id_ = 0;
             bool stopped_ = false;
             bool write_inflight_ = false;
+            bool awaiting_test_request_response_ = false;
             Fix::Role role_;
             
 
