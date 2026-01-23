@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <memory>
 #include <span>
 #include <charconv>
 #include <fix/core/MessageStore.hpp>

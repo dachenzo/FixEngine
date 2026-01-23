@@ -1,9 +1,7 @@
 #pragma once
 #include <span>
 #include <vector>
-#include <string>
 #include <cstring>
-#include <unordered_set>
 #include <fix/core/InboundMessageStore.hpp>
 #include <fix/core/OutboundMessageStore.hpp>
 #include <fix/core/Message.hpp>
@@ -70,6 +68,7 @@ namespace Fix {
                 switch(msg_type[0]) {
                     case '0': // Heartbeat
                     case 'A': // Logon
+                    case '2': // Resend Request
                     case '1': // Test Request
                     case '3': // Reject
                     case '4': // Sequence Reset
