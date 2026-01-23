@@ -7,6 +7,7 @@
 #include <fix/core/Session.hpp>
 #include <fix/core/Parser.hpp>
 #include <fix/core/utils.hpp>
+#include <sys/socket.h>
 
 namespace Fix {
 
@@ -40,6 +41,7 @@ namespace Fix {
                 logon_timer_{exec_},
                 inbound_timer_{exec_},
                 heartbeat_timer_{exec_},
+                logout_timer_{exec_},
                 validator_{}
                 {
         buff_.resize(Framer::start_size());
@@ -80,7 +82,37 @@ namespace Fix {
 
             self->write_inflight_ = false;
             self->write_q_.clear();
-    });
+        });
+        
+    }
+
+    void Session::stop_with_logout(const std::string& reason) {
+        if (stopped_) return;
+        
+        send_logout(reason);
+        auto self = shared_from_this();
+        auto handler  = [self](boost::system::error_code ec) {
+            if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
+            if (ec) {
+                self->logger_.log(
+                    {Fix::Error::Layer::Fix, 
+                    Fix::Error::Category::Error, 
+                    Fix::Error::Severity::High},
+                    "Couldnt start logout timer"
+                );
+                return;
+            };
+            self->logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Logout timer expired, stopping session"
+            );
+            self->stop();
+        };
+        logout_timer_.expires_after(std::chrono::seconds(logout_response_timeout));
+        logout_timer_.async_wait(handler);
+        state_ = SessionState::AWAITING_LOGOUT;
         
     }
 
@@ -220,8 +252,8 @@ namespace Fix {
                         Fix::Error::Severity::High},
                         "No response to Test Request, stopping session"
                     );
-                    self->send_logout("No response to Test Request");
-                    self->stop();
+                    self->stop_with_logout("No response to Test Request");
+                    
                 }
                     
             }
@@ -376,6 +408,8 @@ namespace Fix {
                 auto msg = parser_ctx_.out_msg;
                 dispatch(msg, raw_msg);
             } else {
+                // Parse error during recovery, must logout
+                // we cant wait for a logout since we are already out of sync
                 send_logout("Parse error during recovery");
                 stop();
                 return;
@@ -396,8 +430,7 @@ namespace Fix {
             auto msg = parser_ctx_.out_msg;
             dispatch(msg, msg_wire);
         } else {
-            send_logout("Parse error");
-            stop();
+            stop_with_logout("Parse error");
         } 
 
         drain_recovery_cache_();
@@ -411,8 +444,7 @@ namespace Fix {
 
         if (results.severity == Error::Severity::Fatal) {
             // Fatal error, must logout
-            send_logout("Fatal validation error");
-            stop();
+            stop_with_logout("Fatal validation error");
             return;
         }
         
@@ -446,8 +478,7 @@ namespace Fix {
 
         if (state_ != Fix::SessionState::ACTIVE && state_ != Fix::SessionState::RECOVERING_RESEND) {
             if (is_app_message_type_(msg_type)) {
-                send_logout("Cannot process app message before logon");
-                stop();
+                stop_with_logout("Cannot process app messages yet");
                 return;
             }
         }
@@ -457,8 +488,7 @@ namespace Fix {
         } else if (seq_num > seq_provider_.next_in() && state_ == Fix::SessionState::RECOVERING_RESEND) {
             // During recovery, cache out-of-order messages
             if (recovery_cache_.in_window(seq_num) == false) {
-                send_logout("MsgSeqNum too high during recovery");
-                stop();
+                stop_with_logout("MsgSeqNum too high during recovery");
                 return;
             }
             recovery_cache_.insert(seq_num, raw_msg);
@@ -478,8 +508,7 @@ namespace Fix {
             return;
         } else {
             // old seq num, not marked as duplicate
-            send_logout("MsgSeqNum too low");
-            stop();
+            stop_with_logout("MsgSeqNum too low");
             return;
         }
 
@@ -587,7 +616,27 @@ namespace Fix {
         schedule_heartbeat_();  
         schedule_test_request_timeout_();
     }
-    void Session::handle_logout(const Fix::ValidMessage& message) {}
+
+    void Session::handle_logout(const Fix::ValidMessage& message) {
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Logout received"
+        );
+        if (state_ == SessionState::AWAITING_LOGOUT) {
+            logout_timer_.cancel();
+            stop();
+            return;
+        } else {
+            // we reply with logout and stop
+            send_logout("Received logout");
+            stop();
+            return;
+        }
+        
+    }
+
     void Session::handle_heartbeat(const Fix::ValidMessage& message) {
         awaiting_test_request_response_ = false;
     }
@@ -676,8 +725,7 @@ namespace Fix {
 
 
         if (new_seq_no < seq_provider_.next_in() && !gap_fill) {
-            send_logout("NewSeqNo less than expected");
-            stop();
+            stop_with_logout("NewSeqNo less than expected");
             return;
         }
 
@@ -693,8 +741,7 @@ namespace Fix {
             incoming_hb_int
         );
         if (incoming_hb_int < 10 || incoming_hb_int > 120) {
-            send_logout("HeartBtInt out of range");
-            stop();
+            stop_with_logout("HeartBtInt out of range");
             return;
         }
         params_.heart_beat_int = incoming_hb_int;
