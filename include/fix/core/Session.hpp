@@ -86,16 +86,14 @@ namespace Fix {
             void schedule_test_request_timeout_();
 
             // // FIX admin sends 
-            void send_logon();
+            void send_logon(bool reset_seq_nums);
             void send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag = 0, std::string text = {});
             void send_logout(const std::string& reason);
             void send_heartbeat(const std::string_view testReqId = {});
             void send_test_request(const std::string& testReqId);
             void send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo);
-
             void send_sequence_reset(std::size_t newSeqNo, bool gapfill);
-            // void sendSequenceResetGapFill(std::size_t newSeqNo);
-            // void resendBufferedMessages(std::size_t beginSeqNo, std::size_t endSeqNo);
+           
 
             // FIX admin handlers
             void handle_logon(const Fix::ValidMessage& message);
@@ -105,19 +103,17 @@ namespace Fix {
             void handle_resend_request(const Fix::ValidMessage& message);
             void handle_sequence_reset(const Fix::ValidMessage& message);
 
+
+            //core IO
             void send_message_(std::string_view msg_wire, bool is_resend = false);
-
-            void send_bytes_(Fix::WireWriter handle);
-
-            
-            
+            void send_bytes_(Fix::WireWriter handle);            
             void do_read();
-
-            
-
-
-
             void do_write();
+
+
+            //validation
+            void validate_heartbeat_int(std::string_view incoming_value);
+            bool is_app_message_type_(std::string_view msg_type) const noexcept;
 
 
             struct PendingWrite { 
