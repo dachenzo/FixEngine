@@ -28,7 +28,7 @@ TEST(ValidatorTests, UnknownMessageType) {
     ValidatorResult result = validator.validate_message(valid_logon, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::UnknownMessageType);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::InvalidMsgType);
 }
 
 
@@ -54,7 +54,8 @@ TEST(ValidatorTests, WrongFixVersion) {
     ValidatorResult result = validator.validate_message(valid_logon_bad_fix, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFixVersion);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::Other);
+    EXPECT_EQ(std::string_view(result.errors[0].info), "Unsupported FIX version");
 }
 
 TEST(ValidatorTests, WrongFieldType) {
@@ -79,7 +80,7 @@ TEST(ValidatorTests, WrongFieldType) {
     ValidatorResult result = validator.validate_message(valid_logon_bad_field, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFieldType);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::IncorrectDataFormatForValue);
 }
 
 TEST(ValidatorTests, MissingField) {
@@ -105,7 +106,7 @@ TEST(ValidatorTests, MissingField) {
     ValidatorResult result = validator.validate_message(valid_logon_missing_field, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::MissingField);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::RequiredTagMissing);
 }
 
 
@@ -136,7 +137,7 @@ TEST(ValidatorTests, MissingGroupEntry) {
     ValidatorResult result = validator.validate_message(valid_message_missing_group_entry, params);
 
     ASSERT_FALSE(result.errors.empty());
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::MissingGroupEntry);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::IncorrectNumInGroupCount);
 }
 
 
@@ -167,7 +168,7 @@ TEST(ValidatorTests, UnrecognizedField) {
     ValidatorResult result = validator.validate_message(valid_message_missing_group_schema, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::UnrecognizedField);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::TagSpecifiedWithoutAValue);
 }
 
 
@@ -194,7 +195,7 @@ TEST(ValidatorTests, MalformedTag34) {
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFieldType);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::IncorrectDataFormatForValue);
 }
 
 TEST(ValidatorTests, MalformedTag8) {
@@ -221,7 +222,8 @@ TEST(ValidatorTests, MalformedTag8) {
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongFixVersion);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::Other);
+    EXPECT_EQ(std::string_view(result.errors[0].info), "Unsupported FIX version");
 }
 
 TEST(ValidatorTests, WrongSenderCompID) {
@@ -247,7 +249,7 @@ TEST(ValidatorTests, WrongSenderCompID) {
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongSenderCompID);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::CompIDProblem);
 }
 
 TEST(ValidatorTests, WrongTargetCompID) {
@@ -274,5 +276,5 @@ TEST(ValidatorTests, WrongTargetCompID) {
 
     EXPECT_EQ(result.errors.size(), 1UL);
     EXPECT_EQ(result.severity, Error::Severity::Fatal);
-    EXPECT_EQ(std::get<0>(result.errors[0]), Error::Validator::WrongTargetCompID);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::CompIDProblem);
 }

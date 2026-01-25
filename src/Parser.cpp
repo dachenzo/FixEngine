@@ -1,4 +1,4 @@
-#include <string>
+#include <charconv>
 #include <cstring>
 #include <fix/core/Parser.hpp>
 #include <fix/core/Message.hpp>
@@ -66,6 +66,10 @@ namespace Fix {
             }
 
             std::string_view value = msg_frame.substr(pos, soh_pos - pos);
+            if (value.empty()) {
+                out_errs.push_back({tag, ParseError::MissingValue});
+                return;
+            }
             out_msg.push_back({value, tag});
             pos = soh_pos + 1;
         }   

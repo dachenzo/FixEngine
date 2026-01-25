@@ -40,13 +40,25 @@ namespace Fix::Error {
 
     inline std::string to_string(Validator err) {
         switch (err) {
-            case Validator::WrongFixVersion: return "WrongFixVersion";
-            case Validator::WrongFieldType: return "WrongFieldType";
-            case Validator::MissingField: return "MissingField";
-            case Validator::MissingGroupEntry: return "MissingGroupEntry";
-            case Validator::MissingGroupEntryOrWrongOrder: return "MissingGroupEntryOrWrongOrder";
-            case Validator::MissingGroupSchemaEntry: return "MissingGroupSchemaEntry";
-            case Validator::UnsupportedGroupSize: return "UnsupportedGroupSize";
+            case Validator::InvalidTagNumer: return "InvalidTagNumer";
+            case Validator::RequiredTagMissing: return "RequiredTagMissing";
+            case Validator::TagNotDefinedForMessage: return "TagNotDefinedForMessage";
+            case Validator::UndefinedTag: return "UndefinedTag";
+            case Validator::TagSpecifiedWithoutAValue: return "TagSpecifiedWithoutAValue";
+            case Validator::ValueIsIncorrect: return "ValueIsIncorrect";
+            case Validator::IncorrectDataFormatForValue: return "IncorrectDataFormatForValue";
+            case Validator::DecryptionProblem: return "DecryptionProblem";
+            case Validator::SignatureProblem: return "SignatureProblem";
+            case Validator::CompIDProblem: return "CompIDProblem";
+            case Validator::SendingTimeAccuracyProblem: return "SendingTimeAccuracyProblem";
+            case Validator::InvalidMsgType: return "InvalidMsgType";
+            case Validator::XMLValidationError: return "XMLValidationError";
+            case Validator::TagAppearsMoreThanOnce: return "TagAppearsMoreThanOnce";
+            case Validator::TagSpecifiedOutOfRequiredOrder: return "TagSpecifiedOutOfRequiredOrder";
+            case Validator::RepeatingGroupFieldsOutOfOrder: return "RepeatingGroupFieldsOutOfOrder";
+            case Validator::IncorrectNumInGroupCount: return "IncorrectNumInGroupCount";
+            case Validator::NonDataFieldIncludesFieldDelimiter: return "NonDataFieldIncludesFieldDelimiter";
+            case Validator::Other: return "Other";
             default: return "Unknown";
         }
     }

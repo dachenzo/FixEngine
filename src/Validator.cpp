@@ -1,3 +1,4 @@
+#include "fix/error/ValidatorErrors.hpp"
 #include <algorithm>
 #include <fix/core/Validator.hpp>
 
@@ -14,32 +15,33 @@ namespace Fix {
 
         if (msg_buffer.size() < 3) {
             //automatically invalid 
-            results.errors.emplace_back(Error::Validator::MissingField, 0);
+            results.errors.push_back({{}, 8, Error::Validator::RequiredTagMissing});
+            results.severity = Error::Severity::Fatal;
             return;
         }
 
 
         if (!validate_type_(msg_buffer[0].value, schema[0].type) || msg_buffer[0].value != Fix::DEFAULT_FIX_VERSION) {
             // wrong fix versio
-            results.errors.emplace_back(Error::Validator::WrongFixVersion, 0);
+            results.errors.push_back({"Unsupported FIX version", 8,  Error::Validator::Other});
             results.severity = Error::Severity::Fatal;
             return;
         }
 
         if (!validate_type_(msg_buffer[1].value, schema[1].type)) {
             // invalid body length
-            results.errors.emplace_back(Error::Validator::WrongFieldType, schema[1].tag);
+            results.errors.push_back({{}, schema[1].tag, Error::Validator::IncorrectDataFormatForValue});
             return;
         }   
 
         if (!validate_type_(msg_buffer[2].value, schema[2].type) || msg_buffer[2].value != expected_message_type) {
             // invalid msg type
-            results.errors.emplace_back(Error::Validator::WrongFieldType, schema[2].tag);
+            results.errors.push_back({{}, schema[2].tag, Error::Validator::IncorrectDataFormatForValue});
             return;
         }
 
         if (!message.header_cache_.slots[static_cast<size_t>(CacheSlot::MsgSeqNum)] || !validate_type_(*message.header_cache_.slots[static_cast<size_t>(CacheSlot::MsgSeqNum)], Schema::FieldType::INT)) {
-            results.errors.emplace_back(Error::Validator::WrongFieldType, 34);
+            results.errors.push_back({{}, 34, Error::Validator::IncorrectDataFormatForValue});
             results.severity = Error::Severity::Fatal;
             return;
         }
@@ -47,13 +49,13 @@ namespace Fix {
        
 
         if (!message.header_cache_.slots[static_cast<size_t>(CacheSlot::SenderCompID)] || *message.header_cache_.slots[static_cast<size_t>(CacheSlot::SenderCompID)] != params.target_comp_id) {
-            results.errors.emplace_back(Error::Validator::WrongSenderCompID, 49);
+            results.errors.push_back({"Sender CompID mismatch", 49, Error::Validator::CompIDProblem});
             results.severity = Error::Severity::Fatal;
             return;
         }
 
         if (!message.header_cache_.slots[static_cast<size_t>(CacheSlot::TargetCompID)] || *message.header_cache_.slots[static_cast<size_t>(CacheSlot::TargetCompID)] != params.sender_comp_id) {
-            results.errors.emplace_back(Error::Validator::WrongTargetCompID, 56);
+            results.errors.emplace_back("Target CompID mismatch", 56, Error::Validator::CompIDProblem);
             results.severity = Error::Severity::Fatal;
             return;
         }
@@ -70,7 +72,7 @@ namespace Fix {
         tagscratch_.clear();
 
         if (message.header_cache_.slots[static_cast<size_t>(CacheSlot::MsgType)] == nullptr) {
-            results.errors.push_back({Error::Validator::MissingField, 35});
+            results.errors.push_back({{}, 35, Error::Validator::RequiredTagMissing});
             return results;
         }
 
@@ -78,7 +80,7 @@ namespace Fix {
 
         auto schema = registry_.get(expected_message_type);
         if (!schema) {
-            results.errors.push_back({Error::Validator::UnknownMessageType, 0});
+            results.errors.push_back({{}, 0, Error::Validator::InvalidMsgType});
             return results;
         }
         validate_header_(message, expected_message_type, results, params);
@@ -87,7 +89,7 @@ namespace Fix {
 
         // Only flag extra fields when no prior errors were found
         if (results.errors.empty() && !tagscratch_.full(message.message_.size())) {
-            results.errors.push_back({Error::Validator::UnrecognizedField, 0});
+            results.errors.push_back({{}, 0, Error::Validator::InvalidTagNumber});
         }
 
         return results;
@@ -107,18 +109,18 @@ namespace Fix {
                     int start_idx = static_cast<int>(it - message.message_.begin())+1; //one to advance past the group count field
                     std::size_t group_count = 0;
                     if (!Fix::Utils::parse_int(it->value, group_count)) {
-                        results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                        results.errors.push_back({{}, field_schema.tag, Error::Validator::IncorrectNumInGroupCount});
                         return;
                     }
                     validate_groups_(group_count, message, &field_schema, start_idx, results);
 
                 } else if (!validate_type_(it->value, field_schema.type)) {
-                    results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                    results.errors.push_back({{}, field_schema.tag, Error::Validator::IncorrectDataFormatForValue});
                     return;
                 }
 
             } else if ( field_schema.presence == Schema::FieldPresence::REQUIRED) {
-                results.errors.emplace_back(Error::Validator::MissingField, field_schema.tag);
+                results.errors.push_back({{}, field_schema.tag, Error::Validator::RequiredTagMissing});
                 return;
             }
             
@@ -136,29 +138,29 @@ namespace Fix {
         if (groupcnt == 0) return;
         
         if(!groupfield) {
-            results.errors.emplace_back(Error::Validator::MissingGroupEntry, 0);
+            results.errors.push_back({{}, 0, Error::Validator::IncorrectNumInGroupCount});
             return;
         }
 
         if (!groupfield->group_schema) {
-            results.errors.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
+            results.errors.push_back({"Missing group schema", groupfield->tag, Error::Validator::Other});
             return;
         };
 
         auto& gs = groupfield->group_schema;
         if (gs->field_count == 0 || gs->fields == nullptr) {
-            results.errors.emplace_back(Error::Validator::MissingGroupSchemaEntry, groupfield->tag);
+            results.errors.push_back({"Missing group schema entry", groupfield->tag, Error::Validator::Other});
             return;
         };
 
 
         if (gs->field_count > kMaxGroupCount) {
-            results.errors.emplace_back(Error::Validator::UnsupportedGroupSize, groupfield->tag);
+            results.errors.push_back({"Unsupported group size", groupfield->tag, Error::Validator::Other});
             return;
         }
 
         struct FieldOcc {
-            unsigned long tag;
+            Tag tag;
             int cnt;
         };
 
@@ -188,7 +190,7 @@ namespace Fix {
                 const auto& field_schema = gs->fields[j];
 
                 if (curr_index >= message.message_.size()) {
-                    results.errors.emplace_back(Error::Validator::MissingGroupEntry, field_schema.tag);
+                    results.errors.push_back({{}, field_schema.tag, Error::Validator::IncorrectNumInGroupCount});
                     return;
                 }
 
@@ -197,7 +199,7 @@ namespace Fix {
 
                 if (current_tag != field_schema.tag) {
                     if (field_schema.presence == Schema::FieldPresence::REQUIRED) {
-                        results.errors.emplace_back(Error::Validator::MissingGroupEntryOrWrongOrder, field_schema.tag); 
+                        results.errors.push_back({{}, field_schema.tag, Error::Validator::RequiredTagMissing}); 
                         return;
                     }
                 } else if (has_occured(current_tag)) {
@@ -209,14 +211,14 @@ namespace Fix {
                         curr_index++;
                         std::size_t group_count = 0;
                         if (!Fix::Utils::parse_int(message.message_[curr_index-1].value, group_count)) {
-                            results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                            results.errors.push_back({{}, field_schema.tag, Error::Validator::IncorrectDataFormatForValue});
                             return;
                         }
                         validate_groups_(group_count, message, &field_schema, curr_index, results);
                         
 
                     } else if (!validate_type_(message.message_[curr_index].value, field_schema.type)) {
-                        results.errors.emplace_back(Error::Validator::WrongFieldType, field_schema.tag);
+                        results.errors.push_back({{}, field_schema.tag, Error::Validator::IncorrectDataFormatForValue});
                         return;
                     }
                     increment_tag_count(current_tag);
@@ -229,7 +231,7 @@ namespace Fix {
             } 
 
             if (!atleast_one_occurence) {
-                results.errors.emplace_back(Error::Validator::MissingGroupEntry, groupfield->tag);
+                results.errors.push_back({"Missing group entry", groupfield->tag, Error::Validator::Other});
                 return;
             }
         } 

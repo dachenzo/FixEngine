@@ -1,12 +1,12 @@
 #pragma once
-#include <string>
-#include <array>
-#include <vector>
+#include <cstdint>
+#include <string_view>
+#include <cctype>
 
 
 namespace Fix::Schema {
 
-    using Tag = std::size_t;
+    using Tag = std::uint32_t;
 
     struct GroupSchema; // Forward declaration
 

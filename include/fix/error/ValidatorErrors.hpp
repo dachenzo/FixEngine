@@ -3,16 +3,24 @@
 
 namespace Fix::Error {
     enum class Validator {
-        WrongFixVersion,
-        WrongFieldType,
-        MissingField,
-        MissingGroupEntry,
-        MissingGroupEntryOrWrongOrder,
-        MissingGroupSchemaEntry,
-        UnsupportedGroupSize,
-        UnknownMessageType,
-        UnrecognizedField,
-        WrongSenderCompID,
-        WrongTargetCompID
+        InvalidTagNumber,
+        RequiredTagMissing,
+        TagNotDefinedForMessage,
+        UndefinedTag,
+        TagSpecifiedWithoutAValue,
+        ValueIsIncorrect,
+        IncorrectDataFormatForValue,
+        DecryptionProblem,
+        SignatureProblem,
+        CompIDProblem,
+        SendingTimeAccuracyProblem,
+        InvalidMsgType,
+        XMLValidationError,
+        TagAppearsMoreThanOnce,
+        TagSpecifiedOutOfRequiredOrder,
+        RepeatingGroupFieldsOutOfOrder,
+        IncorrectNumInGroupCount,
+        NonDataFieldIncludesFieldDelimiter,
+        Other
     };
 }

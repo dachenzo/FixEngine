@@ -6,8 +6,9 @@ Current Focus:
 
 
 
-Specific: seq reset
-- reset message store aswell as recovery_cache
+Specific: reject message generation
+- classification of errors according to the fix 4.4 standard
+- reserve the error buffers
 
 
 
