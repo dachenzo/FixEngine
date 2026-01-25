@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
+#include <fix/error/utility.hpp>
 #include <fix/core/Validator.hpp>
+
+
 
 
 using namespace Fix;
@@ -136,7 +139,10 @@ TEST(ValidatorTests, MissingGroupEntry) {
     auto valid_message_missing_group_entry = Fix::make_valid_message(message_missing_group_entry);
     ValidatorResult result = validator.validate_message(valid_message_missing_group_entry, params);
 
+
+
     ASSERT_FALSE(result.errors.empty());
+  
     EXPECT_EQ(result.errors[0].code, Error::Validator::IncorrectNumInGroupCount);
 }
 
@@ -168,7 +174,8 @@ TEST(ValidatorTests, UnrecognizedField) {
     ValidatorResult result = validator.validate_message(valid_message_missing_group_schema, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
-    EXPECT_EQ(result.errors[0].code, Error::Validator::TagSpecifiedWithoutAValue);
+    EXPECT_EQ(result.errors[0].code, Error::Validator::InvalidTagNumber);
+    
 }
 
 

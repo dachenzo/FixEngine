@@ -231,7 +231,7 @@ namespace Fix {
             } 
 
             if (!atleast_one_occurence) {
-                results.errors.push_back({"Missing group entry", groupfield->tag, Error::Validator::Other});
+                results.errors.push_back({{}, groupfield->tag, Error::Validator::IncorrectNumInGroupCount});
                 return;
             }
         } 

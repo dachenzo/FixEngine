@@ -40,7 +40,7 @@ namespace Fix::Error {
 
     inline std::string to_string(Validator err) {
         switch (err) {
-            case Validator::InvalidTagNumer: return "InvalidTagNumer";
+            case Validator::InvalidTagNumber: return "InvalidTagNumber";
             case Validator::RequiredTagMissing: return "RequiredTagMissing";
             case Validator::TagNotDefinedForMessage: return "TagNotDefinedForMessage";
             case Validator::UndefinedTag: return "UndefinedTag";
