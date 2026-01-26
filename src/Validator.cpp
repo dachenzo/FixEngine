@@ -65,34 +65,35 @@ namespace Fix {
 
     }
 
-    ValidatorResult Validator::validate_message(const ValidMessage& message, const Fix::SessionParameters& params) {
+    ValidatorResult& Validator::validate_message(const ValidMessage& message, const Fix::SessionParameters& params) {
         // Placeholder implementation
-        ValidatorResult results{};
+        
         tagscratch_.ensure_bits(message.message_.size());
         tagscratch_.clear();
+        results_.clear();
 
         if (message.header_cache_.slots[static_cast<size_t>(CacheSlot::MsgType)] == nullptr) {
-            results.errors.push_back({{}, 35, Error::Validator::RequiredTagMissing});
-            return results;
+            results_.errors.push_back({{}, 35, Error::Validator::RequiredTagMissing});
+            return results_;
         }
 
         auto expected_message_type = *message.header_cache_.slots[static_cast<size_t>(CacheSlot::MsgType)];
 
         auto schema = registry_.get(expected_message_type);
         if (!schema) {
-            results.errors.push_back({{}, 0, Error::Validator::InvalidMsgType});
-            return results;
+            results_.errors.push_back({{}, 0, Error::Validator::InvalidMsgType});
+            return results_;
         }
-        validate_header_(message, expected_message_type, results, params);
-        validate_fields_(message, schema->body, schema->body_field_count, results);
-        validate_trailer_(message, results);
+        validate_header_(message, expected_message_type, results_, params);
+        validate_fields_(message, schema->body, schema->body_field_count, results_);
+        validate_trailer_(message, results_);
 
         // Only flag extra fields when no prior errors were found
-        if (results.errors.empty() && !tagscratch_.full(message.message_.size())) {
-            results.errors.push_back({{}, 0, Error::Validator::InvalidTagNumber});
+        if (results_.errors.empty() && !tagscratch_.full(message.message_.size())) {
+            results_.errors.push_back({{}, 0, Error::Validator::InvalidTagNumber});
         }
 
-        return results;
+        return results_;
     }   
 
     void Validator::validate_fields_(const ValidMessage& message, const Schema::FieldSchema* schema, std::size_t schema_size, ValidatorResult& results) {

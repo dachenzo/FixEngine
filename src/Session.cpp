@@ -455,8 +455,7 @@ namespace Fix {
         }
         
         if (!results.errors.empty()) {
-            // Reject Message
-            // send_reject();
+            send_reject(msg.header_cache_.msg_seq_num, static_cast<uint32_t>(results.errors[0].code), results.errors[0].tag, std::string_view(results.errors[0].info));
             return;
         }
 
@@ -469,7 +468,6 @@ namespace Fix {
                 Fix::Error::Severity::High},
                 "Validator passed but required fields missing"
             );
-            // send_reject();
             return;
         }
           
@@ -546,7 +544,7 @@ namespace Fix {
         send_message_(wire);
     }
 
-    void Session::send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag, std::string text) {
+    void Session::send_reject(std::size_t ref_seq_num, uint32_t reason, Tag tag, std::string_view text) {
         auto wire = msg_factory_.reject(ref_seq_num, reason, tag, text);
         send_message_(wire);
     }

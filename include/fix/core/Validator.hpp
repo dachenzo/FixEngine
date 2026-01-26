@@ -47,8 +47,18 @@ namespace Fix {
     };
 
     struct ValidatorResult {
+        static constexpr const std::size_t errors_reserve = 64;
         Error::Severity severity{Error::Severity::Moderate};
         std::vector<ValidatorErrorContext> errors;
+
+        ValidatorResult() {
+            errors.reserve(errors_reserve);
+        }
+
+        void clear() {
+            severity = Error::Severity::Moderate;
+            errors.clear();
+        }
     }; 
     
 
@@ -107,9 +117,9 @@ namespace Fix {
 
     struct Validator
     {
-        // All functions will eventually return Validaro Result;
+        // All functions will eventually return Validator Result;
 
-        ValidatorResult validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
+        ValidatorResult& validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
 
         void validate_header_(const ValidMessage& message, const std::string_view expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
@@ -123,8 +133,10 @@ namespace Fix {
         bool validate_type_(const std::string_view value, Fix::Schema::FieldType type);
 
         private:
+        ValidatorResult results_;
         TagScratch tagscratch_;
         Schema::Registry registry_;
+
 
     };
 }

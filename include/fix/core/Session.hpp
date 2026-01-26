@@ -69,8 +69,6 @@ namespace Fix {
 
         Log::SessionLogger& logger() ;
 
-        // // timer callbacks (heartbeat, test‐req, logout)
-        // void onTimer(Fix::TimerType which);
 
         // // client/API
         // void sendAppMessage(const Fix::ValidMessage&);
@@ -90,7 +88,7 @@ namespace Fix {
 
             // // FIX admin sends 
             void send_logon(bool reset_seq_nums);
-            void send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag = 0, std::string text = {});
+            void send_reject(std::size_t ref_seq_num, uint32_t reason, Tag tag, std::string_view text);
             void send_logout(const std::string& reason);
             void send_heartbeat(const std::string_view testReqId = {});
             void send_test_request(const std::string& testReqId);
