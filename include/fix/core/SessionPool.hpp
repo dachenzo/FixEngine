@@ -28,7 +28,8 @@ namespace Fix {
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
-                boost::asio::io_context& io_context
+                boost::asio::io_context& io_context,
+                ReconnectCallback& reconnect_callback
             );
 
         bool remove(Fix::SessionID id);

@@ -93,6 +93,17 @@ namespace Fix {
             --size_;
         }
 
+        void clear() noexcept {
+            // loop through and destruct elements
+            for (std::uint64_t i = 0; i < size_; i++) {
+                buffer_[head_].~T();
+                head_ = next(head_);
+            }
+            head_ = 0;
+            tail_ = 0;
+            size_ = 0;
+        }
+
         std::uint64_t size() const noexcept {
             return size_;
         }

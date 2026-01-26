@@ -1,4 +1,6 @@
 #pragma once 
+#include <boost/asio/executor.hpp>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 #include <fix/core/IConnection.hpp>
@@ -13,7 +15,7 @@
 namespace Fix {
     
 
-    struct SessionManager {
+    struct SessionManager: std::enable_shared_from_this<Fix::SessionManager> {
 
         static std::string generate_engine_id();
 
@@ -42,12 +44,19 @@ namespace Fix {
         std::size_t sessionCount() noexcept;
         
         private:
+
+        void recconnect_session_(const Fix::SessionID& id);
+
+        Fix::Log::LogCore log_core_;
+        boost::asio::strand<boost::asio::any_io_executor> exec_;
         Fix::SessionPool session_pool_;
+        std::unordered_map<Fix::SessionID, Fix::SessionCreationConfig> session_configs_;
         Fix::Application& app_;
         Fix::IConnectionFactory& connFactory_; 
         Fix::ITimerFactory& timerFactory_;
         boost::asio::io_context& io_context_;
-        Fix::Log::LogCore log_core_;
+        
+
         
 
         

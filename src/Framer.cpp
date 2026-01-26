@@ -1,3 +1,4 @@
+#include <charconv>
 #include <fix/core/Framer.hpp>
 
 
@@ -136,6 +137,13 @@ namespace Fix {
     void Framer::discard_n_from_head(std::uint64_t count) { 
         assert(count <= buffer_.readable_size());
         buffer_.discard_prefix(count);
+    }
+
+    void Framer::reset() {
+        buffer_.reset();
+        completed_messages_.clear();
+        current_context_ = {};
+        scan_abs_ = 0;
     }
 
     

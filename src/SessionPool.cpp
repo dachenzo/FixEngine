@@ -22,7 +22,8 @@ namespace Fix {
         Fix::ITimerFactory& timers,
         Fix::SessionParameters params,
         Fix::Log::LogCore& log_core,
-        boost::asio::io_context& io_context
+        boost::asio::io_context& io_context,
+        ReconnectCallback& reconnect_callback
     ) {
         if (free_indices_.empty()) {
             Fix::SessionID session_id = {sessions_.size(), generate_session_Id_()};
@@ -34,7 +35,8 @@ namespace Fix {
                     timers,
                     params,
                     log_core,
-                    io_context
+                    io_context,
+                    reconnect_callback
                 )
             );
             return sessions_.back();
@@ -49,7 +51,8 @@ namespace Fix {
                 timers,
                 params,
                 log_core,
-                io_context
+                io_context,
+                reconnect_callback
 
             );
             return sessions_[nxt];

@@ -61,7 +61,8 @@ namespace Fix {
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
-                boost::asio::io_context& io_context
+                boost::asio::io_context& io_context,
+                ReconnectCallback reconnect_callback
             );
 
         ~Session();
@@ -72,7 +73,7 @@ namespace Fix {
 
 
         // lifecycle
-        void start();                       // open/logon loop
+        void start(StartMode mode);                       // open/logon loop
         void stop();                        // send logout + cleanup
 
 
@@ -91,7 +92,8 @@ namespace Fix {
         private:
 
             //lifecycle helpers
-            void start_();
+            void start_normal_();
+            void start_after_reconnect_();
             void stop_();
 
             // core dispatch
@@ -143,10 +145,9 @@ namespace Fix {
                 std::size_t sent = 0; 
             };
 
+            Fix::RecoveryCache recovery_cache_;
             boost::asio::strand<boost::asio::any_io_executor> exec_;
             Fix::Arena arena_;
-            Fix::RecoveryCache recovery_cache_;
-            ReconnectCallback reconnect_callback_;
             Fix::SessionParameters params_;
             std::deque<PendingWrite> write_q_;
             std::vector<char> buff_;
@@ -154,11 +155,11 @@ namespace Fix {
             Fix::Framer framer_;
             Fix::ParserContext parser_ctx_;
             Fix::Parser parser_;
-            Fix::Serializer serializer_;
             Fix::SessionID id_;
             Fix::MessageStore store_;
             Fix::SessionState state_;
             Fix::SeqProvider seq_provider_;
+            ReconnectCallback reconnect_callback_;
             Fix::Clock clock_;
             Fix::MessageFactory<Fix::Clock> msg_factory_;
             Fix::Log::SessionLogger logger_;

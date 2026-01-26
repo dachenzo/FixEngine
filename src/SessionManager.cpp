@@ -1,7 +1,9 @@
+#include "fix/core/Session.hpp"
 #include <boost/asio/io_context.hpp>
 #include <memory>
 #include <iostream>
 #include <boost/asio.hpp>
+#include <unordered_map>
 #include <fix/core/SessionManager.hpp>
 #include <fix/core/utils.hpp>
 
@@ -25,6 +27,7 @@ namespace Fix {
         Fix::ITimerFactory& timerFactory,
         boost::asio::io_context& io_context):
         app_{app}, 
+        exec_{boost::asio::make_strand(io_context)},
         connFactory_{connFactory},
         timerFactory_{timerFactory},
         session_pool_{},
@@ -35,17 +38,24 @@ namespace Fix {
 
 
     void SessionManager::create_session(const Fix::SessionCreationConfig& config) {
+        ReconnectCallback recconect_callback = 
+            [self = weak_from_this()](const Fix::SessionID& id){
+                if (auto s = self.lock()) s->recconnect_session_(id);
+            };
         auto sess = session_pool_.emplace_session(
             config.role,
             app_,
             timerFactory_,
             config.params,
             log_core_,
-            io_context_
+            io_context_,
+            recconect_callback
         );
         auto id = sess->get_session_id();
         log_core_.add_session(id, sess->readable_id());
+        session_configs_.emplace(id, config);
 
+        
         std::cout << "Session Created\n";
         if (config.role == Fix::Role::ACCEPTOR) {
            
@@ -68,7 +78,7 @@ namespace Fix {
  
                 if (auto s = w.lock()) {
                     s->set_connection(std::move(conn));
-                    s->start();
+                    s->start(StartMode::NORMAL);
                 } else {
                     conn->close();
                 }
@@ -83,12 +93,22 @@ namespace Fix {
                 std::shared_ptr<IConnection> conn
                 ) {
                     if (ec) {
+                        if (auto s = w.lock()) {
+                            s->logger().log(
+                                {
+                                    Fix::Error::Layer::Transport,
+                                    Fix::Error::Category::Error,
+                                    Fix::Error::Severity::High
+                                },
+                                "Failed to listen for incoming connection: " + ec.message()
+                            );
+                        }
                         return;
                     }
 
                     if (auto s = w.lock()) {
                         s->set_connection(std::move(conn));
-                        s->start();
+                        s->start(StartMode::NORMAL);
                     }
                 }
             );
@@ -98,12 +118,86 @@ namespace Fix {
         
     }
 
+    void SessionManager::recconnect_session_(const Fix::SessionID& id) {
+        boost::asio::dispatch(exec_, [this, id]() {
+            
+            auto it = session_configs_.find(id);
+            if (it == session_configs_.end()) {
+                return;
+            }
+            auto sess = session_pool_.get(id);
+            if (!sess) {
+                return;
+            }
+            auto& config = it->second;
+
+            if (config.role == Fix::Role::ACCEPTOR) {
+                connFactory_.async_connect(config.conn_config,
+                [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
+                std::shared_ptr<IConnection> conn) {
+                    if (ec) {
+                        if (auto s = w.lock()) {
+                            s->logger().log(
+                                {
+                                    Fix::Error::Layer::Transport,
+                                    Fix::Error::Category::Error,
+                                    Fix::Error::Severity::High
+                                },
+                                "Failed to reconnect after disconnect: " + ec.message()
+                            );
+                        }
+                        return;
+                    }
+
+                    if (auto s = w.lock()) {
+                        s->set_connection(std::move(conn));
+                        s->start(StartMode::RECONNECT);
+                    } else {
+                        conn->close();
+                    }
+                }
+                );
+            } else {
+                
+                connFactory_.async_listen(
+                    config.conn_config,
+                    [w = std::weak_ptr<Session>(sess)]
+                    (const boost::system::error_code ec,
+                    std::shared_ptr<IConnection> conn
+                    ) {
+                        if (ec) {
+                            if (auto s = w.lock()) {
+                                s->logger().log(
+                                    {
+                                        Fix::Error::Layer::Transport,
+                                        Fix::Error::Category::Error,
+                                        Fix::Error::Severity::High
+                                    },
+                                    "Failed to listen for incoming connection during reconnect: " + ec.message()
+                                );
+                            }
+                            return;
+                        }
+
+                        if (auto s = w.lock()) {
+                            s->set_connection(std::move(conn));
+                            s->start(StartMode::RECONNECT);
+                        }
+                    }
+                );
+
+            }
+        });
+        
+    }
+
     void SessionManager::create_all(std::vector<Fix::SessionCreationConfig>& confgs) {
+        session_configs_.reserve(confgs.size());
         for (Fix::SessionCreationConfig& config: confgs) { create_session(config);}
     }    
 
     void SessionManager::start_all() {
-        for (auto sess: session_pool_.get_all_at_start()) {sess->start();}
+        for (auto sess: session_pool_.get_all_at_start()) {sess->start(StartMode::NORMAL);}
     }
 
     void SessionManager::stop_all() {

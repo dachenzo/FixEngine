@@ -21,7 +21,8 @@ namespace Fix {
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
-                boost::asio::io_context& io_context
+                boost::asio::io_context& io_context,
+                ReconnectCallback reconnect_callback
             ):  
                 exec_{boost::asio::make_strand(io_context)},
                 arena_{},
@@ -35,7 +36,6 @@ namespace Fix {
                 role_{role},
                 store_{},
                 state_{Fix::SessionState::DISCONNECTED},
-                serializer_{},
                 params_{params},
                 clock_{},
                 seq_provider_{},
@@ -45,7 +45,8 @@ namespace Fix {
                 inbound_timer_{exec_},
                 heartbeat_timer_{exec_},
                 logout_timer_{exec_},
-                validator_{}
+                validator_{},
+                reconnect_callback_{std::move(reconnect_callback)}
                 {
         buff_.resize(Framer::start_size());
 
@@ -128,7 +129,7 @@ namespace Fix {
         
     }
 
-    void Session::start_() {
+    void Session::start_normal_() {
         logger_.log(
             {Fix::Error::Layer::Fix, 
             Fix::Error::Category::Info, 
@@ -171,9 +172,13 @@ namespace Fix {
 
     }
 
-    void Session::start() {
-        boost::asio::dispatch(exec_, [self = shared_from_this()] {
-            self->start_();
+    void Session::start(StartMode mode) {
+        boost::asio::dispatch(exec_, [self = shared_from_this(), mode] {
+            if (mode == StartMode::NORMAL) {
+                self->start_normal_();
+            } else {
+                self->start_after_reconnect_();
+            }
         }); 
     }
 
@@ -304,6 +309,12 @@ namespace Fix {
         state_ = Fix::SessionState::DISCONNECTED;
         write_inflight_ = false;
         write_q_.clear();
+        recovery_cache_.clear();
+        framer_.reset();
+        parser_ctx_.clear();
+        stopped_ = false;
+
+        reconnect_callback_(id_);
         
 
     }

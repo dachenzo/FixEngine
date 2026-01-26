@@ -1,4 +1,3 @@
-#include <charconv>
 #include <cstdlib>
 #include <fix/core/Serializer.hpp>
 
@@ -6,24 +5,7 @@
 
 namespace Fix {
 
-    inline void append_uint(int x, std::string& buff) {
-        char tmp[32];
-        auto [p, ec] = std::to_chars(std::begin(tmp), std::end(tmp), x);
-        buff.append(tmp, static_cast<std::size_t>(p - tmp));
-    }
-
-     std::size_t Serializer::serialize(Fix::ValidMessage& msg, std::string& buff) {
-        buff.clear();
-        constexpr char SOH = '\x01';
-        for (auto& field: msg.message_) {
-            append_uint(field.tag, buff);
-            buff.push_back('=');
-            buff.append(field.value);
-            buff.push_back(SOH);
-        }
-
-        return buff.size();
-    }
+    
     
 }
 

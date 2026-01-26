@@ -1,5 +1,5 @@
 #pragma once
-#include <cstddef>
+
 #include <cstdint>
 #include <cassert>
 #include <cstring>
@@ -78,6 +78,9 @@ namespace Fix {
         // Discard `count` bytes from the front of readable().
         void discard_prefix(std::uint64_t count) noexcept {
             assert(count <= (tail_ - head_));
+            for (std::uint64_t i = head_; i < head_ + count; i++) {
+                data_[i].~T();
+            }
             head_ += count;
 
             if (head_ == tail_) {
@@ -109,6 +112,17 @@ namespace Fix {
             base_abs_ += static_cast<std::uint64_t>(head_);
             head_ = 0;
             tail_ = live;
+        }
+
+        // ---- Clear ----
+        void reset() noexcept {
+            // There shouldnt be any alive data before head_
+            for (std::uint64_t i = head_; i < tail_; i++) {
+                data_[i].~T();
+            }
+            base_abs_ = 0; 
+            head_ = 0;
+            tail_ = 0;
         }
 
     private:

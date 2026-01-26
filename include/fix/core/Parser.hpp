@@ -30,6 +30,11 @@ namespace Fix {
             out_msg.reserve(MessageSizeReserve);
             out_errs.reserve(MessageErrorReserve);
         }   
+        void clear() {
+            out_msg.clear();
+            out_errs.clear();
+        }
+
     };
 
 

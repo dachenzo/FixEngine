@@ -1,9 +1,7 @@
 #pragma once
 #include <cstddef>
-#include <queue>
 #include <cstdint>
 #include <string_view>
-#include <charconv>
 #include <fix/core/LinearBuffer.hpp>
 #include <fix/core/Ring.hpp>
 
@@ -66,6 +64,8 @@ namespace Fix {
         void consume_message()  ;
 
         void append(std::string_view data);
+
+        void reset();
 
         private:
         FramerParseResult parse_buffer();
