@@ -37,6 +37,15 @@ namespace Fix {
         DISCONNECTED,
     };
 
+    enum class StartMode {
+        NORMAL,
+        RECONNECT
+    };
+
+    using ReconnectCallback = std::function<void(const Fix::SessionID&)>;
+
+    
+
     
 
 
@@ -51,10 +60,16 @@ namespace Fix {
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
-                Fix::Log::LogCore& log_core
+                Fix::Log::LogCore& log_core,
+                boost::asio::io_context& io_context
             );
 
         ~Session();
+        Session(const Session&) = delete;
+        Session& operator=(const Session&) = delete;   
+        Session(Session&&) = delete;
+        Session& operator=(Session&&) = delete; 
+
 
         // lifecycle
         void start();                       // open/logon loop
@@ -74,6 +89,11 @@ namespace Fix {
         // void sendAppMessage(const Fix::ValidMessage&);
 
         private:
+
+            //lifecycle helpers
+            void start_();
+            void stop_();
+
             // core dispatch
             void dispatch(const GenericMessage<GenericFieldView>& msg, std::string_view raw_msg);
             void process_wire_message_(std::string_view msg_wire);
@@ -110,6 +130,7 @@ namespace Fix {
             void send_bytes_(Fix::WireWriter handle);            
             void do_read();
             void do_write();
+            void on_transport_down_();
 
 
             //validation
@@ -122,11 +143,11 @@ namespace Fix {
                 std::size_t sent = 0; 
             };
 
-
+            boost::asio::strand<boost::asio::any_io_executor> exec_;
             Fix::Arena arena_;
             Fix::RecoveryCache recovery_cache_;
+            ReconnectCallback reconnect_callback_;
             Fix::SessionParameters params_;
-            boost::asio::strand<boost::asio::any_io_executor> exec_{boost::asio::system_executor()};
             std::deque<PendingWrite> write_q_;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;

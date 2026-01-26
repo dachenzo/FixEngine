@@ -42,7 +42,8 @@ int main() {
     Fix::SessionManager session_manager{
         app,
         conn_factory,
-        timer_factory
+        timer_factory,
+        reactor.context()
     };
     std::cout << "Session Manager Created\n";
     session_manager.create_all(configs);

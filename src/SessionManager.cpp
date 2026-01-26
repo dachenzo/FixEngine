@@ -1,3 +1,4 @@
+#include <boost/asio/io_context.hpp>
 #include <memory>
 #include <iostream>
 #include <boost/asio.hpp>
@@ -21,11 +22,13 @@ namespace Fix {
     SessionManager::SessionManager(
         Fix::Application& app,  
         Fix::IConnectionFactory& connFactory, 
-        Fix::ITimerFactory& timerFactory):
+        Fix::ITimerFactory& timerFactory,
+        boost::asio::io_context& io_context):
         app_{app}, 
         connFactory_{connFactory},
         timerFactory_{timerFactory},
         session_pool_{},
+        io_context_{io_context},
         log_core_{generate_engine_id()}
         {
         } 
@@ -37,7 +40,8 @@ namespace Fix {
             app_,
             timerFactory_,
             config.params,
-            log_core_
+            log_core_,
+            io_context_
         );
         auto id = sess->get_session_id();
         log_core_.add_session(id, sess->readable_id());

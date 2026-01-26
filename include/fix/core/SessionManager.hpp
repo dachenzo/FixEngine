@@ -1,9 +1,6 @@
 #pragma once 
 #include <vector>
-#include <string_view>
-#include <optional>
 #include <memory>
-#include <chrono>
 #include <fix/core/IConnection.hpp>
 #include <fix/core/ITimer.hpp>
 #include <fix/core/MessageStore.hpp>
@@ -14,12 +11,14 @@
 #include <fix/log/LogCore.hpp>
 
 namespace Fix {
+    
+
     struct SessionManager {
 
         static std::string generate_engine_id();
 
         SessionManager(Fix::Application& app, 
-        Fix::IConnectionFactory& connFactory, Fix::ITimerFactory& timerFactory);
+        Fix::IConnectionFactory& connFactory, Fix::ITimerFactory& timerFactory, boost::asio::io_context& io_context);
         SessionManager(const SessionManager& other) = delete;
         SessionManager& operator=(const SessionManager& other) = delete;
         SessionManager(const SessionManager&& other) = delete;
@@ -47,6 +46,7 @@ namespace Fix {
         Fix::Application& app_;
         Fix::IConnectionFactory& connFactory_; 
         Fix::ITimerFactory& timerFactory_;
+        boost::asio::io_context& io_context_;
         Fix::Log::LogCore log_core_;
         
 

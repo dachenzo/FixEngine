@@ -3,6 +3,7 @@
 #include <vector>
 #include <array>
 #include <cstring>
+#include <cassert>
 #include <fix/core/utils.hpp>
 #include <fix/error/ValidatorErrors.hpp>
 #include <fix/schema/Field.hpp>
@@ -25,11 +26,13 @@ namespace Fix {
         ErrorString() = default;
         ErrorString(const char* str) {
             size = std::strlen(str);
+            assert(size <= data.size());
             if (size > data.size()) size = data.size();
             std::memcpy(data.data(), str, size);
         }
         ErrorString(std::string_view sv) {
             size = sv.size();
+            assert(size <= data.size());
             if (size > data.size()) size = data.size();
             std::memcpy(data.data(), sv.data(), size);
         }
