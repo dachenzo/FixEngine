@@ -9,6 +9,7 @@
 #include <fix/core/Parser.hpp>
 #include <fix/core/utils.hpp>
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 namespace Fix {
 
@@ -58,6 +59,7 @@ namespace Fix {
 
     void Session::stop_() {
         if (stopped_) return;
+        state_ = Fix::SessionState::DISCONNECTED;
         
         logger_.log(
                 {Fix::Error::Layer::Fix, 
@@ -171,6 +173,61 @@ namespace Fix {
         }
 
     }
+
+    void Session::start_after_reconnect_() {
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Session reconnecting"
+        );
+
+        if (stopped_) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Reconnect ignored: session is stopped"
+            );
+            return;
+        }
+
+        if (!conn_) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Reconnect start called without connection"
+            );
+            return;
+        }
+
+        // per-connection cleanup (some already done in on_transport_down_)
+        awaiting_test_request_response_ = false;
+        reconnecting_ = false;
+        test_req_id_ = 0;                 // optional; only affects your IDs
+        write_q_.clear();
+        write_inflight_ = false;
+        recovery_cache_.clear();
+        framer_.reset();
+        parser_ctx_.clear();
+
+        
+
+        // restart logon handshake without resetting seq numbers
+        if (role_ == Role::INITIATOR) {
+            send_logon(false);              // <- key point: 141=N
+            state_ = SessionState::LOGON_SENT;
+            schedule_logon_timeout_(SessionState::LOGON_SENT);
+        } else {
+            state_ = SessionState::AWAITING_LOGON;
+            schedule_logon_timeout_(SessionState::AWAITING_LOGON);
+        }
+
+        // start IO
+        do_read();
+    }
+
 
     void Session::start(StartMode mode) {
         boost::asio::dispatch(exec_, [self = shared_from_this(), mode] {
@@ -293,12 +350,22 @@ namespace Fix {
     }
 
     void Session::on_transport_down_() {
+        if (state_ == Fix::SessionState::DISCONNECTED || stopped_) return;
+        if (reconnecting_) return;
+        reconnecting_ = true;
         logger_.log(
             {Fix::Error::Layer::Transport, 
             Fix::Error::Category::Info, 
             Fix::Error::Severity::NA},
             "Transport connection lost"
         );
+        //close connection
+        if (conn_) {
+            conn_->close();
+            conn_.reset();
+        }
+
+
         //cancel timers
         logon_timer_.cancel();
         inbound_timer_.cancel();
@@ -312,7 +379,7 @@ namespace Fix {
         recovery_cache_.clear();
         framer_.reset();
         parser_ctx_.clear();
-        stopped_ = false;
+        
 
         reconnect_callback_(id_);
         
@@ -370,7 +437,8 @@ namespace Fix {
                         Fix::Error::Severity::High},
                         err_msg
                     );
-                    conn_->close();
+                    
+                    on_transport_down_();
                     return;
                 }
                 auto sv = std::string_view{buff_.data(), n};
@@ -428,9 +496,8 @@ namespace Fix {
                             err_msg
                         );
                         
-                        conn_->close();
-                        write_q_.clear();
-                        write_inflight_ = false;
+                        
+                        on_transport_down_();
                         return;
                     }
 

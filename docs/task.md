@@ -9,6 +9,7 @@ Current Focus:
 Specific: reject message generation
 - classification of errors according to the fix 4.4 standard
 - reserve the error buffers
+- investigate framer.clear
 
 
 

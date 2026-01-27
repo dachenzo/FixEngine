@@ -44,10 +44,6 @@ namespace Fix {
 
     using ReconnectCallback = std::function<void(const Fix::SessionID&)>;
 
-    
-
-    
-
 
 
     struct Session: public std::enable_shared_from_this<Fix::Session> {
@@ -171,9 +167,10 @@ namespace Fix {
             Fix::Application& app_;
             Fix::ITimerFactory& timers_;
             std::uint64_t test_req_id_ = 0;
-            bool stopped_ = false;
+            bool stopped_ = false;  // user requested stop / session shutting down
             bool write_inflight_ = false;
             bool awaiting_test_request_response_ = false;
+            bool reconnecting_ = false;
             Fix::Role role_;
             
 
