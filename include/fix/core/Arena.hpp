@@ -43,7 +43,7 @@ namespace Fix {
     };
 
     struct Arena {
-        static constexpr const std::size_t block_size = 8 * 1024; // 8 KB
+        static constexpr const  std::size_t block_size = 8 * 1024; // 8 KB
         static constexpr const std::size_t block_count = 16;    // 16 blocks
         static constexpr const std::uint32_t end = UINT32_MAX;
 
@@ -64,7 +64,7 @@ namespace Fix {
         std::byte* block_pointer(std::uint32_t index);
 
         
-
+            
 
 
         private:

@@ -15,7 +15,7 @@
 namespace Fix {
     
 
-    struct SessionManager: std::enable_shared_from_this<Fix::SessionManager> {
+    struct SessionManager {
 
         static std::string generate_engine_id();
 

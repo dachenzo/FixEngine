@@ -31,7 +31,7 @@ namespace Fix {
 
         static constexpr std::uint64_t initial_capacity = 1024 * 64; // 64KB
         static constexpr std::uint64_t min_capacity_growth = 1024 * 32; // 32KB
-        static constexpr std::uint64_t window = 128; // cache [base_offset_ + window]
+        static constexpr std::uint64_t window = 512; // cache [base_offset_ + window]
         static constexpr MessageBounds KEmpty{0, 0};
         static_assert(
             window <= std::numeric_limits<std::uint16_t>::max(), 

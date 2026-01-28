@@ -10,6 +10,9 @@ namespace Fix {
 
     template <typename T>
     struct LinearBuffer {
+        static_assert(std::is_trivially_copyable_v<T>);
+        static_assert(std::is_trivially_destructible_v<T>);
+
         static constexpr std::uint64_t Start_Capacity = 64 * 1024; // 64 KB
         static constexpr std::uint64_t Min_Grow       = 16 * 1024; // 16 KB
         static_assert(Start_Capacity > 0);
@@ -78,9 +81,6 @@ namespace Fix {
         // Discard `count` bytes from the front of readable().
         void discard_prefix(std::uint64_t count) noexcept {
             assert(count <= (tail_ - head_));
-            for (std::uint64_t i = head_; i < head_ + count; i++) {
-                data_[i].~T();
-            }
             head_ += count;
 
             if (head_ == tail_) {
@@ -116,10 +116,7 @@ namespace Fix {
 
         // ---- Clear ----
         void reset() noexcept {
-            // There shouldnt be any alive data before head_
-            for (std::uint64_t i = head_; i < tail_; i++) {
-                data_[i].~T();
-            }
+        
             base_abs_ = 0; 
             head_ = 0;
             tail_ = 0;

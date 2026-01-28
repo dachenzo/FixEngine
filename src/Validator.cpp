@@ -55,7 +55,7 @@ namespace Fix {
         }
 
         if (!message.header_cache_.slots[static_cast<size_t>(CacheSlot::TargetCompID)] || *message.header_cache_.slots[static_cast<size_t>(CacheSlot::TargetCompID)] != params.sender_comp_id) {
-            results.errors.emplace_back("Target CompID mismatch", 56, Error::Validator::CompIDProblem);
+            results.errors.push_back({"Target CompID mismatch", 56, Error::Validator::CompIDProblem});
             results.severity = Error::Severity::Fatal;
             return;
         }

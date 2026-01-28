@@ -38,10 +38,12 @@ namespace Fix {
 
 
     void SessionManager::create_session(const Fix::SessionCreationConfig& config) {
+
         ReconnectCallback reconnect_callback =
-        [mgr_exec = exec_, self = weak_from_this()](Fix::SessionID id) {
-            boost::asio::post(mgr_exec, [self, id]{
-            if (auto s = self.lock()) s->reconnect_session_impl_(id);
+        [mgr_exec = exec_, this](Fix::SessionID id) {
+            // it is safe to capture this because SessionManager's lifetime is the engine's lifetime
+            boost::asio::post(mgr_exec, [this, id]{
+                this->reconnect_session_impl_(id);
             });
         };
 
