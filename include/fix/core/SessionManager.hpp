@@ -1,9 +1,8 @@
 #pragma once 
+#include <boost/asio/executor.hpp>
+#include <unordered_map>
 #include <vector>
-#include <string_view>
-#include <optional>
 #include <memory>
-#include <chrono>
 #include <fix/core/IConnection.hpp>
 #include <fix/core/ITimer.hpp>
 #include <fix/core/MessageStore.hpp>
@@ -14,12 +13,14 @@
 #include <fix/log/LogCore.hpp>
 
 namespace Fix {
+    
+
     struct SessionManager {
 
         static std::string generate_engine_id();
 
         SessionManager(Fix::Application& app, 
-        Fix::IConnectionFactory& connFactory, Fix::ITimerFactory& timerFactory);
+        Fix::IConnectionFactory& connFactory, Fix::ITimerFactory& timerFactory, boost::asio::io_context& io_context);
         SessionManager(const SessionManager& other) = delete;
         SessionManager& operator=(const SessionManager& other) = delete;
         SessionManager(const SessionManager&& other) = delete;
@@ -43,11 +44,19 @@ namespace Fix {
         std::size_t sessionCount() noexcept;
         
         private:
+
+        void reconnect_session_impl_(const Fix::SessionID& id);
+
+        Fix::Log::LogCore log_core_;
+        boost::asio::strand<boost::asio::any_io_executor> exec_;
         Fix::SessionPool session_pool_;
+        std::unordered_map<Fix::SessionID, Fix::SessionCreationConfig> session_configs_;
         Fix::Application& app_;
         Fix::IConnectionFactory& connFactory_; 
         Fix::ITimerFactory& timerFactory_;
-        Fix::Log::LogCore log_core_;
+        boost::asio::io_context& io_context_;
+        
+
         
 
         

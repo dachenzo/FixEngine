@@ -9,6 +9,7 @@
 #include <fix/core/Parser.hpp>
 #include <fix/core/utils.hpp>
 #include <sys/socket.h>
+#include <sys/stat.h>
 
 namespace Fix {
 
@@ -20,8 +21,11 @@ namespace Fix {
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
-                Fix::Log::LogCore& log_core
+                Fix::Log::LogCore& log_core,
+                boost::asio::io_context& io_context,
+                ReconnectCallback reconnect_callback
             ):  
+                exec_{boost::asio::make_strand(io_context)},
                 arena_{},
                 recovery_cache_{},
                 parser_{},
@@ -33,7 +37,6 @@ namespace Fix {
                 role_{role},
                 store_{},
                 state_{Fix::SessionState::DISCONNECTED},
-                serializer_{},
                 params_{params},
                 clock_{},
                 seq_provider_{},
@@ -43,16 +46,22 @@ namespace Fix {
                 inbound_timer_{exec_},
                 heartbeat_timer_{exec_},
                 logout_timer_{exec_},
-                validator_{}
+                validator_{},
+                reconnect_callback_{std::move(reconnect_callback)}
                 {
         buff_.resize(Framer::start_size());
 
     }
 
-    void Session::stop() {
+    Session::~Session() {
+        if (conn_) conn_->close();
+    }
+
+    void Session::stop_() {
         if (stopped_) return;
-        auto self = shared_from_this();
-        self->logger_.log(
+        state_ = Fix::SessionState::DISCONNECTED;
+        
+        logger_.log(
                 {Fix::Error::Layer::Fix, 
                 Fix::Error::Category::Info, 
                 Fix::Error::Severity::NA},
@@ -66,31 +75,34 @@ namespace Fix {
             return;
         }
 
-        boost::asio::dispatch(exec_, [self] {
-            if (self->stopped_) return;
-            self->stopped_ = true;
+      
+        stopped_ = true;
 
-            // Cancel timers
-            self->logon_timer_.cancel();
-            self->inbound_timer_.cancel();
-            self->heartbeat_timer_.cancel();
-            
-            
-            // Close connection (this will cause async reads/writes to complete with ec=operation_aborted)
-            if (self->conn_) {
-                self->conn_->close();
-            }
-
-            self->write_inflight_ = false;
-            self->write_q_.clear();
-        });
+        // Cancel timers
+        logon_timer_.cancel();
+        inbound_timer_.cancel();
+        heartbeat_timer_.cancel();
+        logout_timer_.cancel();
         
+        
+        // Close connection (this will cause async reads/writes to complete with ec=operation_aborted)
+        if (conn_) {
+            conn_->close();
+        }
+
+        write_inflight_ = false;
+        write_q_.clear();
+    }
+
+    void Session::stop() {
+        boost::asio::dispatch(exec_, [self = shared_from_this()] {
+            self->stop_();
+        }); 
     }
 
     void Session::stop_with_logout(const std::string& reason) {
-        if (stopped_) return;
-        
         boost::asio::dispatch(exec_, [self = shared_from_this(), reason] {
+            if (self->stopped_) return;
             self->send_logout(reason);
             
             auto handler  = [self](boost::system::error_code ec) {
@@ -119,10 +131,117 @@ namespace Fix {
         
     }
 
-    Session::~Session() {
-        if (conn_) conn_->close();
+    void Session::start_normal_() {
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Session started"
+        );
+
+        if (!conn_) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Error, 
+                Fix::Error::Severity::High},
+                "Cannot start session without a transport connection"
+            );
+            return;
+        }
+        
+        do_read(); 
+
+        if (role_ == Fix::Role::INITIATOR) {
+            if (params_.initiator_reset_on_logon) {
+                seq_provider_.reset();
+            }
+            send_logon(params_.initiator_reset_on_logon);     
+            
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Logon sent"
+            );
+
+            state_ = Fix::SessionState::LOGON_SENT;
+
+            schedule_logon_timeout_(Fix::SessionState::LOGON_SENT);
+        } else {
+            state_ = Fix::SessionState::AWAITING_LOGON;
+            schedule_logon_timeout_(Fix::SessionState::AWAITING_LOGON);
+        }
+
     }
 
+    void Session::start_after_reconnect_() {
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Session reconnecting"
+        );
+
+        
+
+        if (!conn_) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Reconnect start called without connection"
+            );
+            return;
+        }
+
+        if (stopped_) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Reconnect ignored: session is stopped"
+            );
+            return;
+        }
+
+        // per-connection cleanup (some already done in on_transport_down_)
+        awaiting_test_request_response_ = false;
+        reconnecting_ = false;
+        test_req_id_ = 0;                 // optional; only affects your IDs
+        write_q_.clear();
+        write_inflight_ = false;
+        recovery_cache_.clear();
+        framer_.reset();
+        parser_ctx_.clear();
+
+        
+
+        // restart logon handshake without resetting seq numbers
+        if (role_ == Role::INITIATOR) {
+            send_logon(false);              // <- key point: 141=N
+            state_ = SessionState::LOGON_SENT;
+            schedule_logon_timeout_(SessionState::LOGON_SENT);
+        } else {
+            state_ = SessionState::AWAITING_LOGON;
+            schedule_logon_timeout_(SessionState::AWAITING_LOGON);
+        }
+
+        // start IO
+        do_read();
+    }
+
+
+    void Session::start(StartMode mode) {
+        boost::asio::dispatch(exec_, [self = shared_from_this(), mode] {
+            if (mode == StartMode::NORMAL) {
+                self->start_normal_();
+            } else {
+                self->start_after_reconnect_();
+            }
+        }); 
+    }
+
+    
     Log::SessionLogger& Session::logger() {
         return logger_;
     }
@@ -159,40 +278,6 @@ namespace Fix {
             logon_timer_.async_wait(handler);
     }
 
-
-
-    void Session::start() {
-        logger_.log(
-            {Fix::Error::Layer::Fix, 
-            Fix::Error::Category::Info, 
-            Fix::Error::Severity::NA},
-            "Session started"
-        );
-        
-        do_read(); 
-
-        if (role_ == Fix::Role::INITIATOR) {
-            if (params_.initiator_reset_on_logon) {
-                seq_provider_.reset();
-            }
-            send_logon(params_.initiator_reset_on_logon);     
-            
-            logger_.log(
-                {Fix::Error::Layer::Fix, 
-                Fix::Error::Category::Info, 
-                Fix::Error::Severity::NA},
-                "Logon sent"
-            );
-
-            state_ = Fix::SessionState::LOGON_SENT;
-
-            schedule_logon_timeout_(Fix::SessionState::LOGON_SENT);
-        } else {
-            state_ = Fix::SessionState::AWAITING_LOGON;
-            schedule_logon_timeout_(Fix::SessionState::AWAITING_LOGON);
-        }
-
-    }
 
     std::string Session::readable_id() const noexcept {
         return params_.sender_comp_id + "<->" + params_.target_comp_id + " [" + std::to_string(id_.id) + "]";
@@ -266,6 +351,43 @@ namespace Fix {
         );
     }
 
+    void Session::on_transport_down_() {
+        if (state_ == Fix::SessionState::DISCONNECTED || stopped_) return;
+        if (reconnecting_) return;
+        reconnecting_ = true;
+        logger_.log(
+            {Fix::Error::Layer::Transport, 
+            Fix::Error::Category::Info, 
+            Fix::Error::Severity::NA},
+            "Transport connection lost"
+        );
+        //close connection
+        if (conn_) {
+            conn_->close();
+            conn_.reset();
+        }
+
+
+        //cancel timers
+        logon_timer_.cancel();
+        inbound_timer_.cancel();
+        heartbeat_timer_.cancel();
+        logout_timer_.cancel();
+
+        //change state
+        state_ = Fix::SessionState::DISCONNECTED;
+        write_inflight_ = false;
+        write_q_.clear();
+        recovery_cache_.clear();
+        framer_.reset();
+        parser_ctx_.clear();
+        
+
+        reconnect_callback_(id_);
+        
+
+    }
+
     void Session::send_message_(std::string_view msg_wire, bool is_resend) {    
         auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));
@@ -317,7 +439,8 @@ namespace Fix {
                         Fix::Error::Severity::High},
                         err_msg
                     );
-                    conn_->close();
+                    
+                    on_transport_down_();
                     return;
                 }
                 auto sv = std::string_view{buff_.data(), n};
@@ -375,9 +498,8 @@ namespace Fix {
                             err_msg
                         );
                         
-                        conn_->close();
-                        write_q_.clear();
-                        write_inflight_ = false;
+                        
+                        on_transport_down_();
                         return;
                     }
 
@@ -395,11 +517,9 @@ namespace Fix {
     }
 
     void Session::set_connection(std::shared_ptr<Fix::IConnection> conn) {
-        conn_ = conn;
-        exec_ = boost::asio::strand<boost::asio::any_io_executor>(conn_->get_executor());
-        logon_timer_ = boost::asio::steady_timer(exec_);
-        inbound_timer_ = boost::asio::steady_timer(exec_);
-        heartbeat_timer_ = boost::asio::steady_timer(exec_);
+        boost::asio::dispatch(exec_, [self = shared_from_this(), conn = std::move(conn)]() mutable {
+            self->conn_ = std::move(conn);
+        });
     }
 
     void Session::drain_recovery_cache_() {
@@ -455,8 +575,7 @@ namespace Fix {
         }
         
         if (!results.errors.empty()) {
-            // Reject Message
-            // send_reject();
+            send_reject(msg.header_cache_.msg_seq_num, static_cast<uint32_t>(results.errors[0].code), results.errors[0].tag, std::string_view(results.errors[0].info));
             return;
         }
 
@@ -469,7 +588,6 @@ namespace Fix {
                 Fix::Error::Severity::High},
                 "Validator passed but required fields missing"
             );
-            // send_reject();
             return;
         }
           
@@ -546,7 +664,7 @@ namespace Fix {
         send_message_(wire);
     }
 
-    void Session::send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag, std::string text) {
+    void Session::send_reject(std::size_t ref_seq_num, uint32_t reason, Tag tag, std::string_view text) {
         auto wire = msg_factory_.reject(ref_seq_num, reason, tag, text);
         send_message_(wire);
     }

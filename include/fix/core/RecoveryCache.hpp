@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstring>
 #include <limits>
-#include <algorithm>
 #include <array>
 #include <fix/core/Message.hpp>
 
@@ -32,7 +31,7 @@ namespace Fix {
 
         static constexpr std::uint64_t initial_capacity = 1024 * 64; // 64KB
         static constexpr std::uint64_t min_capacity_growth = 1024 * 32; // 32KB
-        static constexpr std::uint64_t window = 2048; // cache [base_offset_ + window]
+        static constexpr std::uint64_t window = 512; // cache [base_offset_ + window]
         static constexpr MessageBounds KEmpty{0, 0};
         static_assert(
             window <= std::numeric_limits<std::uint16_t>::max(), 
@@ -65,6 +64,10 @@ namespace Fix {
         bool inline in_window(SeqNum seqnum) const noexcept {
             if (seqnum < base_offset_) return false;
             return static_cast<std::uint64_t>(seqnum - base_offset_) < window;
+        }
+
+        void clear() noexcept {
+            reset();
         }
 
         private:

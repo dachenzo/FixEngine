@@ -1,7 +1,9 @@
 #pragma once
 
 #include <vector>
-#include <tuple>
+#include <array>
+#include <cstring>
+#include <cassert>
 #include <fix/core/utils.hpp>
 #include <fix/error/ValidatorErrors.hpp>
 #include <fix/schema/Field.hpp>
@@ -15,9 +17,51 @@
 
 
 namespace Fix {
+
+    struct ErrorString {
+        // forces fixed size to avoid allocations
+        std::array<char, 32> data;
+        std::size_t size{0};
+
+        ErrorString() = default;
+        ErrorString(const char* str) {
+            size = std::strlen(str);
+            assert(size <= data.size());
+            if (size > data.size()) size = data.size();
+            std::memcpy(data.data(), str, size);
+        }
+        ErrorString(std::string_view sv) {
+            size = sv.size();
+            assert(size <= data.size());
+            if (size > data.size()) size = data.size();
+            std::memcpy(data.data(), sv.data(), size);
+        }
+        operator std::string_view() const {
+            return std::string_view{data.data(), size};
+        }
+    };
+
+
+    struct ValidatorErrorContext {
+        ErrorString info;
+        Tag tag;
+        Error::Validator code;
+
+    };
+
     struct ValidatorResult {
+        static constexpr const std::size_t errors_reserve = 64;
         Error::Severity severity{Error::Severity::Moderate};
-        std::vector<std::tuple<Error::Validator, std::size_t>> errors;
+        std::vector<ValidatorErrorContext> errors;
+
+        ValidatorResult() {
+            errors.reserve(errors_reserve);
+        }
+
+        void clear() {
+            severity = Error::Severity::Moderate;
+            errors.clear();
+        }
     }; 
     
 
@@ -76,9 +120,9 @@ namespace Fix {
 
     struct Validator
     {
-        // All functions will eventually return Validaro Result;
+        // All functions will eventually return Validator Result;
 
-        ValidatorResult validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
+        ValidatorResult& validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
 
         void validate_header_(const ValidMessage& message, const std::string_view expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
@@ -92,8 +136,10 @@ namespace Fix {
         bool validate_type_(const std::string_view value, Fix::Schema::FieldType type);
 
         private:
+        ValidatorResult results_;
         TagScratch tagscratch_;
         Schema::Registry registry_;
+
 
     };
 }

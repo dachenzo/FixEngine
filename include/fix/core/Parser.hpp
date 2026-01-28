@@ -2,11 +2,7 @@
 
 #include <cstddef>
 #include <string_view>
-#include <iostream>
-#include <optional>
 #include <stdexcept>
-#include <utility>
-#include <charconv>
 #include <vector>
 #include <fix/message/GenericMessage.hpp>
 #include <fix/error/ParserErrors.hpp>
@@ -34,6 +30,11 @@ namespace Fix {
             out_msg.reserve(MessageSizeReserve);
             out_errs.reserve(MessageErrorReserve);
         }   
+        void clear() {
+            out_msg.clear();
+            out_errs.clear();
+        }
+
     };
 
 

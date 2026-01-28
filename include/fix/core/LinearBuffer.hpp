@@ -1,5 +1,5 @@
 #pragma once
-#include <cstddef>
+
 #include <cstdint>
 #include <cassert>
 #include <cstring>
@@ -10,6 +10,9 @@ namespace Fix {
 
     template <typename T>
     struct LinearBuffer {
+        static_assert(std::is_trivially_copyable_v<T>);
+        static_assert(std::is_trivially_destructible_v<T>);
+
         static constexpr std::uint64_t Start_Capacity = 64 * 1024; // 64 KB
         static constexpr std::uint64_t Min_Grow       = 16 * 1024; // 16 KB
         static_assert(Start_Capacity > 0);
@@ -109,6 +112,14 @@ namespace Fix {
             base_abs_ += static_cast<std::uint64_t>(head_);
             head_ = 0;
             tail_ = live;
+        }
+
+        // ---- Clear ----
+        void reset() noexcept {
+        
+            base_abs_ = 0; 
+            head_ = 0;
+            tail_ = 0;
         }
 
     private:

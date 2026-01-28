@@ -1,9 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include <functional>
 #include <span>
-#include <optional>
 #include <fix/core/Session.hpp>
 #include <fix/core/definitions.hpp>
 #include <fix/core/IConnection.hpp>
@@ -29,7 +27,9 @@ namespace Fix {
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
-                Fix::Log::LogCore& log_core
+                Fix::Log::LogCore& log_core,
+                boost::asio::io_context& io_context,
+                ReconnectCallback& reconnect_callback
             );
 
         bool remove(Fix::SessionID id);

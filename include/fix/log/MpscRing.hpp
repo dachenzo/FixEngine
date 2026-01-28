@@ -1,8 +1,6 @@
 #pragma once
-#include <concepts>
 #include <cstdint>
-#include <array>
-#include <atomic>
+
 
 
 
@@ -29,7 +27,8 @@ namespace Fix::Log {
     template <std::movable Data>
     struct MpscRing {
 
-        static constexpr const  uint64_t capacity = 1 << 13; //always has to be a power of 2 for & modulo to work  
+        static constexpr const  uint64_t capacity = 1 << 10; //always has to be a power of 2 for & modulo to work  
+        static_assert((capacity&(capacity-1)) == 0, "MpscRing capacity must be a power of 2");
         static constexpr const uint64_t mask = capacity - 1;
 
         MpscRing() {

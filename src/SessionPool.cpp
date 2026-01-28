@@ -1,4 +1,3 @@
-#include <optional>
 #include <vector>
 #include <span>
 #include <algorithm>
@@ -22,7 +21,9 @@ namespace Fix {
         Fix::Application& app,
         Fix::ITimerFactory& timers,
         Fix::SessionParameters params,
-        Fix::Log::LogCore& log_core
+        Fix::Log::LogCore& log_core,
+        boost::asio::io_context& io_context,
+        ReconnectCallback& reconnect_callback
     ) {
         if (free_indices_.empty()) {
             Fix::SessionID session_id = {sessions_.size(), generate_session_Id_()};
@@ -33,7 +34,9 @@ namespace Fix {
                     app,
                     timers,
                     params,
-                    log_core
+                    log_core,
+                    io_context,
+                    reconnect_callback
                 )
             );
             return sessions_.back();
@@ -47,7 +50,9 @@ namespace Fix {
                 app,
                 timers,
                 params,
-                log_core
+                log_core,
+                io_context,
+                reconnect_callback
 
             );
             return sessions_[nxt];

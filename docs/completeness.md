@@ -15,14 +15,14 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 |-----------------------|--------|---------|------------|------------|----------|
 | TCP session lifecycle | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Reconnect logic       | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Heartbeats            | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Timeouts              | ✅      | ✅       | ❌          | ❌          | ❌        |
+| Heartbeats            | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Timeouts              | ✅      | ✅       | ✅          | ❌          | ❌        |
 
 ## 2. Session Layer
 | Aspect                 | Exists | Correct | Integrated | Performant | Hardened |
 |------------------------|--------|---------|------------|------------|----------|
 | SeqNum tracking        | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Logon/Logout state     | ✅      | ❌       | ❌          | ❌          | ❌        |
+| Logon/Logout state     | ✅      | ✅       | ✅          | ❌          | ❌        |
 | ResendRequest handling | ✅      | ✅       | ✅          | ❌          | ❌        |
 | GapFill logic          | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Dispatch logic         | ✅      | ❌       | ✅          | ❌          | ❌        |
@@ -58,7 +58,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 |---------------------|--------|---------|------------|------------|----------|
 | Message store       | ✅      | ✅       | ✅          | ❌          | ❌        |
 | SeqNum store        | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Recovery on restart | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Recovery on restart | ✅      | ❌       | ✅          | ❌          | ❌        |
 
 ## 7. Concurrency Model
 | Aspect           | Exists | Correct | Integrated | Performant | Hardened |

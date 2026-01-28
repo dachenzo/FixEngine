@@ -13,11 +13,7 @@ namespace Fix {
         MissingEqualSign,
         MissingValue,
         Failed_checksum,
-        Wrong_fix_version,
-        Wrong_body_length,
-        Duplicate_tag,
         Missing_soh,
-
     };
 
         

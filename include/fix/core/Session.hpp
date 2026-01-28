@@ -37,7 +37,12 @@ namespace Fix {
         DISCONNECTED,
     };
 
-    
+    enum class StartMode {
+        NORMAL,
+        RECONNECT
+    };
+
+    using ReconnectCallback = std::function<void(const Fix::SessionID)>;
 
 
 
@@ -51,13 +56,20 @@ namespace Fix {
                 Fix::Application& app,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
-                Fix::Log::LogCore& log_core
+                Fix::Log::LogCore& log_core,
+                boost::asio::io_context& io_context,
+                ReconnectCallback reconnect_callback
             );
 
         ~Session();
+        Session(const Session&) = delete;
+        Session& operator=(const Session&) = delete;   
+        Session(Session&&) = delete;
+        Session& operator=(Session&&) = delete; 
+
 
         // lifecycle
-        void start();                       // open/logon loop
+        void start(StartMode mode);                       // open/logon loop
         void stop();                        // send logout + cleanup
 
 
@@ -69,13 +81,17 @@ namespace Fix {
 
         Log::SessionLogger& logger() ;
 
-        // // timer callbacks (heartbeat, test‐req, logout)
-        // void onTimer(Fix::TimerType which);
 
         // // client/API
         // void sendAppMessage(const Fix::ValidMessage&);
 
         private:
+
+            //lifecycle helpers
+            void start_normal_();
+            void start_after_reconnect_();
+            void stop_();
+
             // core dispatch
             void dispatch(const GenericMessage<GenericFieldView>& msg, std::string_view raw_msg);
             void process_wire_message_(std::string_view msg_wire);
@@ -90,7 +106,7 @@ namespace Fix {
 
             // // FIX admin sends 
             void send_logon(bool reset_seq_nums);
-            void send_reject(std::size_t ref_seq_num, uint32_t reason, std::size_t tag = 0, std::string text = {});
+            void send_reject(std::size_t ref_seq_num, uint32_t reason, Tag tag, std::string_view text);
             void send_logout(const std::string& reason);
             void send_heartbeat(const std::string_view testReqId = {});
             void send_test_request(const std::string& testReqId);
@@ -112,6 +128,7 @@ namespace Fix {
             void send_bytes_(Fix::WireWriter handle);            
             void do_read();
             void do_write();
+            void on_transport_down_();
 
 
             //validation
@@ -124,22 +141,21 @@ namespace Fix {
                 std::size_t sent = 0; 
             };
 
-
-            Fix::Arena arena_;
             Fix::RecoveryCache recovery_cache_;
+            boost::asio::strand<boost::asio::any_io_executor> exec_;
+            Fix::Arena arena_;
             Fix::SessionParameters params_;
-            boost::asio::strand<boost::asio::any_io_executor> exec_{boost::asio::system_executor()};
             std::deque<PendingWrite> write_q_;
             std::vector<char> buff_;
             std::shared_ptr<IConnection> conn_;
             Fix::Framer framer_;
             Fix::ParserContext parser_ctx_;
             Fix::Parser parser_;
-            Fix::Serializer serializer_;
             Fix::SessionID id_;
             Fix::MessageStore store_;
             Fix::SessionState state_;
             Fix::SeqProvider seq_provider_;
+            ReconnectCallback reconnect_callback_;
             Fix::Clock clock_;
             Fix::MessageFactory<Fix::Clock> msg_factory_;
             Fix::Log::SessionLogger logger_;
@@ -151,9 +167,10 @@ namespace Fix {
             Fix::Application& app_;
             Fix::ITimerFactory& timers_;
             std::uint64_t test_req_id_ = 0;
-            bool stopped_ = false;
+            bool stopped_ = false;  // user requested stop / session shutting down
             bool write_inflight_ = false;
             bool awaiting_test_request_response_ = false;
+            bool reconnecting_ = false;
             Fix::Role role_;
             
 

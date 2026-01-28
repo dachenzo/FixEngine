@@ -1,6 +1,6 @@
 #include <boost/asio.hpp>
 #include <fix/core/Reactor.hpp>
-#include <iostream>
+
 
 
 namespace Fix {
