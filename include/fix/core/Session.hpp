@@ -42,7 +42,7 @@ namespace Fix {
         RECONNECT
     };
 
-    using ReconnectCallback = std::function<void(const Fix::SessionID&)>;
+    using ReconnectCallback = std::function<void(const Fix::SessionID)>;
 
 
 

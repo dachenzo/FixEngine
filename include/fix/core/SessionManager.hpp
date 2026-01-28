@@ -45,7 +45,7 @@ namespace Fix {
         
         private:
 
-        void recconnect_session_(const Fix::SessionID& id);
+        void reconnect_session_impl_(const Fix::SessionID& id);
 
         Fix::Log::LogCore log_core_;
         boost::asio::strand<boost::asio::any_io_executor> exec_;

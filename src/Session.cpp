@@ -182,15 +182,7 @@ namespace Fix {
             "Session reconnecting"
         );
 
-        if (stopped_) {
-            logger_.log(
-                {Fix::Error::Layer::Fix, 
-                Fix::Error::Category::Info, 
-                Fix::Error::Severity::NA},
-                "Reconnect ignored: session is stopped"
-            );
-            return;
-        }
+        
 
         if (!conn_) {
             logger_.log(
@@ -198,6 +190,16 @@ namespace Fix {
                 Fix::Error::Category::Info, 
                 Fix::Error::Severity::NA},
                 "Reconnect start called without connection"
+            );
+            return;
+        }
+
+        if (stopped_) {
+            logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                "Reconnect ignored: session is stopped"
             );
             return;
         }
