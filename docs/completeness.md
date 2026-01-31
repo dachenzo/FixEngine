@@ -14,7 +14,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Aspect                | Exists | Correct | Integrated | Performant | Hardened |
 |-----------------------|--------|---------|------------|------------|----------|
 | TCP session lifecycle | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Reconnect logic       | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Reconnect logic       | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Heartbeats            | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Timeouts              | ✅      | ✅       | ✅          | ❌          | ❌        |
 
@@ -51,7 +51,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Field order       | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Type validation   | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Conditional rules | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Group constraints | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Group constraints | ✅      | ✅       | ✅          | ❌          | ❌        |
 
 ## 6. Persistence
 | Aspect              | Exists | Correct | Integrated | Performant | Hardened |
@@ -70,9 +70,9 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 ## 8. Error Handling
 | Aspect                     | Exists | Correct | Integrated | Performant | Hardened |
 |----------------------------|--------|---------|------------|------------|----------|
-| Reject generation          | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Reject generation          | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Session-level errors       | ✅      | ❌       | ❌          | ❌          | ❌        |
-| Recoverable vs fatal paths | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Recoverable vs fatal paths | ✅      | ✅       | ✅          | ❌          | ❌        |
 
 ## 9. Testing & Tooling
 | Aspect          | Exists | Correct | Integrated | Performant | Hardened |

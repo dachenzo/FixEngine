@@ -2,7 +2,6 @@
 #include <list>
 #include <cstdlib>
 #include <unordered_map>
-#include <fstream>
 #include <filesystem>
 #include <fix/core/definitions.hpp>
 #include <fix/log/LogFile.hpp>

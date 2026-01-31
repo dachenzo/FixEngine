@@ -1,5 +1,4 @@
 #pragma once
-#include <unordered_map>
 #include <array>
 #include <algorithm>
 #include <fix/schema/MessageSchema.hpp>
@@ -41,7 +40,15 @@ namespace Fix::Schema {
 
 
     struct Registry {
-        static inline constexpr auto message_schemas = make_message_registry<Message::Logon>();
+        static inline constexpr auto message_schemas = make_message_registry<
+        Message::Logon,
+        Message::Heartbeat,
+        Message::TestRequest,
+        Message::SequenceReset,
+        Message::Logout,
+        Message::ResendRequest,
+        Message::Reject
+        >();
         static inline constexpr auto sorted_indices = make_sorted_registry_indices<message_schemas.size()>(message_schemas);
         
 

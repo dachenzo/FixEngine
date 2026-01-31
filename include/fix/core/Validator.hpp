@@ -120,7 +120,7 @@ namespace Fix {
 
     struct Validator
     {
-        // All functions will eventually return Validator Result;
+        //The results of the validation must be used in the same scope as the validator
 
         ValidatorResult& validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
 
