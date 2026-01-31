@@ -6,7 +6,7 @@ description: FixEngine component completeness assessment
 
 # Completeness Matrix
 
-Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
+Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed /  🚀 extension
 
 ---
 
@@ -42,7 +42,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Message schemas               | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Field schemas                 | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Repeating groups              | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Versioning FIX 4.2 / FIX 4.4. | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Versioning FIX 4.2 / FIX 4.4. | 🚀     | 🚀      | 🚀         | 🚀         | 🚀       |
 
 ## 5. Validation
 | Aspect            | Exists | Correct | Integrated | Performant | Hardened |
@@ -50,7 +50,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Required fields   | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Field order       | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Type validation   | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Conditional rules | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Conditional rules | 🚀     | 🚀      | 🚀         | 🚀         | 🚀       |
 | Group constraints | ✅      | ✅       | ✅          | ❌          | ❌        |
 
 ## 6. Persistence
@@ -63,9 +63,9 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 ## 7. Concurrency Model
 | Aspect           | Exists | Correct | Integrated | Performant | Hardened |
 |------------------|--------|---------|------------|------------|----------|
-| Threading model  | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Queues/ring bufs | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Memory ownership | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Threading model  | ✅      | ⚠️      | ✅          | ⚠️         | ❌        |
+| Queues/ring bufs | ✅      | ⚠️      | ✅          | ⚠️         | ❌        |
+| Memory ownership | ✅      | ⚠️      | ✅          | ❌          | ❌        |
 
 ## 8. Error Handling
 | Aspect                     | Exists | Correct | Integrated | Performant | Hardened |
@@ -77,7 +77,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 ## 9. Testing & Tooling
 | Aspect          | Exists | Correct | Integrated | Performant | Hardened |
 |-----------------|--------|---------|------------|------------|----------|
-| Unit tests      | ✅      | ❌       | ❌          | ❌          | ❌        |
+| Unit tests      | ✅      | ⚠️      | ✅          | ❌          | ❌        |
 | Golden messages | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Fuzzing         | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Benchmarks      | ❌      | ❌       | ❌          | ❌          | ❌        |
@@ -93,3 +93,68 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed
 | Aspect | Exists | Correct | Integrated | Performant | Hardened |
 |--------|--------|---------|------------|------------|----------|
 | CLI    | ❌      | ❌       | ❌          | ❌          | ❌        |
+
+## 12. Configuration & Deployment
+| Aspect                               | Exists | Correct | Integrated | Performant | Hardened |
+|--------------------------------------|--------|---------|------------|------------|----------|
+| Config file parsing (INI/YAML/JSON)  | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Hot reload / live reconfigure        | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Per-session templates / profiles     | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Environment overrides (env vars/CLI) | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Deterministic session IDs / naming   | ⚠️     | ❓       | ⚠️         | ❌          | ❌        |
+
+DoD: sessions can be fully configured from a file, overrides are supported, and invalid configs fail fast with actionable errors.
+
+## 13. Security & Counterparty Controls
+| Aspect                                      | Exists | Correct | Integrated | Performant | Hardened |
+|---------------------------------------------|--------|---------|------------|------------|----------|
+| Credentials validation (553/554 policy)     | ⚠️     | ❓       | ⚠️         | ❌          | ❌        |
+| TLS transport (FIX over TLS)                | ❌      | ❌       | ❌          | ❌          | ❌        |
+| IP allow/deny / connection admission policy | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Rate limiting / DoS protection              | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Session-level authorization (MsgType rules) | ❌      | ❌       | ❌          | ❌          | ❌        |
+
+DoD: a deployment can enforce TLS and counterparty policies (credentials/admission/rate limits) with clear audit logs.
+
+## 14. Operations & Observability
+| Aspect                                 | Exists | Correct | Integrated | Performant | Hardened |
+|----------------------------------------|--------|---------|------------|------------|----------|
+| Metrics (counters, gauges, histograms) | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Health checks / readiness              | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Structured logs (consistent schema)    | ⚠️     | ❓       | ✅          | ✅          | ❌        |
+| Traceability (correlation IDs)         | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Admin/ops controls (pause/resume/etc)  | ❌      | ❌       | ❌          | ❌          | ❌        |
+
+DoD: operators can observe liveness and key KPIs per session, and correlate a message across parse/validate/dispatch/IO.
+
+## 15. Session Scheduling & Time
+| Aspect                                       | Exists | Correct | Integrated | Performant | Hardened |
+|----------------------------------------------|--------|---------|------------|------------|----------|
+| Trading session schedule (start/end windows) | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Reset policies (daily reset, weekend gaps)   | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Clock correctness (UTC timestamps)           | ⚠️     | ❓       | ⚠️         | ❌          | ❌        |
+| Heartbeat supervision (missed-HB detection)  | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Session state transitions auditing           | ❌      | ❌       | ❌          | ❌          | ❌        |
+
+DoD: sessions can be scheduled/reset predictably and timestamps are correct/consistent (UTC) with tests around edge cases.
+
+## 16. Protocol Hygiene & Interop
+| Aspect                                        | Exists | Correct | Integrated | Performant | Hardened |
+|-----------------------------------------------|--------|---------|------------|------------|----------|
+| BodyLength (9) + CheckSum (10) strictness     | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Duplicate tag handling / tag order strictness | ✅      | ⚠️      | ✅          | ❌          | ❌        |
+| Unknown tag policy (ignore vs reject)         | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Charset / encoding policy                     | ❌      | ❌       | ❌          | ❌          | ❌        |
+| FIXT / custom BeginString variations          | ❌      | ❌       | ❌          | ❌          | ❌        |
+
+DoD: strictness is configurable, interop is validated with golden messages/counterparty sims, and reject behavior is consistent.
+
+## 17. Application Integration
+| Aspect                                         | Exists | Correct | Integrated | Performant | Hardened |
+|------------------------------------------------|--------|---------|------------|------------|----------|
+| Application callbacks (OnLogon/OnLogout/OnMsg) | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Business message routing API                   | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Backpressure signals to application            | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Safe shutdown hooks / draining                 | ⚠️     | ❓       | ⚠️         | ❌          | ❌        |
+
+DoD: the engine exposes a stable application interface for receiving/sending messages, with backpressure and clean shutdown semantics.
