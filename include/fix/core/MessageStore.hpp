@@ -2,8 +2,6 @@
 #include <span>
 #include <vector>
 #include <cstring>
-#include <fix/core/InboundMessageStore.hpp>
-#include <fix/core/OutboundMessageStore.hpp>
 #include <fix/core/Message.hpp>
 
 

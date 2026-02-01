@@ -191,6 +191,22 @@ namespace Fix {
 
         }
     }
+
+
+    void SessionManager::send(OutBoundAppMsg&& msg) {
+        boost::asio::post(exec_,
+        [this, m = std::move(msg)]() mutable {
+            auto session = session_pool_.get(m.session_id);
+            if (!session) {
+                // session not found, the manager needs logging
+                return;
+            }
+
+            session->send_from_app(std::move(m));
+
+            
+        });
+    }
         
     
 

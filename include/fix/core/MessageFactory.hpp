@@ -8,6 +8,7 @@
 #include <fix/core/Clock.hpp>
 #include <fix/core/SeqProvider.hpp>
 #include <fix/core/MessageStore.hpp>
+#include <fix/message/GenericMessage.hpp>
 #include <fix/core/Message.hpp>
 #include <fix/message/admin/Custom.hpp>
 
@@ -157,6 +158,24 @@ namespace Fix {
             scratch_.reset();
             stamp_header_(Message::Custom::MsgType);
             scratch_.add_field(9250, payload);
+            stamp_trailer_();
+            return scratch_.get_buffer_view();
+        }
+
+        std::string_view custom_admin_message(std::string&& payload) {
+            return custom_admin_message(std::string_view{payload});
+        }
+
+        std::string_view custom_admin_message(const char* payload) {
+            return custom_admin_message(std::string_view{payload});
+        }
+
+        std::string_view from_app(GenericMessage<GenericField>& msg, MsgType& msg_type) {
+            scratch_.reset();
+            stamp_header_(msg_type.to_string_view());
+            for (const auto& field: msg) {
+                scratch_.add_field(field.tag, field.value);
+            }
             stamp_trailer_();
             return scratch_.get_buffer_view();
         }

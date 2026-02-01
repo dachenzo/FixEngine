@@ -6,13 +6,15 @@
 #include <fix/core/IConnection.hpp>
 #include <fix/core/ITimer.hpp>
 #include <fix/core/MessageStore.hpp>
-#include <fix/core/Application.hpp>
 #include <fix/core/Session.hpp>
 #include <fix/core/SessionPool.hpp>
 #include <fix/core/definitions.hpp>
 #include <fix/log/LogCore.hpp>
+#include <fix/core/ApplicationEvents.hpp>
 
 namespace Fix {
+
+    struct Application;
     
 
     struct SessionManager {
@@ -41,11 +43,14 @@ namespace Fix {
 
         void stop_all();
 
+        void send(OutBoundAppMsg&& msg);
+
         std::size_t sessionCount() noexcept;
         
         private:
 
         void reconnect_session_impl_(const Fix::SessionID& id);
+
 
         Fix::Log::LogCore log_core_;
         boost::asio::strand<boost::asio::any_io_executor> exec_;

@@ -388,6 +388,14 @@ namespace Fix {
 
     }
 
+    void Session::send_from_app(OutBoundAppMsg&& msg) {
+        boost::asio::dispatch(exec_, [self = shared_from_this(), m = std::move(msg)]() mutable {
+            if (self->stopped_) return;
+            auto wire = self->msg_factory_.from_app(m.message, m.msg_type);
+            self->send_message_(wire);
+        });
+    }
+
     void Session::send_message_(std::string_view msg_wire, bool is_resend) {    
         auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));

@@ -22,6 +22,7 @@
 #include <fix/log/LogCore.hpp>
 #include <fix/log/SessionLogger.hpp>
 #include <fix/message/GenericMessage.hpp>
+#include <fix/core/ApplicationEvents.hpp>
 #include <string_view>
 
 
@@ -82,8 +83,8 @@ namespace Fix {
         Log::SessionLogger& logger() ;
 
 
-        // // client/API
-        // void sendAppMessage(const Fix::ValidMessage&);
+        //app callbacks
+        void send_from_app(OutBoundAppMsg&& msg);
 
         private:
 
@@ -134,6 +135,9 @@ namespace Fix {
             //validation
             void validate_heartbeat_int(std::string_view incoming_value, bool is_initiator);
             bool is_app_message_type_(std::string_view msg_type) const noexcept;
+
+
+            
 
 
             struct PendingWrite { 
