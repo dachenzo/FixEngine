@@ -18,7 +18,6 @@ namespace Fix::Message {
         RawGroup384Schema.size()
     };
 
-
     inline constexpr std::array<FieldSchema, 11> LogonSchema {{
             {98,  FieldType::INT,     FieldPresence::REQUIRED}, // EncryptMethod
             {108, FieldType::INT,     FieldPresence::REQUIRED}, // HeartBtInt

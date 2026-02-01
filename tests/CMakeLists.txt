@@ -11,7 +11,9 @@ add_executable(fix_tests
     test_ring.cpp
     test_parser.cpp
     test_recovery_cache.cpp
-    
+    test_admin_schemas.cpp
+    test_session_pool.cpp
+    test_session_e2e.cpp
 )
 
 

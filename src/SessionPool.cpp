@@ -62,16 +62,22 @@ namespace Fix {
 
     bool SessionPool::remove(Fix::SessionID id) {
         auto storage_index = id.storage_index;
+        if (!sessions_.at(storage_index)) {
+            return false;
+        }
         if (sessions_.at(storage_index)->get_session_id() != id) {
             return false;
         }
-        
+        sessions_[storage_index].reset();
         free_indices_.push_back(storage_index);
         return true;
     }
 
     std::shared_ptr<Fix::Session> SessionPool::get(Fix::SessionID id) {
         auto storage_index = id.storage_index;
+        if (!sessions_.at(storage_index)) {
+            return nullptr;
+        }
         if (sessions_.at(storage_index)->get_session_id() != id) {
             return nullptr;
         }

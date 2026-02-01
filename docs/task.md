@@ -7,18 +7,13 @@ Current Focus:
 
 
 Specific: reject message generation
-- classification of errors according to the fix 4.4 standard
-- reserve the error buffers
-- investigate framer.clear
+- 
 
 
 
 
 BroadTasks:
-- Hook up logon timout
-- integrate heartbeat scheduling
-- integrate heart beat state handling
-- Implement reject messages correctly
+- 
 
 
 Bugs:

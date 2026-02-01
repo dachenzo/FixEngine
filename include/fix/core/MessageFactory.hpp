@@ -9,6 +9,7 @@
 #include <fix/core/SeqProvider.hpp>
 #include <fix/core/MessageStore.hpp>
 #include <fix/core/Message.hpp>
+#include <fix/message/admin/Custom.hpp>
 
 namespace Fix {
 
@@ -83,7 +84,7 @@ namespace Fix {
             stamp_header_("A");
             scratch_.add_field(98, params_.encrypt_method_str);
             scratch_.add_field(141, (echo_reset ? "Y" : "N"));
-            scratch_.add_field(108, params_.heart_beat_str);
+            scratch_.add_field(108, static_cast<int64_t>(heartbeat_override));
             stamp_trailer_();
             return scratch_.get_buffer_view();
         }
@@ -152,6 +153,14 @@ namespace Fix {
             return scratch_.get_buffer_view();
         }
 
+        std::string_view custom_admin_message(std::string_view payload) {
+            scratch_.reset();
+            stamp_header_(Message::Custom::MsgType);
+            scratch_.add_field(9250, payload);
+            stamp_trailer_();
+            return scratch_.get_buffer_view();
+        }
+
         std::string_view regenerate_message(std::string_view original_wire, const MsgIndex& msg_index) {
             scratch_.reset();
             scratch_.add_field(8, params_.fix_version);
@@ -181,6 +190,8 @@ namespace Fix {
 
             
         }
+
+
 
 
 
