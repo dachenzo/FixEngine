@@ -62,6 +62,9 @@ namespace Fix {
 
     bool SessionPool::remove(Fix::SessionID id) {
         auto storage_index = id.storage_index;
+        if (!sessions_.at(storage_index)) {
+            return false;
+        }
         if (sessions_.at(storage_index)->get_session_id() != id) {
             return false;
         }

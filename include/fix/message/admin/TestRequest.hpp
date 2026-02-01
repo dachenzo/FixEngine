@@ -9,7 +9,7 @@ namespace Fix::Message {
     using namespace Fix::Schema;
 
     inline constexpr std::array<FieldSchema, 1> TestRequestSchema {{
-            {112, FieldType::STRING, FieldPresence::OPTIONAL} // TestReqID
+            {112, FieldType::STRING, FieldPresence::REQUIRED} // TestReqID
     }};
 
     

@@ -8,7 +8,7 @@ namespace Fix::Message {
 
     using namespace Fix::Schema;
 
-    inline constexpr std::array<FieldSchema, 2> CustomSchema {{
+    inline constexpr std::array<FieldSchema, 1> CustomSchema {{
         {9250, FieldType::STRING,    FieldPresence::REQUIRED} 
     }};
 
