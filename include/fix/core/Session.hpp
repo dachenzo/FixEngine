@@ -43,10 +43,6 @@ namespace Fix {
         RECONNECT
     };
 
-    using ReconnectCallback = std::function<void(const Fix::SessionID)>;
-
-
-
     struct Session: public std::enable_shared_from_this<Fix::Session> {
 
         static constexpr const int logon_response_timeout = 10;

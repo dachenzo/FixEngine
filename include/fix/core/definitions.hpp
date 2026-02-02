@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdlib>
+#include <functional>
 #include <string>
 #include <cstdint>
 #include <array>
@@ -21,6 +22,8 @@ namespace Fix {
             return other.id != this->id;
         }
     };
+
+    using ReconnectCallback = std::function<void(const Fix::SessionID)>;
 
     enum class Role {
         INITIATOR,

@@ -2,20 +2,16 @@
 #include <vector>
 #include <memory>
 #include <span>
-#include <fix/core/Session.hpp>
 #include <fix/core/definitions.hpp>
-#include <fix/core/IConnection.hpp>
-#include <fix/core/MessageStore.hpp>
-#include <fix/core/Message.hpp>
-#include <fix/core/Application.hpp>
-#include <fix/core/ITimer.hpp>
-#include <fix/core/Codec.hpp>
-#include <fix/core/Parser.hpp>
 #include <fix/core/ApplicationEvents.hpp>
+#include <fix/core/ITimer.hpp>
 #include <fix/log/LogCore.hpp>
+#include <boost/asio/io_context.hpp>
 
 
 namespace Fix {
+
+    struct Session;
 
     struct SessionPool {
 
@@ -23,7 +19,7 @@ namespace Fix {
 
         std::size_t size() noexcept;
 
-        std::shared_ptr<Session> emplace_session(
+        std::shared_ptr<Fix::Session> emplace_session(
                 Fix::Role role,
                 Fix::AppSink&& app_sink,
                 Fix::ITimerFactory& timers,

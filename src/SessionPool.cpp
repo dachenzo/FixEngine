@@ -2,6 +2,7 @@
 #include <span>
 #include <algorithm>
 #include <fix/core/SessionPool.hpp>
+#include <fix/core/Session.hpp>
 
 
 
