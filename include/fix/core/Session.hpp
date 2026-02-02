@@ -116,12 +116,12 @@ namespace Fix {
            
 
             // FIX admin handlers
-            void handle_logon(const Fix::ValidMessage& message);
-            void handle_logout(const Fix::ValidMessage& message);
-            void handle_heartbeat(const Fix::ValidMessage& message);
-            void handle_test_request(const Fix::ValidMessage& message);
-            void handle_resend_request(const Fix::ValidMessage& message);
-            void handle_sequence_reset(const Fix::ValidMessage& message);
+            void handle_logon(const Fix::ValidMessageView& message);
+            void handle_logout(const Fix::ValidMessageView& message);
+            void handle_heartbeat(const Fix::ValidMessageView& message);
+            void handle_test_request(const Fix::ValidMessageView& message);
+            void handle_resend_request(const Fix::ValidMessageView& message);
+            void handle_sequence_reset(const Fix::ValidMessageView& message);
 
 
             //core IO

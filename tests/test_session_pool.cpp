@@ -1,8 +1,5 @@
-#include "fix/core/ApplicationEvents.hpp"
 #include <gtest/gtest.h>
-
 #include <boost/asio/io_context.hpp>
-
 #include <fix/core/Application.hpp>
 #include <fix/core/SessionPool.hpp>
 #include <fix/log/LogCore.hpp>

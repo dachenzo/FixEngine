@@ -29,7 +29,7 @@ TEST(AdminSchemasTests, LogonSchemaValidity) {
         {"235", 10}
     };
 
-    Fix::ValidMessage valid_message = Fix::make_valid_message(valid_logon);
+    Fix::ValidMessageView valid_message = Fix::make_valid_message_view(valid_logon);
 
     Fix::SessionParameters params;
     params.sender_comp_id = "CLIENT1";
@@ -57,7 +57,7 @@ TEST(AdminSchemasTests, HeartbeatSchemaValidity) {
         {"10", 10}
     };
 
-    Fix::ValidMessage valid_message = Fix::make_valid_message(valid_heartbeat);
+    Fix::ValidMessageView valid_message = Fix::make_valid_message_view(valid_heartbeat);
 
     Fix::SessionParameters params;
     params.sender_comp_id = "CLIENT1";
@@ -85,7 +85,7 @@ TEST(AdminSchemasTests, TestRequestSchemaValidity) {
         {"10", 10}
     };
 
-    Fix::ValidMessage valid_message = Fix::make_valid_message(valid_test_request);
+    Fix::ValidMessageView valid_message = Fix::make_valid_message_view(valid_test_request);
 
     Fix::SessionParameters params;
     params.sender_comp_id = "CLIENT1";
@@ -113,7 +113,7 @@ TEST(AdminSchemasTests, SequenceResetSchemaValidity) {
         {"10", 10}
     };
 
-    Fix::ValidMessage valid_message = Fix::make_valid_message(valid_sequence_reset);
+    Fix::ValidMessageView valid_message = Fix::make_valid_message_view(valid_sequence_reset);
 
     Fix::SessionParameters params;
     params.sender_comp_id = "CLIENT1";
@@ -140,7 +140,7 @@ TEST(AdminSchemasTests, LogoutSchemaValidity) {
         {"10", 10}
     };
 
-    Fix::ValidMessage valid_message = Fix::make_valid_message(valid_logout);
+    Fix::ValidMessageView valid_message = Fix::make_valid_message_view(valid_logout);
 
     Fix::SessionParameters params;
     params.sender_comp_id = "CLIENT1";
@@ -169,7 +169,7 @@ TEST(AdminSchemasTests, ResendRequestSchemaValidity) {
         {"10", 10}
     };
 
-    Fix::ValidMessage valid_message = Fix::make_valid_message(valid_resend_request);
+    Fix::ValidMessageView valid_message = Fix::make_valid_message_view(valid_resend_request);
 
     Fix::SessionParameters params;
     params.sender_comp_id = "CLIENT1";
@@ -198,7 +198,7 @@ TEST(AdminSchemasTests, RejectSchemaValidity) {
         {"10", 10}
     };
 
-    Fix::ValidMessage valid_message = Fix::make_valid_message(valid_reject);
+    Fix::ValidMessageView valid_message = Fix::make_valid_message_view(valid_reject);
 
     Fix::SessionParameters params;
     params.sender_comp_id = "CLIENT1";

@@ -14,7 +14,7 @@
 
 namespace Fix {
 
-    struct Application;
+    
     
 
     struct SessionManager {

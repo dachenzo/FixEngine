@@ -122,16 +122,16 @@ namespace Fix {
     {
         //The results of the validation must be used in the same scope as the validator
 
-        ValidatorResult& validate_message(const ValidMessage& message, const Fix::SessionParameters& params);
+        ValidatorResult& validate_message(const ValidMessageView& message, const Fix::SessionParameters& params);
 
-        void validate_header_(const ValidMessage& message, const std::string_view expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
+        void validate_header_(const ValidMessageView& message, const std::string_view expected_message_type, ValidatorResult& validres, const Fix::SessionParameters& params);
 
-        void validate_trailer_(const ValidMessage& message, ValidatorResult& validres);
+        void validate_trailer_(const ValidMessageView& message, ValidatorResult& validres);
 
 
-        void validate_fields_(const ValidMessage& message, const Schema::FieldSchema* schema, std::size_t schema_size, ValidatorResult& validres);
+        void validate_fields_(const ValidMessageView& message, const Schema::FieldSchema* schema, std::size_t schema_size, ValidatorResult& validres);
 
-        void validate_groups_(const std::size_t groupcnt, const ValidMessage& message, const Schema::FieldSchema* groupfield, int& curr_idx, ValidatorResult& validres);
+        void validate_groups_(const std::size_t groupcnt, const ValidMessageView& message, const Schema::FieldSchema* groupfield, int& curr_idx, ValidatorResult& validres);
 
         bool validate_type_(const std::string_view value, Fix::Schema::FieldType type);
 
