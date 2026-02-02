@@ -54,7 +54,7 @@ namespace Fix {
         // ctor/dtor
         Session(Fix::SessionID id,
                 Fix::Role role,
-                Fix::Application& app,
+                Fix::AppSink&& app_sink,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
@@ -168,7 +168,7 @@ namespace Fix {
             boost::asio::steady_timer heartbeat_timer_;
             boost::asio::steady_timer logout_timer_;
             Fix::Validator validator_;
-            Fix::Application& app_;
+            Fix::AppSink app_sink_;
             Fix::ITimerFactory& timers_;
             std::uint64_t test_req_id_ = 0;
             bool stopped_ = false;  // user requested stop / session shutting down

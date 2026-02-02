@@ -18,7 +18,7 @@ namespace Fix {
     Session::Session(
                 Fix::SessionID id,
                 Fix::Role role,
-                Fix::Application& app,
+                Fix::AppSink&& app_sink,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
@@ -31,7 +31,7 @@ namespace Fix {
                 parser_{},
                 framer_{},
                 parser_ctx_{},
-                app_{app},
+                app_sink_{std::move(app_sink)},
                 timers_{timers},
                 id_{id},
                 role_{role},
@@ -657,7 +657,9 @@ namespace Fix {
         else if (msg_type == "1") {handle_test_request(msg);}
         else if (msg_type == "2") {handle_resend_request(msg);}
         else if (msg_type == "4") {handle_sequence_reset(msg);}
-        else {}
+        else {
+            app_sink_({msg, id_});
+        }
 
        
 

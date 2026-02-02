@@ -7,7 +7,13 @@ namespace Fix {
     struct SessionManager;
 
     template <typename App, typename ...Args>
-    concept ApplicationLike = std::constructible_from<App, SessionManager&, Args...>;
+    concept ApplicationLike = 
+    std::constructible_from<App, SessionManager&, Args...> &&
+    requires (App app) {
+        { app.get_name() } -> std::convertible_to<std::string>;
+        { app.get_app_sink() } -> std::convertible_to<AppSink>; 
+    }
+    ;
 
 
     template <typename App, typename... Args>
@@ -17,4 +23,8 @@ namespace Fix {
     }
 
     struct Application {};
+
+    struct DummyApplication {
+        void on_event(InBoundAppEvent&& event) {}
+    }; 
 }

@@ -21,12 +21,13 @@ namespace Fix {
         
     }
 
-    SessionManager::SessionManager(
-        Fix::Application& app,  
+    SessionManager::SessionManager( 
         Fix::IConnectionFactory& connFactory, 
         Fix::ITimerFactory& timerFactory,
-        boost::asio::io_context& io_context):
-        app_{app}, 
+        boost::asio::io_context& io_context,
+        AppSink app_sink
+        ) :
+        app_sink_{app_sink}, 
         exec_{boost::asio::make_strand(io_context)},
         connFactory_{connFactory},
         timerFactory_{timerFactory},
@@ -43,13 +44,19 @@ namespace Fix {
         [mgr_exec = exec_, this](Fix::SessionID id) {
             // it is safe to capture this because SessionManager's lifetime is the engine's lifetime
             boost::asio::post(mgr_exec, [this, id]{
-                this->reconnect_session_impl_(id);
+                reconnect_session_impl_(id);
+            });
+        };
+
+        AppSink session_app_sink = [this](InBoundAppEvent&& event) {
+            boost::asio::post(exec_, [new_event = std::move(event), this]() mutable {
+                app_sink_(std::move(new_event));
             });
         };
 
         auto sess = session_pool_.emplace_session(
             config.role,
-            app_,
+            std::move(session_app_sink),
             timerFactory_,
             config.params,
             log_core_,

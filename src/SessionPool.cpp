@@ -18,7 +18,7 @@ namespace Fix {
 
     std::shared_ptr<Session> SessionPool::emplace_session(      
         Fix::Role role,
-        Fix::Application& app,
+        Fix::AppSink&& app_sink,
         Fix::ITimerFactory& timers,
         Fix::SessionParameters params,
         Fix::Log::LogCore& log_core,
@@ -31,7 +31,7 @@ namespace Fix {
                 std::make_shared<Session>(
                     session_id,
                     role,
-                    app,
+                    std::move(app_sink),
                     timers,
                     params,
                     log_core,
@@ -47,13 +47,12 @@ namespace Fix {
             sessions_[nxt] = std::make_shared<Fix::Session>(
                 session_id,
                 role,
-                app,
+                std::move(app_sink),
                 timers,
                 params,
                 log_core,
                 io_context,
                 reconnect_callback
-
             );
             return sessions_[nxt];
             
