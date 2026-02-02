@@ -22,6 +22,7 @@
 #include <fix/log/LogCore.hpp>
 #include <fix/log/SessionLogger.hpp>
 #include <fix/message/GenericMessage.hpp>
+#include <fix/core/ApplicationEvents.hpp>
 #include <string_view>
 
 
@@ -53,7 +54,7 @@ namespace Fix {
         // ctor/dtor
         Session(Fix::SessionID id,
                 Fix::Role role,
-                Fix::Application& app,
+                Fix::AppSink&& app_sink,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
@@ -82,8 +83,8 @@ namespace Fix {
         Log::SessionLogger& logger() ;
 
 
-        // // client/API
-        // void sendAppMessage(const Fix::ValidMessage&);
+        //app callbacks
+        void send_from_app(OutBoundAppMsg&& msg);
 
         private:
 
@@ -115,12 +116,12 @@ namespace Fix {
            
 
             // FIX admin handlers
-            void handle_logon(const Fix::ValidMessage& message);
-            void handle_logout(const Fix::ValidMessage& message);
-            void handle_heartbeat(const Fix::ValidMessage& message);
-            void handle_test_request(const Fix::ValidMessage& message);
-            void handle_resend_request(const Fix::ValidMessage& message);
-            void handle_sequence_reset(const Fix::ValidMessage& message);
+            void handle_logon(const Fix::ValidMessageView& message);
+            void handle_logout(const Fix::ValidMessageView& message);
+            void handle_heartbeat(const Fix::ValidMessageView& message);
+            void handle_test_request(const Fix::ValidMessageView& message);
+            void handle_resend_request(const Fix::ValidMessageView& message);
+            void handle_sequence_reset(const Fix::ValidMessageView& message);
 
 
             //core IO
@@ -134,6 +135,9 @@ namespace Fix {
             //validation
             void validate_heartbeat_int(std::string_view incoming_value, bool is_initiator);
             bool is_app_message_type_(std::string_view msg_type) const noexcept;
+
+
+            
 
 
             struct PendingWrite { 
@@ -164,7 +168,7 @@ namespace Fix {
             boost::asio::steady_timer heartbeat_timer_;
             boost::asio::steady_timer logout_timer_;
             Fix::Validator validator_;
-            Fix::Application& app_;
+            Fix::AppSink app_sink_;
             Fix::ITimerFactory& timers_;
             std::uint64_t test_req_id_ = 0;
             bool stopped_ = false;  // user requested stop / session shutting down

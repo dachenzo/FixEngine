@@ -1,3 +1,4 @@
+#include "fix/core/Message.hpp"
 #include <boost/asio.hpp>
 #include <boost/asio/dispatch.hpp>
 #include <string_view>
@@ -18,7 +19,7 @@ namespace Fix {
     Session::Session(
                 Fix::SessionID id,
                 Fix::Role role,
-                Fix::Application& app,
+                Fix::AppSink&& app_sink,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
@@ -31,7 +32,7 @@ namespace Fix {
                 parser_{},
                 framer_{},
                 parser_ctx_{},
-                app_{app},
+                app_sink_{std::move(app_sink)},
                 timers_{timers},
                 id_{id},
                 role_{role},
@@ -388,6 +389,14 @@ namespace Fix {
 
     }
 
+    void Session::send_from_app(OutBoundAppMsg&& msg) {
+        boost::asio::dispatch(exec_, [self = shared_from_this(), m = std::move(msg)]() mutable {
+            if (self->stopped_) return;
+            auto wire = self->msg_factory_.from_app(m.message, m.msg_type);
+            self->send_message_(wire);
+        });
+    }
+
     void Session::send_message_(std::string_view msg_wire, bool is_resend) {    
         auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));
@@ -564,7 +573,7 @@ namespace Fix {
 
 
     void Session::dispatch(const GenericMessage<GenericFieldView>& message, std::string_view raw_msg)  {
-        Fix::ValidMessage msg = Fix::make_valid_message(message);
+        Fix::ValidMessageView msg = Fix::make_valid_message_view(message);
 
         auto results = validator_.validate_message(msg, params_);
 
@@ -649,7 +658,9 @@ namespace Fix {
         else if (msg_type == "1") {handle_test_request(msg);}
         else if (msg_type == "2") {handle_resend_request(msg);}
         else if (msg_type == "4") {handle_sequence_reset(msg);}
-        else {}
+        else {
+            app_sink_({make_valid_message(msg.message_), id_});
+        }
 
        
 
@@ -694,7 +705,7 @@ namespace Fix {
         send_message_(wire);
     }
 
-    void Session::handle_logon(const Fix::ValidMessage& message) {
+    void Session::handle_logon(const Fix::ValidMessageView& message) {
         logger_.log(
             {Fix::Error::Layer::Fix, 
             Fix::Error::Category::Info, 
@@ -758,7 +769,7 @@ namespace Fix {
         schedule_test_request_timeout_();
     }
 
-    void Session::handle_logout(const Fix::ValidMessage& message) {
+    void Session::handle_logout(const Fix::ValidMessageView& message) {
         logger_.log(
             {Fix::Error::Layer::Fix, 
             Fix::Error::Category::Info, 
@@ -778,10 +789,10 @@ namespace Fix {
         
     }
 
-    void Session::handle_heartbeat(const Fix::ValidMessage& message) {
+    void Session::handle_heartbeat(const Fix::ValidMessageView& message) {
         awaiting_test_request_response_ = false;
     }
-    void Session::handle_test_request(const Fix::ValidMessage& message) {
+    void Session::handle_test_request(const Fix::ValidMessageView& message) {
         auto test_req_id_it = std::find_if(
             message.message_.begin(),
             message.message_.end(),
@@ -792,7 +803,7 @@ namespace Fix {
         assert(test_req_id_it != message.message_.end());
         send_heartbeat(test_req_id_it->value);
     }
-    void Session::handle_resend_request(const Fix::ValidMessage& msg) {
+    void Session::handle_resend_request(const Fix::ValidMessageView& msg) {
         auto start_seq_num_it = std::find_if(
             msg.message_.begin(),
             msg.message_.end(),
@@ -836,7 +847,7 @@ namespace Fix {
         }
 
     }
-    void Session::handle_sequence_reset(const Fix::ValidMessage& msg) {
+    void Session::handle_sequence_reset(const Fix::ValidMessageView& msg) {
         auto new_seq_no_it = std::find_if(
             msg.message_.begin(),
             msg.message_.end(),

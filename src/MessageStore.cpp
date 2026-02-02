@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <span>
+#include <cassert>
 #include <charconv>
 #include <fix/core/MessageStore.hpp>
 

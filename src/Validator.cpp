@@ -1,3 +1,4 @@
+#include "fix/core/Message.hpp"
 #include "fix/error/ValidatorErrors.hpp"
 #include <algorithm>
 #include <fix/core/Validator.hpp>
@@ -6,7 +7,7 @@
 
 namespace Fix {
     
-    void Validator::validate_header_(const ValidMessage& message, const std::string_view expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
+    void Validator::validate_header_(const ValidMessageView& message, const std::string_view expected_message_type,  ValidatorResult& results, const Fix::SessionParameters& params) {
         auto& schema = Message::StandardHeaderSchema;
         auto& msg_buffer = message.message_;
        
@@ -65,7 +66,7 @@ namespace Fix {
 
     }
 
-    ValidatorResult& Validator::validate_message(const ValidMessage& message, const Fix::SessionParameters& params) {
+    ValidatorResult& Validator::validate_message(const ValidMessageView& message, const Fix::SessionParameters& params) {
         // Placeholder implementation
         
         tagscratch_.ensure_bits(message.message_.size());
@@ -96,7 +97,7 @@ namespace Fix {
         return results_;
     }   
 
-    void Validator::validate_fields_(const ValidMessage& message, const Schema::FieldSchema* schema, std::size_t schema_size, ValidatorResult& results) {
+    void Validator::validate_fields_(const ValidMessageView& message, const Schema::FieldSchema* schema, std::size_t schema_size, ValidatorResult& results) {
         
         for (std::size_t i = 0; i < schema_size; i++) {
             const auto& field_schema = schema[i];
@@ -131,7 +132,7 @@ namespace Fix {
 
     };
 
-    void Validator::validate_groups_(const std::size_t groupcnt, const ValidMessage& message, const 
+    void Validator::validate_groups_(const std::size_t groupcnt, const ValidMessageView& message, const 
     Schema::FieldSchema* groupfield, int& curr_index, ValidatorResult& results) {
         
         constexpr std::size_t kMaxGroupCount = 32;
@@ -267,7 +268,7 @@ namespace Fix {
 
     }
 
-    void Validator::validate_trailer_(const ValidMessage& message, ValidatorResult& results) {
+    void Validator::validate_trailer_(const ValidMessageView& message, ValidatorResult& results) {
         
         validate_fields_(message, Message::TrailerSchema.data(), Message::TrailerSchema.size(), results);
         return;

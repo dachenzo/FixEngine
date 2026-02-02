@@ -1,4 +1,5 @@
 #include <charconv>
+#include <cassert>
 #include <fix/core/MessageFactory.hpp>
 
 

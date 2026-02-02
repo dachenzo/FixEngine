@@ -11,6 +11,7 @@
 #include <fix/core/ITimer.hpp>
 #include <fix/core/Codec.hpp>
 #include <fix/core/Parser.hpp>
+#include <fix/core/ApplicationEvents.hpp>
 #include <fix/log/LogCore.hpp>
 
 
@@ -24,7 +25,7 @@ namespace Fix {
 
         std::shared_ptr<Session> emplace_session(
                 Fix::Role role,
-                Fix::Application& app,
+                Fix::AppSink&& app_sink,
                 Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,

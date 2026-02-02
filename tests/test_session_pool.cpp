@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
-
 #include <boost/asio/io_context.hpp>
-
 #include <fix/core/Application.hpp>
 #include <fix/core/SessionPool.hpp>
 #include <fix/log/LogCore.hpp>
@@ -14,7 +12,9 @@ namespace {
 
 TEST(SessionPoolTests, EmplaceRemoveAndReuseSlot) {
     boost::asio::io_context io;
-    Fix::Application app{};
+    Fix::AppSink app1{};
+    Fix::AppSink app2{};
+    Fix::AppSink app3{};
     DummyTimerFactory timers{};
     Fix::Log::LogCore log_core{"session_pool_tests"};
 
@@ -29,8 +29,8 @@ TEST(SessionPoolTests, EmplaceRemoveAndReuseSlot) {
 
     Fix::ReconnectCallback cb = [](Fix::SessionID) {};
 
-    auto s1 = pool.emplace_session(Fix::Role::INITIATOR, app, timers, p1, log_core, io, cb);
-    auto s2 = pool.emplace_session(Fix::Role::ACCEPTOR, app, timers, p2, log_core, io, cb);
+    auto s1 = pool.emplace_session(Fix::Role::INITIATOR, std::move(app1), timers, p1, log_core, io, cb);
+    auto s2 = pool.emplace_session(Fix::Role::ACCEPTOR, std::move(app2), timers, p2, log_core, io, cb);
 
     ASSERT_NE(s1, nullptr);
     ASSERT_NE(s2, nullptr);
@@ -50,7 +50,7 @@ TEST(SessionPoolTests, EmplaceRemoveAndReuseSlot) {
     Fix::SessionParameters p3{};
     p3.sender_comp_id = "S3";
     p3.target_comp_id = "T3";
-    auto s3 = pool.emplace_session(Fix::Role::INITIATOR, app, timers, p3, log_core, io, cb);
+    auto s3 = pool.emplace_session(Fix::Role::INITIATOR, std::move(app3), timers, p3, log_core, io, cb);
     ASSERT_NE(s3, nullptr);
     EXPECT_EQ(pool.size(), 2u);
 

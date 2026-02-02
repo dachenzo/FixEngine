@@ -8,6 +8,7 @@
 #include <fix/core/Clock.hpp>
 #include <fix/core/SeqProvider.hpp>
 #include <fix/core/MessageStore.hpp>
+#include <fix/message/GenericMessage.hpp>
 #include <fix/core/Message.hpp>
 #include <fix/message/admin/Custom.hpp>
 
@@ -100,7 +101,7 @@ namespace Fix {
             stamp_trailer_();
             return scratch_.get_buffer_view();
         }
-        std::string_view test_request(std::string id) {
+        std::string_view test_request(std::string_view id) {
             scratch_.reset();
             stamp_header_("1");
             scratch_.add_field(112, id);
@@ -161,6 +162,24 @@ namespace Fix {
             return scratch_.get_buffer_view();
         }
 
+        std::string_view custom_admin_message(std::string&& payload) {
+            return custom_admin_message(std::string_view{payload});
+        }
+
+        std::string_view custom_admin_message(const char* payload) {
+            return custom_admin_message(std::string_view{payload});
+        }
+
+        std::string_view from_app(GenericMessage<GenericField>& msg, MsgType& msg_type) {
+            scratch_.reset();
+            stamp_header_(msg_type.to_string_view());
+            for (const auto& field: msg) {
+                scratch_.add_field(field.tag, field.value);
+            }
+            stamp_trailer_();
+            return scratch_.get_buffer_view();
+        }
+
         std::string_view regenerate_message(std::string_view original_wire, const MsgIndex& msg_index) {
             scratch_.reset();
             scratch_.add_field(8, params_.fix_version);
@@ -201,7 +220,7 @@ namespace Fix {
         SeqProvider& seq_provider_;
         TClock& clock_;
 
-        void stamp_header_(std::string type) {
+        void stamp_header_(std::string_view type) {
             scratch_.add_field(8, params_.fix_version);
             scratch_.add_body_length_placeholder();
             scratch_.add_field(35, type);

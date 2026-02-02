@@ -26,7 +26,7 @@ TEST(ValidatorTests, UnknownMessageType) {
         {"235", 10}
     };
 
-    auto valid_logon = Fix::make_valid_message(logon_min);
+    auto valid_logon = Fix::make_valid_message_view(logon_min);
     
     ValidatorResult result = validator.validate_message(valid_logon, params);
 
@@ -53,7 +53,7 @@ TEST(ValidatorTests, WrongFixVersion) {
         {"30", 108},                      // HeartBtInt
         {"235", 10}
     };
-    auto valid_logon_bad_fix = Fix::make_valid_message(logon_bad_fix);
+    auto valid_logon_bad_fix = Fix::make_valid_message_view(logon_bad_fix);
     ValidatorResult result = validator.validate_message(valid_logon_bad_fix, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
@@ -79,7 +79,7 @@ TEST(ValidatorTests, WrongFieldType) {
         {"30", 108},                      // HeartBtInt
         {"235", 10}
     };
-    auto valid_logon_bad_field = Fix::make_valid_message(logon_bad_field);
+    auto valid_logon_bad_field = Fix::make_valid_message_view(logon_bad_field);
     ValidatorResult result = validator.validate_message(valid_logon_bad_field, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
@@ -105,7 +105,7 @@ TEST(ValidatorTests, MissingField) {
         {"235", 10}
     };
 
-    auto valid_logon_missing_field = Fix::make_valid_message(logon_missing_field);
+    auto valid_logon_missing_field = Fix::make_valid_message_view(logon_missing_field);
     ValidatorResult result = validator.validate_message(valid_logon_missing_field, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
@@ -136,7 +136,7 @@ TEST(ValidatorTests, MissingGroupEntry) {
         .target_comp_id = "them"
     };
 
-    auto valid_message_missing_group_entry = Fix::make_valid_message(message_missing_group_entry);
+    auto valid_message_missing_group_entry = Fix::make_valid_message_view(message_missing_group_entry);
     ValidatorResult result = validator.validate_message(valid_message_missing_group_entry, params);
 
 
@@ -170,7 +170,7 @@ TEST(ValidatorTests, UnrecognizedField) {
         {"235", 10}
     };
     
-    auto valid_message_missing_group_schema = Fix::make_valid_message(message_missing_group_schema);
+    auto valid_message_missing_group_schema = Fix::make_valid_message_view(message_missing_group_schema);
     ValidatorResult result = validator.validate_message(valid_message_missing_group_schema, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
@@ -197,7 +197,7 @@ TEST(ValidatorTests, MalformedTag34) {
         {"30", 108},                      // HeartBtInt
         {"012", 10}
     };
-    auto valid_logon_bad_seqnum = Fix::make_valid_message(logon_bad_seqnum);
+    auto valid_logon_bad_seqnum = Fix::make_valid_message_view(logon_bad_seqnum);
     ValidatorResult result = validator.validate_message(valid_logon_bad_seqnum, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
@@ -224,7 +224,7 @@ TEST(ValidatorTests, MalformedTag8) {
         {"231", 10}
     };
 
-    auto valid_logon_bad_seqnum = Fix::make_valid_message(logon_bad_seqnum);
+    auto valid_logon_bad_seqnum = Fix::make_valid_message_view(logon_bad_seqnum);
     ValidatorResult result = validator.validate_message(valid_logon_bad_seqnum, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
@@ -251,7 +251,7 @@ TEST(ValidatorTests, WrongSenderCompID) {
         {"30", 108},                      // HeartBtInt
         {"166", 10}
     };
-    auto valid_logon_bad_sender = Fix::make_valid_message(logon_bad_sender);
+    auto valid_logon_bad_sender = Fix::make_valid_message_view(logon_bad_sender);
     ValidatorResult result = validator.validate_message(valid_logon_bad_sender, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
@@ -278,7 +278,7 @@ TEST(ValidatorTests, WrongTargetCompID) {
         {"166", 10}
     };
 
-    auto valid_logon_bad_target = Fix::make_valid_message(logon_bad_target);
+    auto valid_logon_bad_target = Fix::make_valid_message_view(logon_bad_target);
     ValidatorResult result = validator.validate_message(valid_logon_bad_target, params);
 
     EXPECT_EQ(result.errors.size(), 1UL);
