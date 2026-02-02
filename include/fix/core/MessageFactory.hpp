@@ -101,7 +101,7 @@ namespace Fix {
             stamp_trailer_();
             return scratch_.get_buffer_view();
         }
-        std::string_view test_request(std::string id) {
+        std::string_view test_request(std::string_view id) {
             scratch_.reset();
             stamp_header_("1");
             scratch_.add_field(112, id);
@@ -220,7 +220,7 @@ namespace Fix {
         SeqProvider& seq_provider_;
         TClock& clock_;
 
-        void stamp_header_(std::string type) {
+        void stamp_header_(std::string_view type) {
             scratch_.add_field(8, params_.fix_version);
             scratch_.add_body_length_placeholder();
             scratch_.add_field(35, type);
