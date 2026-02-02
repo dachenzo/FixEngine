@@ -47,7 +47,8 @@ namespace Fix::Schema {
         Message::SequenceReset,
         Message::Logout,
         Message::ResendRequest,
-        Message::Reject
+        Message::Reject,
+        Message::Custom
         >();
         static inline constexpr auto sorted_indices = make_sorted_registry_indices<message_schemas.size()>(message_schemas);
         

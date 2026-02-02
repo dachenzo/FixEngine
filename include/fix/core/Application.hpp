@@ -7,11 +7,14 @@
 #include <iostream>
 #include <boost/asio/executor.hpp>
 #include <fix/core/Message.hpp>
+#include <fix/message/MessageList.hpp>
+#include <fix/core/SessionManager.hpp>
 #include <fix/core/ApplicationEvents.hpp>
+#include <utility>
 
 namespace Fix {
 
-    struct SessionManager;
+
 
     template <typename App, typename ...Args>
     concept ApplicationLike = 
@@ -43,7 +46,6 @@ namespace Fix {
                 boost::asio::post(exec_, [this, ev = std::move(event)]() mutable {
                     process_event_(std::move(ev));
                 });
-
             }; 
         }
 
@@ -53,6 +55,9 @@ namespace Fix {
             std::cout << "DummyApplication received message of type: " 
                       << *event.valid_message.header_cache_.slots[static_cast<size_t>(CacheSlot::MsgType)] 
                       << " for session: " << event.session_id.id << std::endl;
+            GenericMessage<GenericField> msg{{"Yello", 9250}};
+            OutBoundAppMsg out_msg{std::move(msg), event.session_id, Fix::Message::Custom::MsgType};
+            session_manager_.send(std::move(out_msg));  
 
         }
 

@@ -152,8 +152,8 @@ DoD: strictness is configurable, interop is validated with golden messages/count
 ## 17. Application Integration
 | Aspect                                         | Exists | Correct | Integrated | Performant | Hardened |
 |------------------------------------------------|--------|---------|------------|------------|----------|
-| Application callbacks (OnLogon/OnLogout/OnMsg) | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Business message routing API                   | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Application callbacks (OnLogon/OnLogout/OnMsg) | ✅      | ❌       | ✅          | ❌          | ❌        |
+| Business message routing API                   | ✅      | ❌       | ✅          | ❌          | ❌        |
 | Backpressure signals to application            | ❌      | ❌       | ❌          | ❌          | ❌        |
 | Safe shutdown hooks / draining                 | ⚠️     | ❓       | ⚠️         | ❌          | ❌        |
 
