@@ -27,7 +27,7 @@ namespace Fix {
         boost::asio::io_context& io_context,
         AppSink app_sink
         ) :
-        app_sink_{app_sink}, 
+        app_sink_{std::move(app_sink)}, 
         exec_{boost::asio::make_strand(io_context)},
         connFactory_{connFactory},
         timerFactory_{timerFactory},

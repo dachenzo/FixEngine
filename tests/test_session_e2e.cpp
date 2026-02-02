@@ -32,7 +32,8 @@ static constexpr const char* SOH = "\x01";
 
 TEST(SessionE2E, InitiatorAndAcceptorCompleteLogonHandshake) {
     boost::asio::io_context io;
-    Fix::AppSink app{};
+    Fix::AppSink app1{};
+    Fix::AppSink app2{};
     DummyTimerFactory timers{};
     Fix::Log::LogCore log_core{"session_e2e_logon"};
 
@@ -56,8 +57,8 @@ TEST(SessionE2E, InitiatorAndAcceptorCompleteLogonHandshake) {
     log_core.add_session(init_id, "CLT<->SRV [1]");
     log_core.add_session(acc_id,  "SRV<->CLT [2]");
 
-    auto initiator = std::make_shared<Fix::Session>(init_id, Fix::Role::INITIATOR, std::move(app), timers, init_params, log_core, io, cb);
-    auto acceptor  = std::make_shared<Fix::Session>(acc_id,  Fix::Role::ACCEPTOR,  std::move(app), timers, acc_params,  log_core, io, cb);
+    auto initiator = std::make_shared<Fix::Session>(init_id, Fix::Role::INITIATOR, std::move(app1), timers, init_params, log_core, io, cb);
+    auto acceptor  = std::make_shared<Fix::Session>(acc_id,  Fix::Role::ACCEPTOR,  std::move(app2), timers, acc_params,  log_core, io, cb);
 
     auto [c_init, c_acc] = Fix::TestSupport::LoopbackConnection::make_pair(io);
 
@@ -92,7 +93,8 @@ TEST(SessionE2E, InitiatorAndAcceptorCompleteLogonHandshake) {
 
 TEST(SessionE2E, TestRequestGetsHeartbeatWithSameTestReqId) {
     boost::asio::io_context io;
-    Fix::AppSink app{};
+    Fix::AppSink app1{};
+    Fix::AppSink app2{};
     DummyTimerFactory timers{};
     Fix::Log::LogCore log_core{"session_e2e_testreq"};
 
@@ -114,8 +116,8 @@ TEST(SessionE2E, TestRequestGetsHeartbeatWithSameTestReqId) {
     log_core.add_session(init_id, "CLT<->SRV [1]");
     log_core.add_session(acc_id,  "SRV<->CLT [2]");
 
-    auto initiator = std::make_shared<Fix::Session>(init_id, Fix::Role::INITIATOR, std::move(app), timers, init_params, log_core, io, cb);
-    auto acceptor  = std::make_shared<Fix::Session>(acc_id,  Fix::Role::ACCEPTOR,  std::move(app), timers, acc_params,  log_core, io, cb);
+    auto initiator = std::make_shared<Fix::Session>(init_id, Fix::Role::INITIATOR, std::move(app1), timers, init_params, log_core, io, cb);
+    auto acceptor  = std::make_shared<Fix::Session>(acc_id,  Fix::Role::ACCEPTOR,  std::move(app2), timers, acc_params,  log_core, io, cb);
 
     auto [c_init, c_acc] = Fix::TestSupport::LoopbackConnection::make_pair(io);
 
