@@ -388,3 +388,83 @@ TEST(SessionE2E, TriggerResendRequest) {
     acceptor->stop();
     pump(io);
 }
+
+
+TEST(SessionE2E, ChunkedMessageHandling) {
+    boost::asio::io_context io;
+    Fix::AppSink app1 = [](const Fix::InBoundAppEvent&){};
+    Fix::AppSink app2 = [](const Fix::InBoundAppEvent&){};
+    Fix::Log::LogCore log_core{"session_e2e_resend"};
+
+    Fix::SessionID init_id{0, 1};
+    Fix::SessionID acc_id{1, 2};
+
+    Fix::SessionParameters init_params{};
+    init_params.sender_comp_id = "init";
+    init_params.target_comp_id = "acc";
+    init_params.heart_beat_int = 30;
+
+    Fix::SessionParameters acc_params{};
+    acc_params.sender_comp_id = "acc";
+    acc_params.target_comp_id = "init";
+    acc_params.heart_beat_int = 30;
+
+    Fix::ReconnectCallback cb = [](Fix::SessionID) {};
+
+    log_core.add_session(init_id, "init<->acc [1]");
+    log_core.add_session(acc_id,  "acc<->init [2]");
+
+    auto initiator = std::make_shared<Fix::Session>(init_id, Fix::Role::INITIATOR, std::move(app1), init_params, log_core, io, cb);
+    auto acceptor  = std::make_shared<Fix::Session>(acc_id,  Fix::Role::ACCEPTOR,  std::move(app2), acc_params,  log_core, io, cb);
+
+    auto [c_init, c_acc] = Fix::TestSupport::LoopbackConnection::make_pair(io);
+
+    initiator->set_connection(c_init);
+    acceptor->set_connection(c_acc);
+
+    initiator->start(Fix::StartMode::NORMAL);
+    acceptor->start(Fix::StartMode::NORMAL);
+
+    // 1. Wait for Logon Handshake
+    for (int i = 0; i < 200; ++i) {
+        pump(io);
+        if (contains_fix_field(c_init->peek_write_log(), std::string(SOH) + "35=A" + SOH)) {
+            break;
+        }
+    }
+    c_init->take_write_log();
+
+
+    // 2. Send Chunked Message
+    {
+        Fix::SeqProvider sp;
+        sp.update_out(2); // Acceptor sent Logon(1)  So Next is 2.
+        Fix::Clock clock;
+        Fix::MessageFactory<Fix::Clock> mf{acc_params, sp, clock};
+
+        std::string test_req_wire = std::string(mf.custom_message("TEST_PAYLOAD"));
+        // Chunk into pieces
+        const size_t chunk_size = 7;
+        //Inject Garbage first
+        c_init->inject_inbound("GARBAGE_DATA");
+        pump(io);
+
+        // Now inject in chunks
+        for (size_t offset = 0; offset < test_req_wire.size(); offset += chunk_size) {
+            size_t len = std::min(chunk_size, test_req_wire.size() - offset);
+            c_init->inject_inbound(test_req_wire.substr(offset, len));
+            pump(io);
+        }
+    }
+    pump(io);
+    auto traffic = c_init->peek_write_log();
+    std::cout << "Traffic Written by Initiator:\n" << traffic << std::endl;    
+    // Verification:
+    // 1. Ensure Custom Message processed correctly
+    EXPECT_TRUE(contains_fix_field(traffic, std::string(SOH) + std::string("35=") + std::string(Fix::Message::Custom::MsgType) + SOH));
+    EXPECT_TRUE(contains_fix_field(traffic, std::string(SOH) + "9250=custom_response")); 
+    EXPECT_TRUE(contains_fix_field(traffic, std::string(SOH) + "34=2" + SOH));
+    initiator->stop();
+    acceptor->stop();
+    pump(io);
+}
