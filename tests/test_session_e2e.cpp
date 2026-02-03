@@ -29,40 +29,7 @@ static constexpr std::string SOH = "\x01";
 
 
 
-struct TestApplication {
-    TestApplication(Fix::SessionManager& session_manager, boost::asio::io_context& io_context):
-    exec_{boost::asio::make_strand(io_context.get_executor())},
-    session_manager_{session_manager}
-    {}
-    std::string get_name() { return "TestApplication"; }
-    Fix::AppSink get_app_sink() { 
-        return [this](Fix::InBoundAppEvent&& event) {
-            boost::asio::post(exec_, [this, ev = std::move(event)]() mutable {
-                process_event_(std::move(ev));
-            });
-        }; 
-    }
 
-    void process_event_(Fix::InBoundAppEvent&& event) {
-        // assume in strand already
-        std::cout << "TestApplication received message of type: " 
-                  << *event.valid_message.header_cache_.slots[static_cast<size_t>(Fix::CacheSlot::MsgType)] 
-                  << " for session: " << event.session_id.id << std::endl;
-        send_test_message(event.session_id);
-
-    }
-
-    void send_test_message(Fix::SessionID session_id) {
-        Fix::GenericMessage<Fix::GenericField> msg{{"TEST", 9250}};
-        Fix::OutBoundAppMsg out_msg{std::move(msg), session_id, Fix::Message::Custom::MsgType};
-        session_manager_.send(std::move(out_msg));  
-    }
-
-
-
-    boost::asio::strand<boost::asio::any_io_executor> exec_;
-    Fix::SessionManager& session_manager_;
-};
 } // namespace
 
 TEST(SessionE2E, InitiatorAndAcceptorCompleteLogonHandshake) {
