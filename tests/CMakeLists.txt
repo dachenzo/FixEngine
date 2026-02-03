@@ -14,6 +14,7 @@ add_executable(fix_tests
     test_admin_schemas.cpp
     test_session_pool.cpp
     test_session_e2e.cpp
+    test_session_manager.cpp
 )
 
 
