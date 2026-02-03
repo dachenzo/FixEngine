@@ -1,4 +1,3 @@
-#include "fix/core/Message.hpp"
 #include <boost/asio.hpp>
 #include <boost/asio/dispatch.hpp>
 #include <string_view>
@@ -9,6 +8,8 @@
 #include <fix/core/Session.hpp>
 #include <fix/core/Parser.hpp>
 #include <fix/core/utils.hpp>
+#include <fix/message/GenericMessage.hpp>
+#include <fix/message/admin/Custom.hpp>
 #include <sys/socket.h>
 #include <sys/stat.h>
 
@@ -20,7 +21,6 @@ namespace Fix {
                 Fix::SessionID id,
                 Fix::Role role,
                 Fix::AppSink&& app_sink,
-                Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
                 boost::asio::io_context& io_context,
@@ -33,7 +33,6 @@ namespace Fix {
                 framer_{},
                 parser_ctx_{},
                 app_sink_{std::move(app_sink)},
-                timers_{timers},
                 id_{id},
                 role_{role},
                 store_{},
@@ -56,6 +55,10 @@ namespace Fix {
 
     Session::~Session() {
         if (conn_) conn_->close();
+    }
+
+    SessionState Session::get_state() const noexcept {
+        return state_;
     }
 
     void Session::stop_() {
@@ -105,6 +108,13 @@ namespace Fix {
         boost::asio::dispatch(exec_, [self = shared_from_this(), reason] {
             if (self->stopped_) return;
             self->send_logout(reason);
+            self->logger_.log(
+                {Fix::Error::Layer::Fix, 
+                Fix::Error::Category::Info, 
+                Fix::Error::Severity::NA},
+                reason
+            );
+            self->state_ = SessionState::AWAITING_LOGOUT;
             
             auto handler  = [self](boost::system::error_code ec) {
                 if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
@@ -127,7 +137,7 @@ namespace Fix {
             };
             self->logout_timer_.expires_after(std::chrono::seconds(logout_response_timeout));
             self->logout_timer_.async_wait(handler);
-            self->state_ = SessionState::AWAITING_LOGOUT;
+            
         });
         
     }
@@ -397,7 +407,8 @@ namespace Fix {
         });
     }
 
-    void Session::send_message_(std::string_view msg_wire, bool is_resend) {    
+    void Session::send_message_(std::string_view msg_wire, bool is_resend) {   
+        if (stopped_) return;
         auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));
         if (!is_resend) {
@@ -573,8 +584,10 @@ namespace Fix {
 
 
     void Session::dispatch(const GenericMessage<GenericFieldView>& message, std::string_view raw_msg)  {
-        Fix::ValidMessageView msg = Fix::make_valid_message_view(message);
+        if (stopped_) return;
 
+        Fix::ValidMessageView msg = Fix::make_valid_message_view(message);
+        
         auto results = validator_.validate_message(msg, params_);
 
         if (results.severity == Error::Severity::Fatal) {
@@ -624,7 +637,9 @@ namespace Fix {
                 stop_with_logout("MsgSeqNum too high during recovery");
                 return;
             }
-            recovery_cache_.insert(seq_num, raw_msg);
+            if (!recovery_cache_.contains(seq_num)) {
+                recovery_cache_.insert(seq_num, raw_msg);
+            }
             return;
         } else if (seq_num > seq_provider_.next_in()) {
             // Future seq num, need to resend
@@ -633,7 +648,9 @@ namespace Fix {
             state_ = Fix::SessionState::RECOVERING_RESEND;
 
             recovery_cache_.start(expected);        // base offset = expected
-            recovery_cache_.insert(seq_num, raw_msg);
+            if (!recovery_cache_.contains(seq_num)) {
+                recovery_cache_.insert(seq_num, raw_msg);
+            }
             return;
 
         } else if (seq_num < seq_provider_.next_in() && is_dup) {
@@ -641,7 +658,10 @@ namespace Fix {
             return;
         } else {
             // old seq num, not marked as duplicate
-            stop_with_logout("MsgSeqNum too low");
+            std::string err = "Received MsgSeqNum " + std::to_string(seq_num) + " but expected " + std::to_string(seq_provider_.next_in()) + "Message: " + std::string(raw_msg);
+
+            stop_with_logout(err);
+
             return;
         }
 
@@ -657,7 +677,10 @@ namespace Fix {
         else if (msg_type == "0") {handle_heartbeat(msg);}
         else if (msg_type == "1") {handle_test_request(msg);}
         else if (msg_type == "2") {handle_resend_request(msg);}
+        else if (msg_type == "3") {handle_reject(msg);}
         else if (msg_type == "4") {handle_sequence_reset(msg);}
+        else if (msg_type == Message::Custom::MsgType) {handle_custom(msg);}    
+
         else {
             app_sink_({make_valid_message(msg.message_), id_});
         }
@@ -700,9 +723,22 @@ namespace Fix {
         send_message_(wire);
     }
 
+    void Session::send_custom(std::string_view payload) {
+        auto wire = msg_factory_.custom_message(payload);
+        send_message_(wire);
+    }
+
     void Session::send_sequence_reset(std::size_t newSeqNo, bool gapfill) {
         auto wire = msg_factory_.sequence_reset(newSeqNo, gapfill);
         send_message_(wire);
+    }
+
+    void Session::send_sequence_reset_gap_fill(std::size_t msgSeqNum, std::size_t newSeqNo) {
+        auto wire = msg_factory_.sequence_reset_gap_fill(msgSeqNum, newSeqNo);
+        send_message_(wire, true); // true = raw/resend (skip standard seq stamping if any... actually send_message_ handles logging)
+        // Wait, send_message_ implementation? It takes (string_view, bool resend = false)
+        // If resend=true, it might just log "Resend".
+        // Session::send_message_ does NOT stamp headers (MessageFactory does).
     }
 
     void Session::handle_logon(const Fix::ValidMessageView& message) {
@@ -721,7 +757,11 @@ namespace Fix {
                 }
             );
         assert(heart_bt_int_it != message.message_.end());
-        validate_heartbeat_int(heart_bt_int_it->value, role_ == Fix::Role::INITIATOR);
+        auto isvalid = validate_heartbeat_int(heart_bt_int_it->value, role_ == Fix::Role::INITIATOR);
+        if (!isvalid) {
+            stop_with_logout("Invalid HeartBtInt value");
+            return;
+        }
 
         bool reset_seq_nums = false;
         auto reset_it = std::find_if(
@@ -789,9 +829,14 @@ namespace Fix {
         
     }
 
+    
+
     void Session::handle_heartbeat(const Fix::ValidMessageView& message) {
         awaiting_test_request_response_ = false;
     }
+
+
+
     void Session::handle_test_request(const Fix::ValidMessageView& message) {
         auto test_req_id_it = std::find_if(
             message.message_.begin(),
@@ -834,11 +879,16 @@ namespace Fix {
             end_seq_num_it->value.data() + end_seq_num_it->value.size(),
             end_seq_no
         );
+
+        if (end_seq_no == 0 || end_seq_no >= seq_provider_.next_out()) {
+            end_seq_no = (std::uint32_t)seq_provider_.next_out() - 1;
+        }
+
         auto stream = store_.get_resend_stream(begin_seq_no, end_seq_no);
         for (; stream.has_next(); ) {
             auto action = stream.next();
             if (action.gap_fill) {
-                send_sequence_reset(action.end_seq_no + 1, true);
+                send_sequence_reset_gap_fill(action.begin_seq_no, action.end_seq_no + 1);
             } else {
                 auto& msg_index = store_.get_message_index(action.begin_seq_no);
                 auto new_wire = msg_factory_.regenerate_message(store_.get_message_wire(msg_index), msg_index);
@@ -884,8 +934,66 @@ namespace Fix {
         seq_provider_.update_in(new_seq_no);
     }
 
+    void  Session::handle_reject(const Fix::ValidMessageView& message) {
 
-    void Session::validate_heartbeat_int(std::string_view incoming_value, bool is_initiator) {
+
+        auto ref_seq_num_it = std::find_if(
+            message.message_.begin(),
+            message.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 45; // RefSeqNum
+            }
+        );
+
+        auto msg_type_it = std::find_if(
+            message.message_.begin(),
+            message.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 372; // RefMsgType
+            }
+        );
+
+        auto text_it = std::find_if(
+            message.message_.begin(),
+            message.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 58; // Text
+            }
+        );
+        // Placeholder for handling reject messages if needed
+        std::string reason = "Received Reject message" + 
+            ("for MsgSeqNum " + std::string(ref_seq_num_it->value)) +
+            (msg_type_it != message.message_.end() ? (" of type " + std::string(msg_type_it->value)) : "") +
+            (text_it != message.message_.end() ? (": " + std::string(text_it->value)) : "");
+        logger_.log(
+            {Fix::Error::Layer::Fix, 
+            Fix::Error::Category::Warn, 
+            Fix::Error::Severity::Moderate},
+            reason
+        );
+    }       
+
+
+    void Session::handle_custom(const Fix::ValidMessageView& message) {
+        // Placeholder for handling custom messages if needed
+        std::string payload = std::string("custom_response from") + readable_id();
+        auto payload_it = std::find_if(
+            message.message_.begin(),
+            message.message_.end(),
+            [](const GenericFieldView& field) {
+                return field.tag == 9250; // Custom Payload tag
+            }
+        );
+        auto rec_payload = payload_it != message.message_.end() ? payload_it->value : std::string_view{};
+
+        if (rec_payload.find("custom_response") != std::string_view::npos) {
+            // avoid echoing back
+            return;
+        }
+        send_custom(payload);
+    }
+
+    bool Session::validate_heartbeat_int(std::string_view incoming_value, bool is_initiator) {
         uint32_t incoming_hb_int = 0;
         std::from_chars(
             incoming_value.data(),
@@ -893,14 +1001,13 @@ namespace Fix {
             incoming_hb_int
         );
         if (is_initiator && incoming_hb_int != params_.heart_beat_int) {
-            stop_with_logout("HeartBtInt does not match configured value");
-            return;
+            return false;
         }
-        if (incoming_hb_int < 10 || incoming_hb_int > 120) {
-            stop_with_logout("HeartBtInt out of range");
-            return;
+        if (incoming_hb_int < 10 || incoming_hb_int > 120) {            
+            return false;
         }
         params_.heart_beat_int = incoming_hb_int;
+        return true;
     }
 
     bool Session::is_app_message_type_(std::string_view msg_type) const noexcept {

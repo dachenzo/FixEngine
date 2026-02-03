@@ -20,7 +20,6 @@ namespace Fix {
     std::shared_ptr<Session> SessionPool::emplace_session(      
         Fix::Role role,
         Fix::AppSink&& app_sink,
-        Fix::ITimerFactory& timers,
         Fix::SessionParameters params,
         Fix::Log::LogCore& log_core,
         boost::asio::io_context& io_context,
@@ -32,8 +31,7 @@ namespace Fix {
                 std::make_shared<Session>(
                     session_id,
                     role,
-                    std::move(app_sink),
-                    timers,
+                    std::move(app_sink),        
                     params,
                     log_core,
                     io_context,
@@ -49,7 +47,6 @@ namespace Fix {
                 session_id,
                 role,
                 std::move(app_sink),
-                timers,
                 params,
                 log_core,
                 io_context,

@@ -23,10 +23,13 @@
 #include <fix/log/SessionLogger.hpp>
 #include <fix/message/GenericMessage.hpp>
 #include <fix/core/ApplicationEvents.hpp>
+#include <string>
 #include <string_view>
 
 
 namespace Fix {
+
+
 
     enum class SessionState {
         AWAITING_LOGON,
@@ -36,6 +39,27 @@ namespace Fix {
         RECOVERING_RESEND,
         ACTIVE,
         DISCONNECTED,
+    };
+
+    inline std::string to_string(SessionState state) {
+        switch (state) {
+            case SessionState::AWAITING_LOGON:
+                return "AWAITING_LOGON";
+            case SessionState::AWAITING_LOGOUT:
+                return "AWAITING_LOGOUT";
+            case SessionState::LOGON_RECEIVED:
+                return "LOGON_RECEIVED";
+            case SessionState::LOGON_SENT:
+                return "LOGON_SENT";
+            case SessionState::RECOVERING_RESEND:
+                return "RECOVERING_RESEND";
+            case SessionState::ACTIVE:
+                return "ACTIVE";
+            case SessionState::DISCONNECTED:
+                return "DISCONNECTED";
+            default:
+                return "UNKNOWN";
+        }
     };
 
     enum class StartMode {
@@ -51,7 +75,6 @@ namespace Fix {
         Session(Fix::SessionID id,
                 Fix::Role role,
                 Fix::AppSink&& app_sink,
-                Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
                 boost::asio::io_context& io_context,
@@ -77,6 +100,8 @@ namespace Fix {
         std::string readable_id() const noexcept;
 
         Log::SessionLogger& logger() ;
+
+        SessionState get_state() const noexcept;
 
 
         //app callbacks
@@ -109,6 +134,8 @@ namespace Fix {
             void send_test_request(const std::string& testReqId);
             void send_resend_request(std::size_t beginSeqNo, std::size_t endSeqNo);
             void send_sequence_reset(std::size_t newSeqNo, bool gapfill);
+            void send_sequence_reset_gap_fill(std::size_t msgSeqNum, std::size_t newSeqNo);
+            void send_custom(std::string_view payload);
            
 
             // FIX admin handlers
@@ -118,6 +145,8 @@ namespace Fix {
             void handle_test_request(const Fix::ValidMessageView& message);
             void handle_resend_request(const Fix::ValidMessageView& message);
             void handle_sequence_reset(const Fix::ValidMessageView& message);
+            void handle_reject(const Fix::ValidMessageView& message);
+            void handle_custom(const Fix::ValidMessageView& message);
 
 
             //core IO
@@ -129,7 +158,7 @@ namespace Fix {
 
 
             //validation
-            void validate_heartbeat_int(std::string_view incoming_value, bool is_initiator);
+            bool validate_heartbeat_int(std::string_view incoming_value, bool is_initiator);
             bool is_app_message_type_(std::string_view msg_type) const noexcept;
 
 
@@ -165,7 +194,6 @@ namespace Fix {
             boost::asio::steady_timer logout_timer_;
             Fix::Validator validator_;
             Fix::AppSink app_sink_;
-            Fix::ITimerFactory& timers_;
             std::uint64_t test_req_id_ = 0;
             bool stopped_ = false;  // user requested stop / session shutting down
             bool write_inflight_ = false;

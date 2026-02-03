@@ -43,4 +43,22 @@ namespace Fix {
 
     template<typename T>
     using GenericMessage = std::vector<T>;
+
+    inline std::string to_string(const GenericMessage<GenericFieldView>& msg) {
+        std::string result;
+        for (const auto& field : msg) {
+            result += std::to_string(field.tag) + "=" + std::string(field.value) + "\x01" + "\n";
+        }
+        return result;
+
+    }
+
+    inline std::string to_string(const GenericMessage<GenericField>& msg) {
+        std::string result;
+        for (const auto& field : msg) {
+            result += std::to_string(field.tag) + "=" + field.value + "\x01" + "\n";
+        }
+        return result;
+
+    }
 }
