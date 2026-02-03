@@ -13,7 +13,6 @@
 #include <fix/core/Message.hpp>
 #include <fix/core/RecoveryCache.hpp>
 #include <fix/core/MessageFactory.hpp>
-#include <fix/core/Application.hpp>
 #include <fix/core/ITimer.hpp>
 #include <fix/core/Codec.hpp>
 #include <fix/core/Validator.hpp>

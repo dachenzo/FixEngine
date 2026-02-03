@@ -67,33 +67,6 @@ namespace Fix {
         
         std::cout << "Session Created\n";
         if (config.role == Fix::Role::ACCEPTOR) {
-           
-            connFactory_.async_connect(config.conn_config,
-            [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
-            std::shared_ptr<IConnection> conn) {
-                if (ec) {
-                    if (auto s = w.lock()) {
-                        s->logger().log(
-                            {
-                                Fix::Error::Layer::Transport,
-                                Fix::Error::Category::Error,
-                                Fix::Error::Severity::High
-                            },
-                            "Failed to connect: " + ec.message()
-                        );
-                    }
-                    return;
-                }
- 
-                if (auto s = w.lock()) {
-                    s->set_connection(std::move(conn));
-                    s->start(StartMode::NORMAL);
-                } else {
-                    conn->close();
-                }
-            }
-            );
-        } else {
             
             connFactory_.async_listen(
                 config.conn_config,
@@ -122,6 +95,33 @@ namespace Fix {
                 }
             );
 
+        } else {
+           
+            connFactory_.async_connect(config.conn_config,
+            [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
+            std::shared_ptr<IConnection> conn) {
+                if (ec) {
+                    if (auto s = w.lock()) {
+                        s->logger().log(
+                            {
+                                Fix::Error::Layer::Transport,
+                                Fix::Error::Category::Error,
+                                Fix::Error::Severity::High
+                            },
+                            "Failed to connect: " + ec.message()
+                        );
+                    }
+                    return;
+                }
+ 
+                if (auto s = w.lock()) {
+                    s->set_connection(std::move(conn));
+                    s->start(StartMode::NORMAL);
+                } else {
+                    conn->close();
+                }
+            }
+            );
         }
 
         
@@ -139,32 +139,6 @@ namespace Fix {
         auto& config = it->second;
 
         if (config.role == Fix::Role::ACCEPTOR) {
-            connFactory_.async_connect(config.conn_config,
-            [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
-            std::shared_ptr<IConnection> conn) {
-                if (ec) {
-                    if (auto s = w.lock()) {
-                        s->logger().log(
-                            {
-                                Fix::Error::Layer::Transport,
-                                Fix::Error::Category::Error,
-                                Fix::Error::Severity::High
-                            },
-                            "Failed to reconnect after disconnect: " + ec.message()
-                        );
-                    }
-                    return;
-                }
-
-                if (auto s = w.lock()) {
-                    s->set_connection(std::move(conn));
-                    s->start(StartMode::RECONNECT);
-                } else {
-                    conn->close();
-                }
-            }
-            );
-        } else {
             
             connFactory_.async_listen(
                 config.conn_config,
@@ -193,6 +167,32 @@ namespace Fix {
                 }
             );
 
+        } else {
+            connFactory_.async_connect(config.conn_config,
+            [w = std::weak_ptr<Fix::Session>(sess)](const boost::system::error_code& ec,
+            std::shared_ptr<IConnection> conn) {
+                if (ec) {
+                    if (auto s = w.lock()) {
+                        s->logger().log(
+                            {
+                                Fix::Error::Layer::Transport,
+                                Fix::Error::Category::Error,
+                                Fix::Error::Severity::High
+                            },
+                            "Failed to reconnect after disconnect: " + ec.message()
+                        );
+                    }
+                    return;
+                }
+
+                if (auto s = w.lock()) {
+                    s->set_connection(std::move(conn));
+                    s->start(StartMode::RECONNECT);
+                } else {
+                    conn->close();
+                }
+            }
+            );
         }
     }
 

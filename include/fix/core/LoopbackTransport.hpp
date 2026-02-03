@@ -21,6 +21,7 @@ struct LoopbackChannel {
     std::string inbound;
     std::optional<PendingRead> pending;
     bool closed = false;
+    boost::system::error_code close_reason = boost::asio::error::operation_aborted;
 };
 
 // A minimal in-memory duplex connection suitable for driving Session logic in tests.
@@ -51,8 +52,8 @@ struct LoopbackConnection final : Fix::IConnection, public std::enable_shared_fr
             std::lock_guard<std::mutex> lk(inbound_->mu);
 
             if (inbound_->closed) {
-                boost::asio::post(exec_, [h = std::move(handle)]() mutable {
-                    h(boost::asio::error::operation_aborted, 0);
+                boost::asio::post(exec_, [h = std::move(handle), ec = inbound_->close_reason]() mutable {
+                    h(ec, 0);
                 });
                 return;
             }
@@ -123,9 +124,11 @@ struct LoopbackConnection final : Fix::IConnection, public std::enable_shared_fr
 
     void close() override {
         std::optional<LoopbackChannel::PendingRead> pending;
+        boost::system::error_code reason;
         {
             std::lock_guard<std::mutex> lk(inbound_->mu);
             inbound_->closed = true;
+            reason = inbound_->close_reason;
             if (inbound_->pending.has_value()) {
                 pending = std::move(inbound_->pending);
                 inbound_->pending.reset();
@@ -133,8 +136,27 @@ struct LoopbackConnection final : Fix::IConnection, public std::enable_shared_fr
         }
 
         if (pending.has_value()) {
-            boost::asio::post(pending->exec, [h = std::move(pending->handler)]() mutable {
-                h(boost::asio::error::operation_aborted, 0);
+            boost::asio::post(pending->exec, [h = std::move(pending->handler), reason]() mutable {
+                h(reason, 0);
+            });
+        }
+    }
+
+    void simulate_disconnect(boost::system::error_code ec = boost::asio::error::connection_reset) {
+         std::optional<LoopbackChannel::PendingRead> pending;
+        {
+            std::lock_guard<std::mutex> lk(inbound_->mu);
+            inbound_->closed = true;
+            inbound_->close_reason = ec;
+            if (inbound_->pending.has_value()) {
+                pending = std::move(inbound_->pending);
+                inbound_->pending.reset();
+            }
+        }
+
+        if (pending.has_value()) {
+            boost::asio::post(pending->exec, [h = std::move(pending->handler), ec]() mutable {
+                h(ec, 0);
             });
         }
     }

@@ -1,4 +1,4 @@
-Current Focus: 
+Current Focus: Test session manager and application integration
 
 
 
