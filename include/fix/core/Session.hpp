@@ -29,6 +29,8 @@
 
 namespace Fix {
 
+
+
     enum class SessionState {
         AWAITING_LOGON,
         AWAITING_LOGOUT,
@@ -37,6 +39,27 @@ namespace Fix {
         RECOVERING_RESEND,
         ACTIVE,
         DISCONNECTED,
+    };
+
+    inline std::string to_string(SessionState state) {
+        switch (state) {
+            case SessionState::AWAITING_LOGON:
+                return "AWAITING_LOGON";
+            case SessionState::AWAITING_LOGOUT:
+                return "AWAITING_LOGOUT";
+            case SessionState::LOGON_RECEIVED:
+                return "LOGON_RECEIVED";
+            case SessionState::LOGON_SENT:
+                return "LOGON_SENT";
+            case SessionState::RECOVERING_RESEND:
+                return "RECOVERING_RESEND";
+            case SessionState::ACTIVE:
+                return "ACTIVE";
+            case SessionState::DISCONNECTED:
+                return "DISCONNECTED";
+            default:
+                return "UNKNOWN";
+        }
     };
 
     enum class StartMode {
@@ -133,7 +156,7 @@ namespace Fix {
 
 
             //validation
-            void validate_heartbeat_int(std::string_view incoming_value, bool is_initiator);
+            bool validate_heartbeat_int(std::string_view incoming_value, bool is_initiator);
             bool is_app_message_type_(std::string_view msg_type) const noexcept;
 
 

@@ -109,6 +109,7 @@ namespace Fix {
                 Fix::Error::Severity::NA},
                 reason
             );
+            self->state_ = SessionState::AWAITING_LOGOUT;
             
             auto handler  = [self](boost::system::error_code ec) {
                 if (self->stopped_ || ec == boost::asio::error::operation_aborted) return;
@@ -131,7 +132,7 @@ namespace Fix {
             };
             self->logout_timer_.expires_after(std::chrono::seconds(logout_response_timeout));
             self->logout_timer_.async_wait(handler);
-            self->state_ = SessionState::AWAITING_LOGOUT;
+            
         });
         
     }
@@ -401,7 +402,8 @@ namespace Fix {
         });
     }
 
-    void Session::send_message_(std::string_view msg_wire, bool is_resend) {    
+    void Session::send_message_(std::string_view msg_wire, bool is_resend) {   
+        if (stopped_) return;
         auto writer = Fix::WireWriter::from_arena(arena_, msg_wire);
         send_bytes_(std::move(writer));
         if (!is_resend) {
@@ -577,8 +579,9 @@ namespace Fix {
 
 
     void Session::dispatch(const GenericMessage<GenericFieldView>& message, std::string_view raw_msg)  {
-        Fix::ValidMessageView msg = Fix::make_valid_message_view(message);
+        if (stopped_) return;
 
+        Fix::ValidMessageView msg = Fix::make_valid_message_view(message);
         auto results = validator_.validate_message(msg, params_);
 
         if (results.severity == Error::Severity::Fatal) {
@@ -748,7 +751,11 @@ namespace Fix {
                 }
             );
         assert(heart_bt_int_it != message.message_.end());
-        validate_heartbeat_int(heart_bt_int_it->value, role_ == Fix::Role::INITIATOR);
+        auto isvalid = validate_heartbeat_int(heart_bt_int_it->value, role_ == Fix::Role::INITIATOR);
+        if (!isvalid) {
+            stop_with_logout("Invalid HeartBtInt value");
+            return;
+        }
 
         bool reset_seq_nums = false;
         auto reset_it = std::find_if(
@@ -980,7 +987,7 @@ namespace Fix {
         send_custom(payload);
     }
 
-    void Session::validate_heartbeat_int(std::string_view incoming_value, bool is_initiator) {
+    bool Session::validate_heartbeat_int(std::string_view incoming_value, bool is_initiator) {
         uint32_t incoming_hb_int = 0;
         std::from_chars(
             incoming_value.data(),
@@ -988,14 +995,13 @@ namespace Fix {
             incoming_hb_int
         );
         if (is_initiator && incoming_hb_int != params_.heart_beat_int) {
-            stop_with_logout("HeartBtInt does not match configured value");
-            return;
+            return false;
         }
-        if (incoming_hb_int < 10 || incoming_hb_int > 120) {
-            stop_with_logout("HeartBtInt out of range");
-            return;
+        if (incoming_hb_int < 10 || incoming_hb_int > 120) {            
+            return false;
         }
         params_.heart_beat_int = incoming_hb_int;
+        return true;
     }
 
     bool Session::is_app_message_type_(std::string_view msg_type) const noexcept {

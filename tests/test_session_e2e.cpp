@@ -468,3 +468,139 @@ TEST(SessionE2E, ChunkedMessageHandling) {
     acceptor->stop();
     pump(io);
 }
+
+ 
+TEST(SessionE2E, Logout) {
+    boost::asio::io_context io;
+    Fix::AppSink app1 = [](const Fix::InBoundAppEvent&){};
+    Fix::AppSink app2 = [](const Fix::InBoundAppEvent&){};
+    Fix::Log::LogCore log_core{"session_e2e_resend"};
+
+    Fix::SessionID init_id{0, 1};
+    Fix::SessionID acc_id{1, 2};
+
+    Fix::SessionParameters init_params{};
+    init_params.sender_comp_id = "init";
+    init_params.target_comp_id = "acc";
+    init_params.heart_beat_int = 30;
+
+    Fix::SessionParameters acc_params{};
+    acc_params.sender_comp_id = "acc";
+    acc_params.target_comp_id = "init";
+    acc_params.heart_beat_int = 30;
+
+    Fix::ReconnectCallback cb = [](Fix::SessionID) {};
+
+    log_core.add_session(init_id, "init<->acc [1]");
+    log_core.add_session(acc_id,  "acc<->init [2]");
+
+    auto initiator = std::make_shared<Fix::Session>(init_id, Fix::Role::INITIATOR, std::move(app1), init_params, log_core, io, cb);
+    auto acceptor  = std::make_shared<Fix::Session>(acc_id,  Fix::Role::ACCEPTOR,  std::move(app2), acc_params,  log_core, io, cb);
+
+    auto [c_init, c_acc] = Fix::TestSupport::LoopbackConnection::make_pair(io);
+
+    initiator->set_connection(c_init);
+    acceptor->set_connection(c_acc);
+
+    initiator->start(Fix::StartMode::NORMAL);
+    acceptor->start(Fix::StartMode::NORMAL);
+
+    // 1. Wait for Logon Handshake
+    for (int i = 0; i < 200; ++i) {
+        pump(io);
+        if (contains_fix_field(c_init->peek_write_log(), std::string(SOH) + "35=A" + SOH)) {
+            break;
+        }
+    }
+
+
+    {
+        Fix::SeqProvider sp;
+        sp.update_out(2); // Next MsgSeqNum is 2
+        Fix::Clock clock;
+        Fix::MessageFactory<Fix::Clock> mf{init_params, sp, clock};
+        auto logout_wire = std::string(mf.logout("Client requested logout"));
+        c_init->inject_inbound(logout_wire);
+        c_init->take_write_log();
+        pump(io);
+    }
+
+
+    auto traffic = c_init->peek_write_log();
+
+    // Verification:
+    // 1. Ensure Logout response sent
+    EXPECT_TRUE(contains_fix_field(traffic, std::string(SOH) + "35=5" + SOH));
+
+    initiator->stop();
+    acceptor->stop();
+    pump(io);
+}
+
+
+TEST(SessionE2E, IdleHeartbeat) {
+    boost::asio::io_context io;
+    Fix::AppSink app1 = [](const Fix::InBoundAppEvent&){};
+    Fix::AppSink app2 = [](const Fix::InBoundAppEvent&){};
+    Fix::Log::LogCore log_core{"session_e2e_idle_heartbeat"};
+
+    Fix::SessionID init_id{0, 1};
+    Fix::SessionID acc_id{1, 2};
+
+    Fix::SessionParameters init_params{};
+    init_params.sender_comp_id = "init";
+    init_params.target_comp_id = "acc";
+    init_params.heart_beat_int = 5;
+
+    Fix::SessionParameters acc_params{};
+    acc_params.sender_comp_id = "acc";
+    acc_params.target_comp_id = "init";
+    acc_params.heart_beat_int = 5;
+
+    Fix::ReconnectCallback cb = [](Fix::SessionID) {};
+
+    log_core.add_session(init_id, "init<->acc [1]");
+    log_core.add_session(acc_id,  "acc<->init [2]");
+
+    auto initiator = std::make_shared<Fix::Session>(init_id, Fix::Role::INITIATOR, std::move(app1), init_params, log_core, io, cb);
+    auto acceptor  = std::make_shared<Fix::Session>(acc_id,  Fix::Role::ACCEPTOR,  std::move(app2), acc_params,  log_core, io, cb);
+
+    auto [c_init, c_acc] = Fix::TestSupport::LoopbackConnection::make_pair(io);
+
+    initiator->set_connection(c_init);
+    acceptor->set_connection(c_acc);
+
+    initiator->start(Fix::StartMode::NORMAL);
+    acceptor->start(Fix::StartMode::NORMAL);
+
+    // 1. Wait for Logon Handshake
+    for (int i = 0; i < 200; ++i) {
+        pump(io);
+        if (contains_fix_field(c_init->peek_write_log(), std::string(SOH) + "35=A" + SOH)) {
+            break;
+        }
+    }
+    c_init->take_write_log();
+    c_acc->take_write_log();
+
+    // 2. Advance time to trigger heartbeat
+    for (int i = 0; i < 7; ++i) {
+        boost::asio::steady_timer timer(io, std::chrono::seconds(1));
+        timer.wait();
+        pump(io);   
+    }
+
+    auto init_traffic = c_init->peek_write_log();
+    auto acc_traffic  = c_acc->peek_write_log();
+
+
+
+    // Verification:    // 1. Ensure Heartbeats sent
+    EXPECT_TRUE(contains_fix_field(init_traffic, std::string(SOH) + "35=0" + SOH));
+    EXPECT_TRUE(contains_fix_field(init_traffic, std::string(SOH) + "34=2" + SOH));
+    EXPECT_TRUE(contains_fix_field(acc_traffic,  std::string(SOH) + "35=0" + SOH));
+    EXPECT_TRUE(contains_fix_field(acc_traffic,  std::string(SOH) + "34=2" + SOH));
+    initiator->stop();
+    acceptor->stop();
+    pump(io);
+}
