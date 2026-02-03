@@ -458,7 +458,6 @@ TEST(SessionE2E, ChunkedMessageHandling) {
     }
     pump(io);
     auto traffic = c_init->peek_write_log();
-    std::cout << "Traffic Written by Initiator:\n" << traffic << std::endl;    
     // Verification:
     // 1. Ensure Custom Message processed correctly
     EXPECT_TRUE(contains_fix_field(traffic, std::string(SOH) + std::string("35=") + std::string(Fix::Message::Custom::MsgType) + SOH));
@@ -550,12 +549,12 @@ TEST(SessionE2E, IdleHeartbeat) {
     Fix::SessionParameters init_params{};
     init_params.sender_comp_id = "init";
     init_params.target_comp_id = "acc";
-    init_params.heart_beat_int = 5;
+    init_params.heart_beat_int = 10;
 
     Fix::SessionParameters acc_params{};
     acc_params.sender_comp_id = "acc";
     acc_params.target_comp_id = "init";
-    acc_params.heart_beat_int = 5;
+    acc_params.heart_beat_int = 10;
 
     Fix::ReconnectCallback cb = [](Fix::SessionID) {};
 
@@ -584,7 +583,7 @@ TEST(SessionE2E, IdleHeartbeat) {
     c_acc->take_write_log();
 
     // 2. Advance time to trigger heartbeat
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < 12; ++i) {
         boost::asio::steady_timer timer(io, std::chrono::seconds(1));
         timer.wait();
         pump(io);   
