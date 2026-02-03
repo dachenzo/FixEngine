@@ -13,7 +13,7 @@ namespace Fix::Message {
     }};
 
     struct Custom {
-        inline static constexpr std::string_view MsgType = "custom_admin";
+        inline static constexpr std::string_view MsgType = "cu";
         inline static constexpr  const FieldSchema* Schema = CustomSchema.data();
         inline static constexpr  const std::size_t SchemaSize = CustomSchema.size();        
     };

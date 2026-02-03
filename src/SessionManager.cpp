@@ -23,14 +23,12 @@ namespace Fix {
 
     SessionManager::SessionManager( 
         Fix::IConnectionFactory& connFactory, 
-        Fix::ITimerFactory& timerFactory,
         boost::asio::io_context& io_context,
         AppSink app_sink
         ) :
         app_sink_{std::move(app_sink)}, 
         exec_{boost::asio::make_strand(io_context)},
         connFactory_{connFactory},
-        timerFactory_{timerFactory},
         session_pool_{},
         io_context_{io_context},
         log_core_{generate_engine_id()}
@@ -57,7 +55,6 @@ namespace Fix {
         auto sess = session_pool_.emplace_session(
             config.role,
             std::move(session_app_sink),
-            timerFactory_,
             config.params,
             log_core_,
             io_context_,

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 #include <span>
 #include <cassert>
 #include <charconv>
@@ -83,6 +84,8 @@ namespace Fix {
         }
         std::memcpy(blob_buffer_ + blob_buffer_used_, wire.data(), wire.size());
         auto msg_index = create_message_index(wire, static_cast<uint32_t>(blob_buffer_used_));
+        std::cout  << "Storing outbound message SeqNum: " << msg_index.seq << " Type: " 
+                  << std::string(msg_index.msg_type.data(), msg_index.msg_size) << ' ' <<wire.substr(25, 25) << std::endl;
         assert(msg_index.seq == outbound_index_.size() + 1); // MsgSeqNum should be sequential
         outbound_index_.push_back(msg_index);
         blob_buffer_used_ += wire.size();

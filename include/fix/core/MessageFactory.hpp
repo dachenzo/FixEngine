@@ -128,6 +128,27 @@ namespace Fix {
             stamp_trailer_();
             return scratch_.get_buffer_view();
         }
+
+        std::string_view sequence_reset_gap_fill(uint64_t msgSeqNum, uint64_t newSeqNo) {
+            scratch_.reset();
+            // Custom header stamping
+            scratch_.add_field(8, params_.fix_version);
+            scratch_.add_body_length_placeholder();
+            scratch_.add_field(35, "4");
+            scratch_.add_field(34, static_cast<int64_t>(msgSeqNum)); // Use provided seq num
+            scratch_.add_field(49, params_.sender_comp_id);
+            scratch_.add_field(56, params_.target_comp_id);
+            scratch_.add_field(52, clock_.now_fix());
+
+            scratch_.add_field(123, "Y");   // GapFillFlag is always Y here
+            scratch_.add_field(36, static_cast<int64_t>(newSeqNo));
+            scratch_.add_field(43, "Y"); // PossDup
+            scratch_.add_field(122, clock_.now_fix()); // OrigSendingTime required for PossDup? Usually yes.
+
+            stamp_trailer_();
+            std::string_view result = scratch_.get_buffer_view();
+            return result;
+        }
         
         std::string_view logout(std::string text = {}) {
             scratch_.reset();
@@ -154,7 +175,7 @@ namespace Fix {
             return scratch_.get_buffer_view();
         }
 
-        std::string_view custom_admin_message(std::string_view payload) {
+        std::string_view custom_message(std::string_view payload) {
             scratch_.reset();
             stamp_header_(Message::Custom::MsgType);
             scratch_.add_field(9250, payload);
@@ -162,12 +183,12 @@ namespace Fix {
             return scratch_.get_buffer_view();
         }
 
-        std::string_view custom_admin_message(std::string&& payload) {
-            return custom_admin_message(std::string_view{payload});
+        std::string_view custom_message(std::string&& payload) {
+            return custom_message(std::string_view{payload});
         }
 
-        std::string_view custom_admin_message(const char* payload) {
-            return custom_admin_message(std::string_view{payload});
+        std::string_view custom_message(const char* payload) {
+            return custom_message(std::string_view{payload});
         }
 
         std::string_view from_app(GenericMessage<GenericField>& msg, MsgType& msg_type) {

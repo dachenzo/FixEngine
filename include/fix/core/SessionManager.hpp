@@ -21,7 +21,7 @@ namespace Fix {
 
         static std::string generate_engine_id();
 
-        SessionManager(Fix::IConnectionFactory& connFactory, Fix::ITimerFactory& timerFactory, boost::asio::io_context& io_context, AppSink app_sink);
+        SessionManager(Fix::IConnectionFactory& connFactory, boost::asio::io_context& io_context, AppSink app_sink);
         SessionManager(const SessionManager& other) = delete;
         SessionManager& operator=(const SessionManager& other) = delete;
         SessionManager(const SessionManager&& other) = delete;
@@ -57,7 +57,6 @@ namespace Fix {
         std::unordered_map<Fix::SessionID, Fix::SessionCreationConfig> session_configs_;
         AppSink app_sink_;
         Fix::IConnectionFactory& connFactory_; 
-        Fix::ITimerFactory& timerFactory_;
         boost::asio::io_context& io_context_;
 
         

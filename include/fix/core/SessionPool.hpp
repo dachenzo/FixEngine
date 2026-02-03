@@ -22,7 +22,6 @@ namespace Fix {
         std::shared_ptr<Fix::Session> emplace_session(
                 Fix::Role role,
                 Fix::AppSink&& app_sink,
-                Fix::ITimerFactory& timers,
                 Fix::SessionParameters params,
                 Fix::Log::LogCore& log_core,
                 boost::asio::io_context& io_context,
