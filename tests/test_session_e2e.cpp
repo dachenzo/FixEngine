@@ -409,7 +409,7 @@ TEST(SessionE2E, ChunkedMessageHandling) {
         Fix::Clock clock;
         Fix::MessageFactory<Fix::Clock> mf{acc_params, sp, clock};
 
-        std::string test_req_wire = std::string(mf.custom_message("TEST_PAYLOAD"));
+        std::string custom_wire = std::string(mf.custom_message("TEST_PAYLOAD"));
         // Chunk into pieces
         const size_t chunk_size = 7;
         //Inject Garbage first
@@ -417,9 +417,9 @@ TEST(SessionE2E, ChunkedMessageHandling) {
         pump(io);
 
         // Now inject in chunks
-        for (size_t offset = 0; offset < test_req_wire.size(); offset += chunk_size) {
-            size_t len = std::min(chunk_size, test_req_wire.size() - offset);
-            c_init->inject_inbound(test_req_wire.substr(offset, len));
+        for (size_t offset = 0; offset < custom_wire.size(); offset += chunk_size) {
+            size_t len = std::min(chunk_size, custom_wire.size() - offset);
+            c_init->inject_inbound(custom_wire.substr(offset, len));
             pump(io);
         }
     }
