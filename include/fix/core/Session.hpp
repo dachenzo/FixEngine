@@ -101,6 +101,8 @@ namespace Fix {
 
         Log::SessionLogger& logger() ;
 
+        SessionState get_state() const noexcept;
+
 
         //app callbacks
         void send_from_app(OutBoundAppMsg&& msg);

@@ -8,6 +8,7 @@
 #include <fix/core/Session.hpp>
 #include <fix/core/Parser.hpp>
 #include <fix/core/utils.hpp>
+#include <fix/message/GenericMessage.hpp>
 #include <fix/message/admin/Custom.hpp>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -54,6 +55,10 @@ namespace Fix {
 
     Session::~Session() {
         if (conn_) conn_->close();
+    }
+
+    SessionState Session::get_state() const noexcept {
+        return state_;
     }
 
     void Session::stop_() {
@@ -582,6 +587,7 @@ namespace Fix {
         if (stopped_) return;
 
         Fix::ValidMessageView msg = Fix::make_valid_message_view(message);
+        
         auto results = validator_.validate_message(msg, params_);
 
         if (results.severity == Error::Severity::Fatal) {
