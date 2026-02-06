@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <fstream>
-#include <filesystem>
 #include <chrono>
 
 namespace Fix::Log {

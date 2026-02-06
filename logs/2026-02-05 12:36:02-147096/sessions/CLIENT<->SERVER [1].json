@@ -1,7 +1,0 @@
-[
-{"Category":"Info","Layer":"Peripheral","Severity":"Low","Message":"Added session to LogFileSink"},
-{"Category":"Info","Layer":"Fix","Severity":"NA","Message":"Session started"},
-{"Category":"Info","Layer":"Fix","Severity":"NA","Message":"Logon sent"},
-{"Category":"Info","Layer":"Fix","Severity":"NA","Message":"Logon received"}
-]
-]

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include <fix/error/Category.hpp>
 #include <fix/error/Layer.hpp>
 #include <fix/error/Severity.hpp>
