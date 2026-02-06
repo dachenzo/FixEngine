@@ -1,4 +1,5 @@
 #include "fix/core/Session.hpp"
+#include "fix/core/definitions.hpp"
 #include <boost/asio/io_context.hpp>
 #include <memory>
 #include <iostream>
@@ -36,7 +37,7 @@ namespace Fix {
         } 
 
 
-    void SessionManager::create_session(const Fix::SessionCreationConfig& config) {
+    SessionID SessionManager::create_session(const Fix::SessionCreationConfig& config) {
 
         ReconnectCallback reconnect_callback =
         [mgr_exec = exec_, this](Fix::SessionID id) {
@@ -123,6 +124,8 @@ namespace Fix {
             }
             );
         }
+
+        return id;
 
         
     }
@@ -214,9 +217,14 @@ namespace Fix {
         
     
 
-    void SessionManager::create_all(std::vector<Fix::SessionCreationConfig>& confgs) {
+    std::vector<SessionID> SessionManager::create_all(std::vector<Fix::SessionCreationConfig>& confgs) {
         session_configs_.reserve(confgs.size());
-        for (Fix::SessionCreationConfig& config: confgs) { create_session(config);}
+        std::vector<SessionID> ids;
+        ids.reserve(confgs.size());
+        for (Fix::SessionCreationConfig& config: confgs) { 
+            ids.push_back(create_session(config));
+        }
+        return ids;
     }    
 
     void SessionManager::start_all() {
@@ -224,9 +232,18 @@ namespace Fix {
     }
 
     void SessionManager::stop_all() {
-        for (auto sess: session_pool_.get_all()) {
-            if (sess) sess->stop();
-        }
+        boost::asio::post(exec_, [this]{
+            for (auto sess: session_pool_.get_all()) {sess->stop();}
+        }); 
+    }
+
+    void SessionManager::stop_session(const Fix::SessionID& id) {
+        boost::asio::post(exec_, [this, id]{
+            auto session = session_pool_.get(id);
+            if (session) {
+                session->stop();
+            }
+        });
     }
 
     bool SessionManager::remove_session(const Fix::SessionID& id) {

@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <string_view>
-#include <iostream>
 #include <fix/core/MessageFactory.hpp>
 
 
@@ -9,8 +8,8 @@ TEST(MessageFactoryTests, LogonMessageTest) {
     params.fix_version = "FIX.4.4";
     params.sender_comp_id = "SENDER";
     params.target_comp_id = "TARGET";
-    params.encrypt_method_str = "0";
-    params.heart_beat_str = "30";
+    
+    
 
     Fix::SeqProvider seq_provider{};
     struct ClockMock {

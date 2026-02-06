@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <array>
 #include <optional>
+#include <sys/types.h>
 
 namespace Fix {
 
@@ -44,13 +45,15 @@ namespace Fix {
         std::string target_comp_id = "test_target";
         std::optional<std::string> username;
         std::optional<std::string> password;
-        std::string encrypt_method_str = "0"; // none
-        std::string heart_beat_str = "30";
-        std::uint32_t heart_beat_int = 30;
+        u_int32_t heart_beat_int = 30;
         int encrypt_method = 0;
         bool initiator_reset_on_logon = false;
         bool acceptor_reset_on_logon = true;
         bool send_last_msg_prcessed_seq =true;
+
+       
+
+       
         
     }; 
 
@@ -67,10 +70,10 @@ namespace Fix {
         int  min_heart_bt = 5;                // clamp peer 108
         int  max_heart_bt = 120;
         bool require_credentials = false;     // if true, 553/554 must be present & valid
-};
+    };
 
 
-    enum class TimerType {};
+    
 
 }
 
@@ -81,27 +84,5 @@ namespace std {
             return std::hash<std::size_t>{}(id.id);
         }
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 } 

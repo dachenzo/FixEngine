@@ -28,19 +28,21 @@ namespace Fix {
         SessionManager& operator=(const SessionManager&& other) = delete;
 
 
-        void create_session(const Fix::SessionCreationConfig& cnfg);
+        SessionID create_session(const Fix::SessionCreationConfig& cnfg);
 
         bool remove_session(const Fix::SessionID& id);
 
         std::shared_ptr<Fix::Session> findSession(const Fix::SessionID& id);
 
-        std::vector<Fix::SessionID> listSessions() const;
+        std::vector<Fix::SessionID> list_sessions() const;
 
-        void create_all(std::vector<Fix::SessionCreationConfig>& configs);
+        std::vector<SessionID> create_all(std::vector<Fix::SessionCreationConfig>& configs);
 
         void start_all();
 
         void stop_all();
+
+        void stop_session(const Fix::SessionID& id);
 
         void send(OutBoundAppMsg&& msg);
 

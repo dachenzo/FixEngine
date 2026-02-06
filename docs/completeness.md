@@ -25,16 +25,16 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed /  �
 | Logon/Logout state     | ✅      | ✅       | ✅          | ❌          | ❌        |
 | ResendRequest handling | ✅      | ✅       | ✅          | ❌          | ❌        |
 | GapFill logic          | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Dispatch logic         | ✅      | ❌       | ✅          | ❌          | ❌        |
+| Dispatch logic         | ✅      | ✅       | ✅          | ❌          | ❌        |
 
 ## 3. Message Processing
 | Aspect          | Exists | Correct | Integrated | Performant | Hardened |
 |-----------------|--------|---------|------------|------------|----------|
 | Parsing         | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Validation hook | ✅      | ❌       | ✅          | ❌          | ❌        |
+| Validation hook | ✅      | ✅       | ✅          | ❌          | ❌        |
 | Generation      | ✅      | ✅       | ✅          | ❌          | ❌        |
-| Normalisation   | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Routing         | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Normalisation   | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Routing         | ✅      | ✅       | ✅          | ❌          | ❌        |
 
 ## 4. Schema & Metadata
 | Aspect                        | Exists | Correct | Integrated | Performant | Hardened |
@@ -77,9 +77,9 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed /  �
 ## 9. Testing & Tooling
 | Aspect          | Exists | Correct | Integrated | Performant | Hardened |
 |-----------------|--------|---------|------------|------------|----------|
-| Unit tests      | ✅      | ⚠️      | ✅          | ❌          | ❌        |
-| Golden messages | ❌      | ❌       | ❌          | ❌          | ❌        |
-| Fuzzing         | ❌      | ❌       | ❌          | ❌          | ❌        |
+| Unit tests      | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Golden messages | ✅      | ✅       | ✅          | ❌          | ❌        |
+| Fuzzing         | 🚀     | 🚀      | 🚀         | 🚀         | 🚀       |
 | Benchmarks      | ❌      | ❌       | ❌          | ❌          | ❌        |
 
 ## 10. Logging
@@ -92,7 +92,7 @@ Legend: ✅ yes / ⚠️ partial or uncertain / ❌ no / ❓ not assessed /  �
 ## 11. Interaction
 | Aspect | Exists | Correct | Integrated | Performant | Hardened |
 |--------|--------|---------|------------|------------|----------|
-| CLI    | ❌      | ❌       | ❌          | ❌          | ❌        |
+| CLI    | ✅      | ✅       | ✅          | ❌          | ❌        |
 
 ## 12. Configuration & Deployment
 | Aspect                               | Exists | Correct | Integrated | Performant | Hardened |
