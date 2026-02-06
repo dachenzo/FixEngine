@@ -57,7 +57,7 @@ int main () {
      Fix::ConnectionConfig server_conn_config {
         "127.0.0.1",
         5001,
-        Fix::Role::INITIATOR,
+        Fix::Role::ACCEPTOR,
         1
     };
 
@@ -76,8 +76,8 @@ int main () {
 
     Fix::ConnectionConfig client_conn_config {
         "127.0.0.1",
-        5002,
-        Fix::Role::ACCEPTOR,
+        5001,
+        Fix::Role::INITIATOR,
         1
     };
 
