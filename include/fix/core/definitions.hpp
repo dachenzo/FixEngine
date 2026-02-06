@@ -45,7 +45,7 @@ namespace Fix {
         std::string target_comp_id = "test_target";
         std::optional<std::string> username;
         std::optional<std::string> password;
-        u_int32_t heart_beat_int = 30;
+        std::uint32_t heart_beat_int = 30;
         int encrypt_method = 0;
         bool initiator_reset_on_logon = false;
         bool acceptor_reset_on_logon = true;
