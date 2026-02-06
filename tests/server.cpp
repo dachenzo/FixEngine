@@ -10,6 +10,7 @@
 /// @brief  Tests that packets are sent between both Initiator and Acceptor configurations and that Fix::Parser is able to emmit a valid message when used
 /// @return int
 int main() {
+    
     std::cout << "Server Test started\n";
 
 

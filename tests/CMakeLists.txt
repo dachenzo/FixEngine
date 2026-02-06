@@ -17,8 +17,13 @@ add_executable(fix_tests
     test_session_manager.cpp
 )
 
+add_executable(shelltest
+    test_shell.cpp
+)
+
 
 target_link_libraries(fix_tests PRIVATE GTest::gtest_main fix_engine)
+target_link_libraries(shelltest PRIVATE GTest::gtest_main fix_engine)
 
 include(GoogleTest)
 gtest_discover_tests(fix_tests)

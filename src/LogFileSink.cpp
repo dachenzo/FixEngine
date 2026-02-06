@@ -29,7 +29,9 @@ namespace Fix::Log {
         for (auto& [sid, node] : sess_to_file_) {
             close_file(node);
         }
-
+        sess_to_file_.clear();
+        lru_cache_.clear();
+        currently_open_files_ = 0;
     }
 
 

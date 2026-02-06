@@ -83,7 +83,7 @@ namespace Fix {
         std::string_view logon(int heartbeat_override, bool echo_reset) {
             scratch_.reset();
             stamp_header_("A");
-            scratch_.add_field(98, params_.encrypt_method_str);
+            scratch_.add_field(98, params_.encrypt_method);
             scratch_.add_field(141, (echo_reset ? "Y" : "N"));
             scratch_.add_field(108, static_cast<int64_t>(heartbeat_override));
             stamp_trailer_();
